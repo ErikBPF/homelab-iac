@@ -33,6 +33,10 @@
     if [ ! -f .env ] && [ -f .env.sops ]; then
       sops -d --input-type dotenv --output-type dotenv .env.sops > .env
     fi
+    # State backend is MinIO (S3). OpenTofu's s3 backend reads AWS_*; our creds
+    # live as MINIO_TFSTATE_* in .env. Map them so plan/apply reach the bucket.
+    export AWS_ACCESS_KEY_ID="''${MINIO_TFSTATE_ROOT_USER:-}"
+    export AWS_SECRET_ACCESS_KEY="''${MINIO_TFSTATE_ROOT_PASSWORD:-}"
     echo "homelab-iac devenv"
     tofu version | head -1
     terragrunt --version | head -1

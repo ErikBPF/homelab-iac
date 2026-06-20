@@ -10,6 +10,11 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 export TG_TF_PATH="${TG_TF_PATH:-tofu}"
 
+# State lives in MinIO (S3 backend). The bucket creds are MINIO_TFSTATE_* in the
+# secret store; OpenTofu's s3 backend reads AWS_*. Map them if not already set.
+export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${MINIO_TFSTATE_ROOT_USER:-}}"
+export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${MINIO_TFSTATE_ROOT_PASSWORD:-}}"
+
 out=$(terragrunt run --all --non-interactive -- plan -detailed-exitcode -no-color 2>&1)
 code=$?
 
