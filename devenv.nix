@@ -7,6 +7,10 @@
   # Terraform/OpenTofu environment variables
   env.TF_DATA_DIR = ".terraform";
 
+  # Pin Terragrunt to OpenTofu. A system `terraform` binary exists and would
+  # otherwise be picked up — but it cannot read OpenTofu-encrypted state.
+  env.TG_TF_PATH = "${pkgs.opentofu}/bin/tofu";
+
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
@@ -18,7 +22,7 @@
   ];
 
   enterShell = ''
-    echo "unifi-tf devenv"
+    echo "homelab-iac devenv"
     tofu version | head -1
     terragrunt --version | head -1
   '';

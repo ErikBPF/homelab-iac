@@ -37,3 +37,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# devenv git-hooks generated (machine-specific store paths)
+.pre-commit-config.yaml
