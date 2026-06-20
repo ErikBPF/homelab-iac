@@ -68,7 +68,6 @@ generate "encryption" {
 inputs = {
   state_passphrase = local.state_passphrase
 
-  # Default token = the DNS-scoped token. Units needing account scope (tunnels)
-  # override cf_api_token with a broader token (e.g. CLOUDFLARE_TUNNEL_API_TOKEN).
+  # Single dual-scope token (Zone:DNS:Edit + Account:Tunnel:Edit) for all units.
   cf_api_token = get_env("CLOUDFLARE_API_TOKEN")
 }
