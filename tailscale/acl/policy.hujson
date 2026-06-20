@@ -22,8 +22,9 @@
 		//    *.homelab.pastelariadev.com -> swag, which reverse-proxies them.
 		{"action": "accept", "src": ["*"], "dst": ["swag:80,443"]},
 
-		// 4. Ingress -> the upstreams it proxies over the tailnet (kepler k3s).
-		{"action": "accept", "src": ["discovery"], "dst": ["kepler:443,6443"]},
+		// 4. discovery is the hub (SWAG reverse-proxy, LiteLLM router, monitoring,
+		//    DNS) — it reaches every host on every port.
+		{"action": "accept", "src": ["discovery"], "dst": ["*:*"]},
 
 		// 5. Preserved: Syncthing between fleet hosts.
 		{
@@ -38,6 +39,11 @@
 			"src":    ["laptop", "pathfinder", "orion", "discovery"],
 			"dst":    ["kepler:111,445,2049,4000,4001,4002"],
 		},
+
+		// 7. Fleet Alloy -> discovery's observability sinks: Loki :3100 (logs) +
+		//    Prometheus remote_write :9090 (metrics). Every host's Alloy pushes
+		//    here; k3s in-cluster Alloy egresses SNAT'd to kepler's TS IP too.
+		{"action": "accept", "src": ["laptop", "pathfinder", "orion", "kepler"], "dst": ["discovery:3100,9090"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -49,7 +55,10 @@
 		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
 		{"src": "galaxy", "accept": ["swag:443"]},       // anyone reaches SWAG
 		{"src": "orion", "deny": ["kepler:8001"]},       // no direct backend access
-		{"src": "discovery", "accept": ["kepler:6443"]}, // ingress reaches k3s
+		{"src": "discovery", "accept": ["kepler:6443"]}, // hub reaches k3s
+		{"src": "discovery", "accept": ["orion:8080"]},  // hub reaches host services (LLMs)
+		{"src": "kepler", "accept": ["discovery:3100"]}, // cluster ships logs to Loki
+		{"src": "orion", "accept": ["discovery:9090"]},  // host Alloy ships metrics
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
 		{"src": "kepler", "accept": ["orion:22000"]},    // syncthing preserved
 		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
