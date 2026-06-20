@@ -37,7 +37,7 @@ inputs = {
       fixed_ip = "192.168.10.20"
     }
     "52:54:00:80:4a:0e" = {
-      name     = ""
+      name     = "homeassistant"
       fixed_ip = "192.168.10.205"
     }
     "64:51:06:1a:f8:1a" = {
@@ -51,11 +51,11 @@ inputs = {
       network_id = "5e3cdb8a933186073f310966"
     }
     "b8:27:eb:15:7e:48" = {
-      name     = ""
+      name     = "archinaut"
       fixed_ip = "192.168.10.225"
     }
     "74:56:3c:47:d1:77" = {
-      name     = ""
+      name     = "kepler"
       fixed_ip = "192.168.10.230"
     }
     "ca:20:15:19:9f:42" = {
