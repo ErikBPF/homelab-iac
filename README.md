@@ -1,15 +1,13 @@
 # homelab-iac
 
 Declarative, git-versioned **homelab infrastructure-as-code** (OpenTofu +
-Terragrunt). Today it manages the **UniFi network layer** (`filipowm/unifi`
-provider) — networks/VLANs, WLANs, DNS, and DHCP reservations: the substrate
-every host and service in the fleet sits on. Namespaced under `unifi/` so other
-declarative infra can join later.
+Terragrunt). Two components, each under its own top-level dir:
 
-Two environments:
-
-- `home` — UDM Pro/SE at `https://192.168.10.1`
-- `lab` — production lab controller (fill `api_url`)
+- **`unifi/`** — the UniFi network layer (`filipowm/unifi`): networks/VLANs,
+  WLANs, DNS, DHCP reservations. The substrate the fleet sits on.
+  Environments: `home` (UDM Pro/SE at `https://192.168.10.1`) and `lab` (stub).
+- **`tailscale/`** — the Tailscale tailnet (`tailscale/tailscale`): ACL policy
+  file + DNS (nameservers, MagicDNS, search paths). The overlay-network layer.
 
 Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
@@ -33,8 +31,9 @@ is a **reservation** or **DNS record** in this repo. Keep them in sync.
 
 ## Coverage & gaps
 
-**Managed in code** (zero-diff import): networks (`Default`, `Main`), WLANs (×3),
-static DNS (×2), DHCP reservations (×22).
+**Managed in code** (zero-diff import): _UniFi_ — networks (`Default`, `Main`),
+WLANs (×3), static DNS (×2), DHCP reservations (×22); _Tailscale_ — ACL policy
+file (`tailscale/acl/policy.hujson`) + DNS (nameservers, MagicDNS, search paths).
 
 **Not manageable with the `filipowm/unifi` provider — stays UI-managed:**
 
@@ -46,6 +45,11 @@ static DNS (×2), DHCP reservations (×22).
   credentials. (Its policy route is currently **disabled** anyway.)
 - **Traffic routes / policy-based routing** — no `traffic_route` resource.
 - **WLAN groups** — no resource (WLANs bind to AP groups, which we do set).
+- **MikroTik switches** (`192.168.10.2` `Mikrotik servidor`, `.3` `Mikrotik Sala`)
+  run **swOS** — web-UI only, no API/SSH/REST, so no Terraform provider applies
+  (`terraform-provider-routeros` needs RouterOS). They are captured here only as
+  DHCP reservations. (RouterOS migration would be required to manage them as code,
+  and only CRS-series hardware can run it.)
 
 **At defaults — not worth importing** (would add noise, no real config): the
 predefined `user_group` (Default), `radius_profile` (Default), firewall zones,
@@ -60,15 +64,19 @@ rules/groups, port-forwards, dynamic DNS, RADIUS accounts.
 ```
 .
 ├── devenv.nix / devenv.yaml / .envrc   # devenv: opentofu, terragrunt, tflint, jq
-├── .env.example                        # per-env API keys (copy -> .env, gitignored)
-└── unifi/
-    ├── root.hcl                        # root: generates provider + encryption + backend
-    ├── default_flags.hcl               # allow_insecure (self-signed UDM cert)
-    ├── environments/<env>/
-    │   ├── env.hcl                      # env name, api_url, site
-    │   └── <stack>/terragrunt.hcl       # one live unit per stack
-    └── modules/<stack>/                 # reusable: network (worked), wlan,
-                                         #   firewall, port-forward, dns, reservations
+├── .env.example                        # secrets template (copy -> .env, gitignored)
+├── unifi/
+│   ├── root.hcl                        # root: generates provider + encryption + backend
+│   ├── default_flags.hcl               # allow_insecure (self-signed UDM cert)
+│   ├── environments/<env>/
+│   │   ├── env.hcl                      # env name, api_url, site
+│   │   └── <stack>/terragrunt.hcl       # one live unit per stack
+│   └── modules/<stack>/                 # network, wlan, dns, reservations, …
+└── tailscale/
+    ├── root.hcl                        # root: tailscale provider + encryption + backend
+    ├── acl/  (terragrunt.hcl + policy.hujson)   # tailnet policy file
+    ├── dns/  (terragrunt.hcl)                    # nameservers, MagicDNS, search paths
+    └── modules/{acl,dns}/
 ```
 
 ## Setup

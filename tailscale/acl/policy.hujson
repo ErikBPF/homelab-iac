@@ -1,0 +1,20 @@
+{
+	"acls": [
+		{
+			"action": "accept",
+			"src":    ["*"],
+			"dst":    ["*:*"],
+		},
+	],
+	"ssh": [
+		// The default SSH policy, which lets users SSH into devices they own.
+		// Learn more at https://tailscale.com/kb/1193/tailscale-ssh/
+		{
+			"action":      "check",
+			"src":         ["autogroup:member"],
+			"dst":         ["autogroup:self"],
+			"users":       ["autogroup:nonroot", "root"],
+			"checkPeriod": "0s",
+		},
+	],
+}
