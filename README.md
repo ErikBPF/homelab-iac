@@ -31,6 +31,30 @@ for the **network they live on**.
 Rule of thumb: when a host IP or a service hostname changes, the matching half
 is a **reservation** or **DNS record** in this repo. Keep them in sync.
 
+## Coverage & gaps
+
+**Managed in code** (zero-diff import): networks (`Default`, `Main`), WLANs (×3),
+static DNS (×2), DHCP reservations (×22).
+
+**Not manageable with the `filipowm/unifi` provider — stays UI-managed:**
+
+- **OpenVPN-client network `OpenVPN USA`** (NordVPN). The `network` resource
+  supports only `purpose = corporate|guest|wan|vlan-only` — there is no
+  `vpn-client` purpose and no OpenVPN-client resource. The provider exposes only
+  `setting_teleport` (WireGuard) and `setting_magic_site_to_site_vpn` (IPsec
+  S2S), neither of which is an outbound OpenVPN client. Also holds NordVPN
+  credentials. (Its policy route is currently **disabled** anyway.)
+- **Traffic routes / policy-based routing** — no `traffic_route` resource.
+- **WLAN groups** — no resource (WLANs bind to AP groups, which we do set).
+
+**At defaults — not worth importing** (would add noise, no real config): the
+predefined `user_group` (Default), `radius_profile` (Default), firewall zones,
+and the global `setting_*` (mgmt, ntp, country, …) are all stock. Import a
+`setting_*` module only once you actually customize that setting.
+
+**Empty — nothing to import:** static routes, port profiles, firewall
+rules/groups, port-forwards, dynamic DNS, RADIUS accounts.
+
 ## Layout
 
 ```
