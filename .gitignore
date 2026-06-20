@@ -12,6 +12,7 @@ unifi_key
 
 # Terraform / OpenTofu
 .terraform/
+.terraform.d/
 *.tfstate
 *.tfstate.backup
 *.tfplan

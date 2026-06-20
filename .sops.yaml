@@ -1,0 +1,6 @@
+# sops encryption rules. The .env secrets are encrypted to this age recipient
+# (erik's key, same as the servarr repo). Decrypt needs the matching private
+# key at $SOPS_AGE_KEY_FILE (~/.config/sops/age/keys.txt).
+creation_rules:
+  - path_regex: (^|/)\.env(\.sops)?$
+    age: age127vmpu9ps2d2ulukcsp743xvmg5n9dsg9up4gtusc4ehgnjl6y7qg245jt

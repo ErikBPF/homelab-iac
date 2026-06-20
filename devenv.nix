@@ -11,6 +11,10 @@
   # otherwise be picked up — but it cannot read OpenTofu-encrypted state.
   env.TG_TF_PATH = "${pkgs.opentofu}/bin/tofu";
 
+  # Shared provider plugin cache — one download instead of one per unit
+  # (OpenTofu 1.12 made the shared cache lockfile-safe).
+  env.TF_PLUGIN_CACHE_DIR = "${config.devenv.root}/.terraform.d/plugin-cache";
+
   # https://devenv.sh/packages/
   packages = [
     pkgs.git
@@ -19,9 +23,16 @@
     pkgs.tflint
     pkgs.jq
     pkgs.curl
+    pkgs.sops
+    pkgs.age
   ];
 
   enterShell = ''
+    mkdir -p "$TF_PLUGIN_CACHE_DIR"
+    # Decrypt the sops-managed secrets into the dotenv-loaded .env if missing.
+    if [ ! -f .env ] && [ -f .env.sops ]; then
+      sops -d --input-type dotenv --output-type dotenv .env.sops > .env
+    fi
     echo "homelab-iac devenv"
     tofu version | head -1
     terragrunt --version | head -1
