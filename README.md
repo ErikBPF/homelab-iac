@@ -1,13 +1,15 @@
 # homelab-iac
 
 Declarative, git-versioned **homelab infrastructure-as-code** (OpenTofu +
-Terragrunt). Two components, each under its own top-level dir:
+Terragrunt). Three components, each under its own top-level dir:
 
 - **`unifi/`** — the UniFi network layer (`filipowm/unifi`): networks/VLANs,
   WLANs, DNS, DHCP reservations. The substrate the fleet sits on.
   Environments: `home` (UDM Pro/SE at `https://192.168.10.1`) and `lab` (stub).
 - **`tailscale/`** — the Tailscale tailnet (`tailscale/tailscale`): ACL policy
   file + DNS (nameservers, MagicDNS, search paths). The overlay-network layer.
+- **`cloudflare/`** — the public edge (`cloudflare/cloudflare`): DNS records for
+  `pastelariadev.com` (tunnel CNAMEs). The public-DNS layer.
 
 Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
@@ -33,7 +35,11 @@ is a **reservation** or **DNS record** in this repo. Keep them in sync.
 
 **Managed in code** (zero-diff import): _UniFi_ — networks (`Default`, `Main`),
 WLANs (×3), static DNS (×2), DHCP reservations (×22); _Tailscale_ — ACL policy
-file (`tailscale/acl/policy.hujson`) + DNS (nameservers, MagicDNS, search paths).
+file (`tailscale/acl/policy.hujson`) + DNS (nameservers, MagicDNS, search paths);
+_Cloudflare_ — public DNS for `pastelariadev.com` (3 tunnel CNAMEs).
+
+This gives DNS-as-code at every layer: **public** (Cloudflare) · **LAN** (UniFi
+static DNS) · **tailnet** (Tailscale MagicDNS).
 
 **Not manageable with the `filipowm/unifi` provider — stays UI-managed:**
 
@@ -72,11 +78,15 @@ rules/groups, port-forwards, dynamic DNS, RADIUS accounts.
 │   │   ├── env.hcl                      # env name, api_url, site
 │   │   └── <stack>/terragrunt.hcl       # one live unit per stack
 │   └── modules/<stack>/                 # network, wlan, dns, reservations, …
-└── tailscale/
-    ├── root.hcl                        # root: tailscale provider + encryption + backend
-    ├── acl/  (terragrunt.hcl + policy.hujson)   # tailnet policy file
-    ├── dns/  (terragrunt.hcl)                    # nameservers, MagicDNS, search paths
-    └── modules/{acl,dns}/
+├── tailscale/
+│   ├── root.hcl                        # root: tailscale provider + encryption + backend
+│   ├── acl/  (terragrunt.hcl + policy.hujson)   # tailnet policy file
+│   ├── dns/  (terragrunt.hcl)                    # nameservers, MagicDNS, search paths
+│   └── modules/{acl,dns}/
+└── cloudflare/
+    ├── root.hcl                        # root: cloudflare provider + encryption + backend
+    ├── dns/  (terragrunt.hcl)                    # public DNS records (tunnel CNAMEs)
+    └── modules/dns/
 ```
 
 ## Setup
