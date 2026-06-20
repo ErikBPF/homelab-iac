@@ -26,7 +26,14 @@ generate "provider" {
   path      = "provider_gen.tf"
   if_exists = "overwrite"
   contents  = <<-EOT
-    provider "cloudflare" {}
+    variable "cf_api_token" {
+      type      = string
+      sensitive = true
+    }
+
+    provider "cloudflare" {
+      api_token = var.cf_api_token
+    }
   EOT
 }
 
@@ -60,4 +67,8 @@ generate "encryption" {
 
 inputs = {
   state_passphrase = local.state_passphrase
+
+  # Default token = the DNS-scoped token. Units needing account scope (tunnels)
+  # override cf_api_token with a broader token (e.g. CLOUDFLARE_TUNNEL_API_TOKEN).
+  cf_api_token = get_env("CLOUDFLARE_API_TOKEN")
 }
