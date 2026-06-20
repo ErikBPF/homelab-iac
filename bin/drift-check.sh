@@ -10,7 +10,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.." || exit 1
 export TG_TF_PATH="${TG_TF_PATH:-tofu}"
 
-out=$(terragrunt run --all plan -detailed-exitcode --terragrunt-non-interactive -no-color 2>&1)
+out=$(terragrunt run --all --non-interactive -- plan -detailed-exitcode -no-color 2>&1)
 code=$?
 
 case "$code" in
