@@ -1,20 +1,57 @@
 {
+	// Named tailnet/LAN addresses (stable Tailscale IPs; swag = discovery's
+	// advertised /32 LAN IP where *.homelab.pastelariadev.com resolves).
+	"hosts": {
+		"laptop":     "100.74.137.124",
+		"pathfinder": "100.104.92.5",
+		"galaxy":     "100.66.253.15",
+		"discovery":  "100.76.140.121",
+		"swag":       "192.168.10.210",
+		"kepler":     "100.94.239.46",
+		"orion":      "100.102.11.127",
+	},
+
 	"acls": [
+		// 1. Admin devices: OpenSSH (port 2222) into everything.
+		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["*:2222"]},
+
+		// 2. Everyone: DNS to discovery (MagicDNS nameserver / AdGuard).
+		{"action": "accept", "src": ["*"], "dst": ["discovery:53", "swag:53"]},
+
+		// 3. Everyone: the SWAG ingress only. All services are published as
+		//    *.homelab.pastelariadev.com -> swag, which reverse-proxies them.
+		{"action": "accept", "src": ["*"], "dst": ["swag:80,443"]},
+
+		// 4. Ingress -> the upstreams it proxies over the tailnet (kepler k3s).
+		{"action": "accept", "src": ["discovery"], "dst": ["kepler:443,6443"]},
+
+		// 5. Preserved: Syncthing between fleet hosts.
 		{
 			"action": "accept",
-			"src":    ["*"],
-			"dst":    ["*:*"],
+			"src":    ["laptop", "pathfinder", "kepler", "orion", "discovery"],
+			"dst":    ["laptop:22000", "pathfinder:22000", "kepler:22000", "orion:22000", "discovery:22000"],
+		},
+
+		// 6. Preserved: NFS / SMB to the kepler NAS from fleet hosts.
+		{
+			"action": "accept",
+			"src":    ["laptop", "pathfinder", "orion", "discovery"],
+			"dst":    ["kepler:111,445,2049,4000,4001,4002"],
 		},
 	],
-	"ssh": [
-		// The default SSH policy, which lets users SSH into devices they own.
-		// Learn more at https://tailscale.com/kb/1193/tailscale-ssh/
-		{
-			"action":      "check",
-			"src":         ["autogroup:member"],
-			"dst":         ["autogroup:self"],
-			"users":       ["autogroup:nonroot", "root"],
-			"checkPeriod": "0s",
-		},
+
+	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
+	// not enabled, so no "ssh" section. Add one (needs tags) if you ever turn on
+	// `tailscale up --ssh`.
+
+	"tests": [
+		{"src": "laptop", "accept": ["kepler:2222"]},    // admin can SSH
+		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
+		{"src": "galaxy", "accept": ["swag:443"]},       // anyone reaches SWAG
+		{"src": "orion", "deny": ["kepler:8001"]},       // no direct backend access
+		{"src": "discovery", "accept": ["kepler:6443"]}, // ingress reaches k3s
+		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
+		{"src": "kepler", "accept": ["orion:22000"]},    // syncthing preserved
+		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
 	],
 }
