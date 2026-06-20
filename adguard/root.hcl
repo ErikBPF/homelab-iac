@@ -5,9 +5,11 @@
 # Auth: host/username/scheme are non-secret (below); the password comes from
 # ADGUARD_PASSWORD in the shell (.env via dotenv) — never on disk or in state.
 #
-# NOTE: while migrating, do NOT `just sync-servarr discovery` — the committed
-# AdGuardHome.yaml would clobber Terraform's API changes (dual ownership). The
-# YAML is removed only once this component is verified complete.
+# OWNERSHIP (split): Terraform owns rewrites + user_rules + list_filters via the
+# AdGuard API. The base config (DNS upstreams, dhcp, tls, querylog/stats) stays
+# in servarr's AdGuardHome.yaml — the provider's adguard_config can't manage it
+# cleanly (its update rejects the disabled-DHCP block). `just sync-servarr`
+# excludes config/adguard/AdGuardHome.yaml so a sync can't clobber TF's changes.
 
 locals {
   state_passphrase = get_env("UNIFI_STATE_PASSPHRASE")

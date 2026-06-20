@@ -36,10 +36,18 @@ is a **reservation** or **DNS record** in this repo. Keep them in sync.
 **Managed in code** (zero-diff import): _UniFi_ — networks (`Default`, `Main`),
 WLANs (×3), static DNS (×2), DHCP reservations (×22); _Tailscale_ — ACL policy
 file (`tailscale/acl/policy.hujson`) + DNS (nameservers, MagicDNS, search paths);
-_Cloudflare_ — public DNS for `pastelariadev.com` (3 tunnel CNAMEs).
+_Cloudflare_ — public DNS for `pastelariadev.com` (3 tunnel CNAMEs);
+_AdGuard_ — DNS rewrites, `user_rules`, blocklist filters.
 
 This gives DNS-as-code at every layer: **public** (Cloudflare) · **LAN** (UniFi
-static DNS) · **tailnet** (Tailscale MagicDNS).
+static DNS) · **tailnet** (Tailscale MagicDNS) · **filtering** (AdGuard).
+
+> **AdGuard ownership split:** Terraform owns rewrites / user_rules / filters via
+> the API. The **base config** (DNS upstreams, dhcp, tls, querylog/stats) stays
+> in servarr's `AdGuardHome.yaml` — `adguard_config` can't be managed cleanly
+> (its update rejects the disabled-DHCP block). `just sync-servarr` excludes that
+> file so a sync can't clobber Terraform. AdGuard rewrites the YAML at runtime,
+> so its base config effectively self-persists on the host.
 
 **Not manageable with the `filipowm/unifi` provider — stays UI-managed:**
 
