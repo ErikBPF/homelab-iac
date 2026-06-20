@@ -35,4 +35,27 @@ inputs = {
     "||samsungads.com^",
     "||ads.samsung.com^",
   ]
+
+  list_filters = {
+    "AdGuard DNS filter" = {
+      url     = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt"
+      enabled = true
+    }
+    "AdAway Default Blocklist" = {
+      url     = "https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt"
+      enabled = false
+    }
+    "HaGeZi Multi Pro++" = {
+      url     = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.plus.txt"
+      enabled = true
+    }
+    "OISD Big" = {
+      url     = "https://big.oisd.nl"
+      enabled = true
+    }
+    "HaGeZi Threat Intelligence Feeds" = {
+      url     = "https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.txt"
+      enabled = true
+    }
+  }
 }

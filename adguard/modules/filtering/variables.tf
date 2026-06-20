@@ -9,3 +9,13 @@ variable "user_rules" {
   type        = list(string)
   default     = []
 }
+
+variable "list_filters" {
+  description = "Blocklist/allowlist subscriptions, keyed by name."
+  type = map(object({
+    url       = string
+    enabled   = optional(bool, true)
+    whitelist = optional(bool, false)
+  }))
+  default = {}
+}
