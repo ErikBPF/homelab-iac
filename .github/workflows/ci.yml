@@ -1,0 +1,43 @@
+# Lint/format gate — mirrors the local devenv git-hooks (tofu fmt, terragrunt
+# hcl format, tflint) so a bad commit fails in CI, not at the next drift run.
+# Format + lint only: no creds, no backend, no provider API calls, and no use
+# of untrusted event inputs in run: steps.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: "1.12.1"
+
+      - name: Install terragrunt
+        run: |
+          curl -fsSL -o /usr/local/bin/terragrunt \
+            https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64
+          chmod +x /usr/local/bin/terragrunt
+          terragrunt --version
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: tofu fmt
+        run: tofu fmt -check -recursive
+
+      - name: terragrunt hcl format
+        run: terragrunt hcl format --check --diff
+
+      - name: tflint
+        run: tflint --recursive

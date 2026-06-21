@@ -74,6 +74,21 @@ and the global `setting_*` (mgmt, ntp, country, …) are all stock. Import a
 **Empty — nothing to import:** static routes, port profiles, firewall
 rules/groups, port-forwards, dynamic DNS, RADIUS accounts.
 
+> **Drift detection is blind to the unmanaged surfaces above.** The scheduled
+> drift check (`bin/drift-check.sh`, run on discovery) only plans the *managed*
+> resources, so "no drift" means managed code matches reality — it says nothing
+> about the OpenVPN client, traffic routes, WLAN groups, or the swOS switches.
+> Changes there must be tracked by hand.
+
+## State backend & recovery
+
+State lives in a **MinIO bucket on discovery** (S3 backend, shared `backend.hcl`),
+OpenTofu-encrypted on top, mirrored off-host to orion + kepler (Syncthing,
+versioned) and snapshotted by restic. If MinIO or discovery is lost, follow
+[`docs/disaster-recovery.md`](docs/disaster-recovery.md) — and note the **sops
+age key is the single point of total loss** (everything else is committed but
+age-encrypted).
+
 ## Layout
 
 ```
