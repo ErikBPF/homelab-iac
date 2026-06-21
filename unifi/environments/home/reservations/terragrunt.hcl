@@ -54,10 +54,13 @@ inputs = {
       name     = "archinaut"
       fixed_ip = "192.168.10.225"
     }
-    "b8:27:eb:15:7e:48" = {
-      name     = "archinaut-wifi"
-      fixed_ip = "192.168.10.226"
-    }
+    # archinaut-wifi → .226 deferred: .226 is currently held by a transient
+    # client (36:8d:52:ee:49:3e) and WiFi is disabled on the host (re-enable at
+    # migration Step 9). Re-add this once WiFi is back and .226 is free:
+    #   "b8:27:eb:15:7e:48" = {
+    #     name     = "archinaut-wifi"
+    #     fixed_ip = "192.168.10.226"
+    #   }
     "74:56:3c:47:d1:77" = {
       name     = "kepler"
       fixed_ip = "192.168.10.230"
