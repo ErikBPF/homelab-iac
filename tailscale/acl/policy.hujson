@@ -1,6 +1,6 @@
 {
-	// Named tailnet/LAN addresses (stable Tailscale IPs; swag = discovery's
-	// advertised /32 LAN IP where *.homelab.pastelariadev.com resolves).
+	// Named tailnet/LAN addresses (stable Tailscale IPs; swag = a LAN IP on
+	// discovery's advertised subnet, where *.homelab.pastelariadev.com resolves).
 	"hosts": {
 		"laptop":     "100.74.137.124",
 		"pathfinder": "100.104.92.5",
@@ -9,6 +9,15 @@
 		"swag":       "192.168.10.210",
 		"kepler":     "100.94.239.46",
 		"orion":      "100.102.11.127",
+	},
+
+	// Auto-approve discovery's advertised LAN subnet route (the node is owned by
+	// this account), so widening 192.168.10.0/24 takes effect on apply without a
+	// manual approval click in the admin console.
+	"autoApprovers": {
+		"routes": {
+			"192.168.10.0/24": ["erikbogado@gmail.com"],
+		},
 	},
 
 	"acls": [
@@ -44,6 +53,13 @@
 		//    Prometheus remote_write :9090 (metrics). Every host's Alloy pushes
 		//    here; k3s in-cluster Alloy egresses SNAT'd to kepler's TS IP too.
 		{"action": "accept", "src": ["laptop", "pathfinder", "orion", "kepler"], "dst": ["discovery:3100,9090"]},
+
+		// 8. Admin devices reach the whole LAN through discovery's subnet route,
+		//    so tailnet devices can hit LAN-only hosts (swOS switches, UDM,
+		//    printer, IoT) that can't run Tailscale. Admin-only preserves the
+		//    posture — other tailnet devices still get only SWAG (rule 3). SNAT
+		//    on the router means no return route is needed on the UDM.
+		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["192.168.10.0/24:*"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -62,5 +78,8 @@
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
 		{"src": "kepler", "accept": ["orion:22000"]},    // syncthing preserved
 		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
+		{"src": "galaxy", "accept": ["192.168.10.2:80"]},  // admin phone reaches a LAN-only switch UI
+		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
+		{"src": "orion", "deny": ["192.168.10.2:80"]},     // non-admin can't reach LAN-only hosts
 	],
 }
