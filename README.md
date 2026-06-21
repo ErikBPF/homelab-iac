@@ -5,7 +5,7 @@ Terragrunt). Three components, each under its own top-level dir:
 
 - **`unifi/`** — the UniFi network layer (`filipowm/unifi`): networks/VLANs,
   WLANs, DNS, DHCP reservations. The substrate the fleet sits on.
-  Environments: `home` (UDM Pro/SE at `https://192.168.10.1`) and `lab` (stub).
+  Environment: `home` (UDM Pro/SE at `https://192.168.10.1`).
 - **`tailscale/`** — the Tailscale tailnet (`tailscale/tailscale`): ACL policy
   file + DNS (nameservers, MagicDNS, search paths). The overlay-network layer.
 - **`cloudflare/`** — the public edge (`cloudflare/cloudflare`): DNS records for
