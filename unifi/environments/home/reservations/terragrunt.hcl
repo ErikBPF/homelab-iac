@@ -50,9 +50,13 @@ inputs = {
       fixed_ip   = "192.168.10.220"
       network_id = "5e3cdb8a933186073f310966"
     }
-    "b8:27:eb:15:7e:48" = {
+    "b8:27:eb:40:2b:1d" = {
       name     = "archinaut"
       fixed_ip = "192.168.10.225"
+    }
+    "b8:27:eb:15:7e:48" = {
+      name     = "archinaut-wifi"
+      fixed_ip = "192.168.10.226"
     }
     "74:56:3c:47:d1:77" = {
       name     = "kepler"
