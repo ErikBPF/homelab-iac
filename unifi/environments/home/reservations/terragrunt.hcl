@@ -46,9 +46,9 @@ inputs = {
       network_id = "6642461fb9ca59447793c3da"
     }
     "b4:2e:99:92:4f:8b" = {
-      name       = "HTPC"
+      name       = "orion"
       fixed_ip   = "192.168.10.220"
-      network_id = "5e3cdb8a933186073f310966"
+      network_id = "6642461fb9ca59447793c3da"
     }
     "b8:27:eb:40:2b:1d" = {
       name     = "archinaut"
