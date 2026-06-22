@@ -11,12 +11,18 @@
 		"orion":      "100.102.11.127",
 	},
 
-	// Auto-approve discovery's advertised LAN subnet route (the node is owned by
-	// this account), so widening 192.168.10.0/24 takes effect on apply without a
-	// manual approval click in the admin console.
+	// Auto-approve discovery's advertised routes (the node is owned by this
+	// account), so they take effect on apply without a manual approval click.
+	// Narrowed from 192.168.10.0/24 to /32s: a broad subnet route poisons
+	// on-LAN hosts that also run --accept-routes (orion/kepler) — they pull
+	// their own subnet into Tailscale's table 52 and blackhole the LAN. Only
+	// the LAN-only devices that genuinely need tailnet reach are approved:
+	// swag ingress (.210), UDM (.1), swOS switch (.2).
 	"autoApprovers": {
 		"routes": {
-			"192.168.10.0/24": ["erikbogado@gmail.com"],
+			"192.168.10.210/32": ["erikbogado@gmail.com"],
+			"192.168.10.1/32":   ["erikbogado@gmail.com"],
+			"192.168.10.2/32":   ["erikbogado@gmail.com"],
 		},
 	},
 
@@ -60,6 +66,12 @@
 		//    posture — other tailnet devices still get only SWAG (rule 3). SNAT
 		//    on the router means no return route is needed on the UDM.
 		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["192.168.10.0/24:*"]},
+
+		// 9. Fleet pulls from orion's nix binary cache (nix-serve :5000) over
+		//    MagicDNS (http://orion:5000, see desktop-nixos common.nix). The LAN
+		//    path works via rule 8's subnet route, but non-admin hosts and the
+		//    MagicDNS name need this explicit grant or the substituter times out.
+		{"action": "accept", "src": ["laptop", "pathfinder", "kepler"], "dst": ["orion:5000"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -77,6 +89,7 @@
 		{"src": "orion", "accept": ["discovery:9090"]},  // host Alloy ships metrics
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
 		{"src": "kepler", "accept": ["orion:22000"]},    // syncthing preserved
+		{"src": "kepler", "accept": ["orion:5000"]},     // fleet pulls orion nix cache
 		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
 		{"src": "galaxy", "accept": ["192.168.10.2:80"]},  // admin phone reaches a LAN-only switch UI
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
