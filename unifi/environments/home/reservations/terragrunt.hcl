@@ -50,20 +50,14 @@ inputs = {
       fixed_ip   = "192.168.10.220"
       network_id = "6642461fb9ca59447793c3da"
     }
-    "b8:27:eb:40:2b:1d" = {
+    # archinaut moved to WiFi: .225 is pinned to the wlan0 MAC. The wired link is
+    # retired — its old reservation (b8:27:eb:40:2b:1d → .225) and the temporary
+    # .226 validation reservation are both gone. APPLY ONLY AFTER the ethernet
+    # cable is unplugged, so .225 transfers cleanly from the dying wired lease to
+    # wlan0 with no contention.
+    "b8:27:eb:15:7e:48" = {
       name     = "archinaut"
       fixed_ip = "192.168.10.225"
-    }
-    # WiFi validation (dual-home): wired .225 stays primary while WiFi is proven
-    # out on .226. Once WiFi is confirmed functional, decide the final IP (move
-    # .225 onto the wlan0 MAC, or keep .226) — do NOT change the .225 line until
-    # then. VERIFY this MAC against the live wlan0 (`nmcli -g GENERAL.HWADDR
-    # device show wlan0` on the Pi) BEFORE `tofu apply`; this value is the guess
-    # from the old code comment. If .226 is still held by the transient client
-    # 36:8d:52:ee:49:3e, the reservation reclaims it on the next lease.
-    "b8:27:eb:15:7e:48" = {
-      name     = "archinaut-wifi"
-      fixed_ip = "192.168.10.226"
     }
     "74:56:3c:47:d1:77" = {
       name     = "kepler"
