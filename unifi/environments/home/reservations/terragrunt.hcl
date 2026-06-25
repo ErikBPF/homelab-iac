@@ -54,13 +54,17 @@ inputs = {
       name     = "archinaut"
       fixed_ip = "192.168.10.225"
     }
-    # archinaut-wifi → .226 deferred: .226 is currently held by a transient
-    # client (36:8d:52:ee:49:3e) and WiFi is disabled on the host (re-enable at
-    # migration Step 9). Re-add this once WiFi is back and .226 is free:
-    #   "b8:27:eb:15:7e:48" = {
-    #     name     = "archinaut-wifi"
-    #     fixed_ip = "192.168.10.226"
-    #   }
+    # WiFi validation (dual-home): wired .225 stays primary while WiFi is proven
+    # out on .226. Once WiFi is confirmed functional, decide the final IP (move
+    # .225 onto the wlan0 MAC, or keep .226) — do NOT change the .225 line until
+    # then. VERIFY this MAC against the live wlan0 (`nmcli -g GENERAL.HWADDR
+    # device show wlan0` on the Pi) BEFORE `tofu apply`; this value is the guess
+    # from the old code comment. If .226 is still held by the transient client
+    # 36:8d:52:ee:49:3e, the reservation reclaims it on the next lease.
+    "b8:27:eb:15:7e:48" = {
+      name     = "archinaut-wifi"
+      fixed_ip = "192.168.10.226"
+    }
     "74:56:3c:47:d1:77" = {
       name     = "kepler"
       fixed_ip = "192.168.10.230"
