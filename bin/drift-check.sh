@@ -4,7 +4,7 @@
 #
 # Run from a host with LAN/tailnet reach to the providers (UDM, AdGuard, …) and
 # the creds loaded (devenv loads .env; or sops-decrypt .env.sops first).
-# Optional: set NTFY_URL to a full ntfy topic URL to get alerted on drift.
+# Optional: set DISCORD_WEBHOOK_URL to a Discord webhook to get alerted on drift.
 set -uo pipefail
 
 cd "$(dirname "$0")/.." || exit 1
@@ -30,10 +30,10 @@ case "$code" in
       | grep -aE 'Plan:|will be (updated|created|destroyed)|# ' | head -40)
     echo "homelab-iac: DRIFT DETECTED"
     printf '%s\n' "$summary"
-    if [ -n "${NTFY_URL:-}" ]; then
-      curl -s -H "Title: homelab-iac drift" -H "Priority: high" -H "Tags: warning" \
-        -d "Tailscale/UniFi/Cloudflare/AdGuard config drifted from code. Run a plan." \
-        "$NTFY_URL" >/dev/null || true
+    if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
+      curl -fsS -m 10 -H "Content-Type: application/json" \
+        --data "$(jq -nc --arg c "🟠 **homelab-iac drift** — Tailscale/UniFi/Cloudflare/AdGuard config drifted from code. Run a plan." '{content:$c}')" \
+        "$DISCORD_WEBHOOK_URL" >/dev/null || true
     fi
     exit 2
     ;;
@@ -42,10 +42,10 @@ case "$code" in
     printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' | tail -25
     # Alert on errors too — a broken checker (unreachable provider, expired
     # creds, registry down) otherwise looks identical to "no drift".
-    if [ -n "${NTFY_URL:-}" ]; then
-      curl -s -H "Title: homelab-iac drift-check ERROR" -H "Priority: high" -H "Tags: rotating_light" \
-        -d "drift-check failed (exit $code): provider unreachable / expired creds / registry down. Investigate." \
-        "$NTFY_URL" >/dev/null || true
+    if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
+      curl -fsS -m 10 -H "Content-Type: application/json" \
+        --data "$(jq -nc --arg c "🔴 **homelab-iac drift-check ERROR** (exit $code) — provider unreachable / expired creds / registry down. Investigate." '{content:$c}')" \
+        "$DISCORD_WEBHOOK_URL" >/dev/null || true
     fi
     exit 1
     ;;
