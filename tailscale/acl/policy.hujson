@@ -72,6 +72,13 @@
 		//    path works via rule 8's subnet route, but non-admin hosts and the
 		//    MagicDNS name need this explicit grant or the substituter times out.
 		{"action": "accept", "src": ["laptop", "pathfinder", "kepler"], "dst": ["orion:5000"]},
+
+		// 10. Lab ESO (kepler) -> the platform OpenBao on discovery :8200 (P3.1b).
+		//    External Secrets in the kepler lab cluster repoints off the disposable
+		//    in-cluster vault to the always-on OpenBao on discovery. In-cluster ESO
+		//    pods egress SNAT'd to kepler's tailnet IP, so src "kepler" covers them
+		//    (same path rule 7's in-cluster Alloy uses). Blast radius = lab only.
+		{"action": "accept", "src": ["kepler"], "dst": ["discovery:8200"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -86,6 +93,7 @@
 		{"src": "discovery", "accept": ["kepler:6443"]}, // hub reaches k3s
 		{"src": "discovery", "accept": ["orion:8080"]},  // hub reaches host services (LLMs)
 		{"src": "kepler", "accept": ["discovery:3100"]}, // cluster ships logs to Loki
+		{"src": "kepler", "accept": ["discovery:8200"]}, // lab ESO reads OpenBao
 		{"src": "orion", "accept": ["discovery:9090"]},  // host Alloy ships metrics
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
 		{"src": "kepler", "accept": ["orion:22000"]},    // syncthing preserved
