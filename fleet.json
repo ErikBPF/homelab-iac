@@ -1,0 +1,104 @@
+{
+  "hosts": {
+    "archinaut": {
+      "ip": "192.168.10.225",
+      "mac": "b8:27:eb:15:7e:48",
+      "role": "server",
+      "tailscaleIp": null
+    },
+    "discovery": {
+      "ip": "192.168.10.210",
+      "mac": "64:51:06:1a:f8:1a",
+      "role": "server",
+      "tailscaleIp": "100.76.140.121"
+    },
+    "homeassistant": {
+      "ip": "192.168.10.115",
+      "mac": "52:54:00:d6:a5:ce",
+      "role": "appliance",
+      "tailscaleIp": null
+    },
+    "kepler": {
+      "ip": "192.168.10.230",
+      "mac": "74:56:3c:47:d1:77",
+      "role": "server",
+      "tailscaleIp": null
+    },
+    "laptop": {
+      "ip": null,
+      "mac": null,
+      "role": "laptop",
+      "tailscaleIp": null
+    },
+    "orion": {
+      "ip": "192.168.10.220",
+      "mac": "b4:2e:99:92:4f:8b",
+      "role": "server",
+      "tailscaleIp": null
+    },
+    "pathfinder": {
+      "ip": "192.168.10.125",
+      "mac": "54:bf:64:28:cb:2e",
+      "role": "workstation",
+      "tailscaleIp": null
+    },
+    "voyager": {
+      "ip": "129.148.45.145",
+      "mac": null,
+      "role": "server",
+      "tailscaleIp": null
+    }
+  },
+  "ingress": {
+    "ai": {
+      "host": "kepler",
+      "zone": "ai.pastelariadev.com"
+    },
+    "homelab": {
+      "host": "discovery",
+      "zone": "homelab.pastelariadev.com"
+    }
+  },
+  "services": {
+    "ha": {
+      "backend": {
+        "host": "homeassistant",
+        "port": 8123
+      },
+      "fqdn": "ha.pastelariadev.com",
+      "scope": "public"
+    },
+    "immich": {
+      "backend": {
+        "host": "kepler",
+        "port": 2283
+      },
+      "fqdn": null,
+      "scope": "home"
+    },
+    "n8n": {
+      "backend": {
+        "host": "orion",
+        "port": 5678
+      },
+      "fqdn": null,
+      "scope": "home"
+    },
+    "openwebui": {
+      "backend": {
+        "host": "kepler",
+        "port": 3003
+      },
+      "fqdn": null,
+      "scope": "home"
+    },
+    "rpg": {
+      "backend": {
+        "host": "kepler",
+        "port": 7860
+      },
+      "fqdn": "rpg.pastelariadev.com",
+      "scope": "public"
+    }
+  }
+}

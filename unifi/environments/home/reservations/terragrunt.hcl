@@ -23,8 +23,10 @@ inputs = {
       name     = "nixos-andre-wifi"
       fixed_ip = "192.168.10.108"
     }
+    # Renamed nix-erik → pathfinder to match the fleet SSOT (desktop-nixos
+    # fleet.hosts). In-place name update; MAC/IP unchanged.
     "54:bf:64:28:cb:2e" = {
-      name     = "nix-erik"
+      name     = "pathfinder"
       fixed_ip = "192.168.10.125"
     }
     "c4:ad:34:2e:74:5d" = {
@@ -40,8 +42,10 @@ inputs = {
       name     = "homeassistant"
       fixed_ip = "192.168.10.205"
     }
+    # Renamed Moon → discovery to match the fleet SSOT (desktop-nixos
+    # fleet.hosts). In-place name update; MAC/IP/network_id unchanged.
     "64:51:06:1a:f8:1a" = {
-      name       = "Moon"
+      name       = "discovery"
       fixed_ip   = "192.168.10.210"
       network_id = "6642461fb9ca59447793c3da"
     }
