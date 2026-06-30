@@ -21,10 +21,8 @@ locals {
     "b4:2e:99:92:4f:8b" = local.main_net # orion
   }
 
-  # Reservations for fleet hosts with a MAC+IP. role=appliance (the .115 HA VM)
-  # is excluded: it's a manual UDM reservation, still to be adopted via
-  # `terragrunt import` (deferred). voyager (public, no MAC) / laptop (roaming)
-  # naturally fall out of the filter.
+  # Reservations for fleet hosts with a MAC+IP (incl. the .115 HA appliance, adopted
+  # via `terragrunt import`). voyager (public, no MAC) / laptop (roaming) fall out.
   fleet_res = {
     for name, h in local.fleet.hosts :
     h.mac => {
@@ -33,7 +31,7 @@ locals {
       network_id = lookup(local.fleet_network_ids, h.mac, null)
       note       = null
     }
-    if h.mac != null && h.ip != null && h.role != "appliance"
+    if h.mac != null && h.ip != null
   }
 
   # Non-fleet devices (not in the fleet SSOT). Stale entries removed 2026-06-29
