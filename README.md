@@ -1,5 +1,9 @@
 # homelab-iac
 
+> **SSOT role (desktop-nixos RFC 2026-06-29):** owns the **network substrate** —
+> UniFi VLAN/WLAN/DHCP reservations + static DNS, Tailscale ACL, Cloudflare.
+> Consumes desktop-nixos's vendored, pinned `fleet.json`.
+
 Declarative, git-versioned **homelab infrastructure-as-code** (OpenTofu +
 Terragrunt). Three components, each under its own top-level dir:
 
