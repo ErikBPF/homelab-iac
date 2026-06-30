@@ -33,7 +33,7 @@
     "filesystem": {
       "type": "local",
       "command": [
-        "bun", "x", "@modelcontextprotocol/server-filesystem",
+        "npx", "-y", "@modelcontextprotocol/server-filesystem",
         "/home/erik/Documents/erik/homelab-iac"
       ],
       "enabled": true
