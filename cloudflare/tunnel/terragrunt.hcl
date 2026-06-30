@@ -28,7 +28,6 @@ inputs = {
       tunnel_id = "fe892a2a-213b-484c-948f-5b666be1fdd9"
       ingress = [
         { hostname = local.svc.ha.fqdn, service = local.url.ha },
-        { hostname = local.svc.rpg.fqdn, service = local.url.rpg },
         { service = "http_status:404" }, # catch-all (required last)
       ]
     }

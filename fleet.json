@@ -50,10 +50,6 @@
     }
   },
   "ingress": {
-    "ai": {
-      "host": "kepler",
-      "zone": "ai.pastelariadev.com"
-    },
     "homelab": {
       "host": "discovery",
       "zone": "homelab.pastelariadev.com"
@@ -68,14 +64,6 @@
       "fqdn": "ha.pastelariadev.com",
       "scope": "public"
     },
-    "immich": {
-      "backend": {
-        "host": "kepler",
-        "port": 2283
-      },
-      "fqdn": null,
-      "scope": "home"
-    },
     "n8n": {
       "backend": {
         "host": "orion",
@@ -83,22 +71,6 @@
       },
       "fqdn": null,
       "scope": "home"
-    },
-    "openwebui": {
-      "backend": {
-        "host": "kepler",
-        "port": 3003
-      },
-      "fqdn": null,
-      "scope": "home"
-    },
-    "rpg": {
-      "backend": {
-        "host": "kepler",
-        "port": 7860
-      },
-      "fqdn": "rpg.pastelariadev.com",
-      "scope": "public"
     }
   }
 }
