@@ -26,6 +26,14 @@
 		},
 	},
 
+	// Tag ownership. tag:server lets the fleet enroll via a non-expiring OAuth
+	// client secret (scope auth_keys, tag:server) instead of a 90-day auth key —
+	// a device advertising tag:server is owned by the tag, and the account owns
+	// the tag here so it can mint/rotate keys for it. Applied first for voyager.
+	"tagOwners": {
+		"tag:server": ["erikbogado@gmail.com"],
+	},
+
 	"acls": [
 		// 1. Admin devices: OpenSSH (port 2222) into everything.
 		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["*:2222"]},
@@ -79,6 +87,12 @@
 		//    pods egress SNAT'd to kepler's tailnet IP, so src "kepler" covers them
 		//    (same path rule 7's in-cluster Alloy uses). Blast radius = lab only.
 		{"action": "accept", "src": ["kepler"], "dst": ["discovery:8200"]},
+
+		// 11. Dev workstations -> orion's shared sccache WebDAV cache (:4321,
+		//    nginx dav). Routes dev-loop `cargo build` artifacts to orion; a miss
+		//    or an unreachable orion falls back to a local compile (desktop-nixos
+		//    modules/services/sccache.nix). Same workstation scope as rule 9.
+		{"action": "accept", "src": ["laptop", "pathfinder"], "dst": ["orion:4321"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
