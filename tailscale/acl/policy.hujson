@@ -88,11 +88,12 @@
 		//    (same path rule 7's in-cluster Alloy uses). Blast radius = lab only.
 		{"action": "accept", "src": ["kepler"], "dst": ["discovery:8200"]},
 
-		// 11. Dev workstations -> orion's shared sccache WebDAV cache (:4321,
-		//    nginx dav). Routes dev-loop `cargo build` artifacts to orion; a miss
-		//    or an unreachable orion falls back to a local compile (desktop-nixos
-		//    modules/services/sccache.nix). Same workstation scope as rule 9.
-		{"action": "accept", "src": ["laptop", "pathfinder"], "dst": ["orion:4321"]},
+		// 11. Any fleet host -> orion's shared sccache WebDAV cache (:4321, nginx
+		//    dav). Routes dev-loop `cargo build` artifacts to orion; a miss or an
+		//    unreachable orion falls back to a local compile (desktop-nixos
+		//    modules/services/sccache.nix). Broad src so servers can share the
+		//    cache too; actual use is opt-in per host (sccacheClient.enable).
+		{"action": "accept", "src": ["*"], "dst": ["orion:4321"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -112,6 +113,8 @@
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
 		{"src": "kepler", "accept": ["orion:22000"]},    // syncthing preserved
 		{"src": "kepler", "accept": ["orion:5000"]},     // fleet pulls orion nix cache
+		{"src": "laptop", "accept": ["orion:4321"]},     // workstation reaches sccache cache
+		{"src": "kepler", "accept": ["orion:4321"]},     // servers may share the sccache cache too
 		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
 		{"src": "galaxy", "accept": ["192.168.10.2:80"]},  // admin phone reaches a LAN-only switch UI
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
