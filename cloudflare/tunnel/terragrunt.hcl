@@ -44,6 +44,11 @@ inputs = {
       secret = get_env("CF_TUNNEL_SECRET_HOMEASSISTANT_REMOTE_ACCESS", "placeholder-set-to-rotate")
       ingress = [
         { hostname = local.svc.ha.fqdn, service = local.url.ha },
+        # LiteLLM is container-only on homelab-net (no host port), so this
+        # bypasses the fleet.json ip:port derivation and targets the container by
+        # name — cloudflared shares homelab-net with litellm. Edge auth is CF
+        # Access (cloudflare/access); LiteLLM then checks the scoped bearer key.
+        { hostname = local.svc.whisper.fqdn, service = "http://litellm:4000" },
         { service = "http_status:404" }, # catch-all (required last)
       ]
     }

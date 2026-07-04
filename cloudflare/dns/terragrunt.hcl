@@ -18,5 +18,10 @@ inputs = {
       value   = "fe892a2a-213b-484c-948f-5b666be1fdd9.cfargotunnel.com"
       proxied = true
     }
+    "whisper.pastelariadev.com" = {
+      type    = "CNAME"
+      value   = "fe892a2a-213b-484c-948f-5b666be1fdd9.cfargotunnel.com"
+      proxied = true
+    }
   }
 }

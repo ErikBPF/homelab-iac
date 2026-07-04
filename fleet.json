@@ -4,7 +4,7 @@
       "ip": "192.168.10.225",
       "mac": "b8:27:eb:15:7e:48",
       "role": "server",
-      "tailscaleIp": null
+      "tailscaleIp": "100.75.250.107"
     },
     "discovery": {
       "ip": "192.168.10.210",
@@ -22,31 +22,37 @@
       "ip": "192.168.10.230",
       "mac": "74:56:3c:47:d1:77",
       "role": "server",
-      "tailscaleIp": null
+      "tailscaleIp": "100.94.239.46"
     },
     "laptop": {
       "ip": null,
       "mac": null,
       "role": "laptop",
-      "tailscaleIp": null
+      "tailscaleIp": "100.74.137.124"
     },
     "orion": {
       "ip": "192.168.10.220",
       "mac": "b4:2e:99:92:4f:8b",
       "role": "server",
-      "tailscaleIp": null
+      "tailscaleIp": "100.102.11.127"
     },
     "pathfinder": {
       "ip": "192.168.10.125",
       "mac": "54:bf:64:28:cb:2e",
       "role": "workstation",
-      "tailscaleIp": null
+      "tailscaleIp": "100.104.92.5"
     },
-    "voyager": {
-      "ip": "129.148.45.145",
+    "telstar": {
+      "ip": null,
       "mac": null,
       "role": "server",
       "tailscaleIp": null
+    },
+    "voyager": {
+      "ip": "147.15.7.254",
+      "mac": null,
+      "role": "server",
+      "tailscaleIp": "100.105.38.10"
     }
   },
   "ingress": {
@@ -71,6 +77,14 @@
       },
       "fqdn": null,
       "scope": "home"
+    },
+    "whisper": {
+      "backend": {
+        "host": "discovery",
+        "port": 4000
+      },
+      "fqdn": "whisper.pastelariadev.com",
+      "scope": "public"
     }
   }
 }
