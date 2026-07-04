@@ -3,29 +3,37 @@ variable "account_id" {
   type        = string
 }
 
-variable "app_name" {
-  description = "Display name of the Access application."
-  type        = string
-}
+variable "applications" {
+  description = <<-EOT
+    Access applications keyed by their display name (the key IS the app name, so
+    it must match an existing app's name when adopting one via import). Each
+    protects `domain` and generates up to two policies:
+      - an "allow" email policy for the emails in `allowed_emails`;
+      - a "non_identity" service-token policy including a freshly-minted token
+        (when `create_service_token`) and/or any `extra_service_token_ids`
+        (existing tokens referenced by id).
+    App-hardening attrs default to hardened values for new apps; override per app
+    to reproduce an already-live app faithfully (set `same_site_cookie_attribute`
+    to null to omit it).
+  EOT
+  type = map(object({
+    domain                     = string
+    session_duration           = optional(string, "24h")
+    app_launcher_visible       = optional(bool, false)
+    http_only_cookie_attribute = optional(bool, true)
+    same_site_cookie_attribute = optional(string) # null = omit; set "strict" to harden
+    enable_binding_cookie      = optional(bool, true)
+    auto_redirect_to_identity  = optional(bool, false)
+    skip_interstitial          = optional(bool, false)
 
-variable "domain" {
-  description = "FQDN the Access application protects (must match a tunnel ingress hostname / DNS record)."
-  type        = string
-}
+    allowed_emails          = optional(list(string), [])
+    email_policy_name       = optional(string, "allowed-emails")
+    email_policy_precedence = optional(number, 2)
 
-variable "service_token_name" {
-  description = "Name of the service token minted for non-interactive (device) access."
-  type        = string
-}
-
-variable "allowed_emails" {
-  description = "Emails allowed via interactive (identity) login, in addition to the device service token. Empty = service-token only."
-  type        = list(string)
-  default     = []
-}
-
-variable "session_duration" {
-  description = "Interactive session lifetime."
-  type        = string
-  default     = "24h"
+    create_service_token    = optional(bool, false)
+    service_token_name      = optional(string, "")
+    extra_service_token_ids = optional(list(string), [])
+    token_policy_name       = optional(string, "device-service-token")
+    token_policy_precedence = optional(number, 1)
+  }))
 }
