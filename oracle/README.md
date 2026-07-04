@@ -1,51 +1,48 @@
-# oracle — Always-Free Ampere A1 offsite host (`voyager`)
+# oracle — Always-Free offsite Oracle Cloud hosts (`voyager`, `telstar`)
 
-Creates the whole stack for the fleet's offsite backup receiver on Oracle
-Cloud, from a clean slate: VCN + subnet + internet gateway + route table +
-security list + the A1 instance. The instance boots Ubuntu (aarch64) as the
-install entrypoint; `desktop-nixos` then converts it to NixOS via
-`just deploy-voyager` (nixos-anywhere).
+Two Always-Free OCI hosts, each its own Terragrunt unit (own state) over a shared
+instance module: VCN + subnet + internet gateway + route table + security list +
+instance (+ a free-tier budget guard). Both boot Ubuntu as the install
+entrypoint; `desktop-nixos` then converts them to NixOS via nixos-anywhere.
+
+- **voyager** — x86 `VM.Standard.E2.1.Micro` (Always-Free x86, 1 GB). The fleet's
+  offsite backup / DR anchor. A1 capacity in `sa-saopaulo-1` was too scarce, so
+  voyager settled on the always-available **x86 micro** — no A1 / shape upgrade.
+- **telstar** — Ampere **A1** (aarch64, default **2 OCPU / 12 GB**) for exposing
+  personal projects to the public internet. A1 capacity is intermittent; a retry
+  loop drives the create until it frees.
 
 ## Layout
-- `root.hcl` — generates the `oci` provider (creds from `.env.sops`) + pbkdf2
-  state encryption, MinIO S3 backend (shared `backend.hcl`).
-- `modules/instance/` — network + instance.
-- `compute/` — the `voyager` unit.
-- `bin/upgrade-retry.sh` — loops the shape upgrade until capacity frees.
+- `root.hcl` — `oci` provider (creds from `.env.sops`) + pbkdf2 state encryption,
+  MinIO S3 backend (shared `backend.hcl`).
+- `modules/instance/` — network + instance + free-tier budget guard.
+- `compute/` — the **voyager** unit (x86 micro).
+- `compute-telstar/` — the **telstar** unit (A1).
+- `bin/telstar-get-retry.sh` — loops `terragrunt apply` for telstar until A1
+  capacity frees. Runs persistently on **discovery** — see
+  `telstar-capture-status.md`.
+- `bin/upgrade-retry.sh` — loops an in-place A1 **shape resize** until capacity
+  frees (only relevant to an A1 host, e.g. resizing telstar 1/6 → 2/12).
 
 ## Secrets (`.env.sops`)
 `OCI_tenancy_ocid`, `OCI_user_ocid`, `OCI_fingerprint`, `OCI_private_key_b64`
 (base64 of the API signing-key PEM), `OCI_region`, `OCI_compartment_ocid`.
-Optional: `OCI_availability_domain`, `OCI_SSH_PUBKEY_FILE`, and the shape knobs
-`OCI_OCPUS` / `OCI_MEMORY_GBS` (see below).
+Optional: `OCI_availability_domain`, `OCI_SSH_PUBKEY_FILE`, shape knobs
+`OCI_OCPUS` / `OCI_MEMORY_GBS`. Also `MINIO_TFSTATE_ROOT_USER` / `_PASSWORD`
+(S3 backend, mapped to `AWS_*`) and `UNIFI_STATE_PASSPHRASE` (state encryption).
 
 ## Apply
 ```
-cd oracle/compute
-terragrunt apply        # via direnv (devenv provides tofu/terragrunt)
+cd oracle/compute            # voyager (x86)   —   or oracle/compute-telstar (A1)
+terragrunt apply             # via direnv (devenv provides tofu/terragrunt)
 ```
-Output `public_ip` → set as `ip_voyager` in `desktop-nixos/justfile` →
-`just deploy-voyager`.
+Take the output `public_ip` → set `hosts.<host>.ip` in
+`desktop-nixos/modules/meta.nix`, run `just fleet-json` → `just deploy-<host>`.
 
-## A1 capacity
+## A1 capacity (telstar only)
 `sa-saopaulo-1` has a single AD and free A1 capacity is intermittent
 ("500-InternalError, Out of host capacity"). The network always lands; only the
-instance waits. Retry `apply` until it succeeds — smaller shapes land far more
-easily, which is why we start at **1 OCPU / 6 GB**.
-
-## Shape & the upgrade plan
-The shape is env-driven (`compute/terragrunt.hcl`), defaulting to the
-capacity-friendly **1 OCPU / 6 GB** to validate the flow. The free A1 pool is
-**4 OCPU / 24 GB total**; the target is **2 OCPU / 12 GB** once capacity allows.
-
-Upgrade (in-place resize, reboots the instance — only the delta needs capacity):
-```
-cd oracle/compute
-OCI_OCPUS=2 OCI_MEMORY_GBS=12 terragrunt apply
-```
-Or let it retry on a schedule until capacity frees:
-```
-OCI_OCPUS=2 OCI_MEMORY_GBS=12 bash ../bin/upgrade-retry.sh
-```
-Run this only **after** `voyager` exists at 1 OCPU — it resizes an existing
-instance, it does not create one.
+instance waits. `bin/telstar-get-retry.sh` retries `apply` until it frees
+(running persistently on discovery). Smaller shapes land far more easily
+(1 OCPU / 6 GB) if you'd rather grab the box then resize via
+`bin/upgrade-retry.sh` — the free A1 pool is **4 OCPU / 24 GB** total.
