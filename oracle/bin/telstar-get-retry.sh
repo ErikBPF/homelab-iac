@@ -43,7 +43,7 @@ while [ "$(date +%s)" -lt "$end" ]; do
   if terragrunt apply -auto-approve >"$log" 2>&1; then
     echo ">>> TELSTAR CREATED on attempt $n"
     grep -iE "public_ip|instance_ocid" "$log" | tail -3
-    echo ">>> next: set public_ip as ip_telstar in desktop-nixos/justfile, then just deploy-telstar"
+    echo ">>> next: set hosts.telstar.ip in desktop-nixos/modules/meta.nix, just fleet-json, then just deploy-telstar"
     rm -f "$log"; exit 0
   fi
   if grep -q "Out of host capacity" "$log"; then
