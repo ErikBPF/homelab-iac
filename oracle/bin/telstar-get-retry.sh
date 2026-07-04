@@ -5,9 +5,9 @@
 # (erik) with linger so it survives reboots.
 set -uo pipefail
 export PATH="/run/current-system/sw/bin:$HOME/.nix-profile/bin:/usr/bin:/bin:$PATH"
-REPO="$HOME/homelab-iac"
+REPO="${REPO:-$HOME/homelab-iac}"
 # discovery's `tofu` is a tenv shim — let it auto-install the pinned OpenTofu.
-export TENV_AUTO_INSTALL=true
+export TENV_AUTO_INSTALL="${TENV_AUTO_INSTALL:-true}"
 
 # Decrypt the sops dotenv ONCE and export the creds terragrunt needs (OCI signing
 # key, MinIO S3 backend, state passphrase). sops exec-env can't set --input-type
@@ -27,9 +27,10 @@ shred -u "$TMPENV" 2>/dev/null || rm -f "$TMPENV"
 export AWS_ACCESS_KEY_ID="${MINIO_TFSTATE_ROOT_USER:-}"
 export AWS_SECRET_ACCESS_KEY="${MINIO_TFSTATE_ROOT_PASSWORD:-}"
 export TG_TF_PATH="$(command -v tofu)"
-# SSH pubkey injected into the telstar instance (the laptop's key, copied here —
-# a pubkey is not secret). Lets the deploy host reach telstar for just deploy-telstar.
-export OCI_SSH_PUBKEY_FILE="$HOME/telstar-ssh-key.pub"
+# SSH pubkey injected into the telstar instance (a pubkey is not secret). Lets
+# the deploy host reach telstar for just deploy-telstar. Override via env (the
+# declarative discovery service points this at a nix-managed file).
+export OCI_SSH_PUBKEY_FILE="${OCI_SSH_PUBKEY_FILE:-$HOME/telstar-ssh-key.pub}"
 cd "$REPO/oracle/compute-telstar"
 
 end=$(( $(date +%s) + 7 * 24 * 3600 ))
