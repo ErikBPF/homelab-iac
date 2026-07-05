@@ -17,6 +17,14 @@ variable "tunnels" {
       hostname = optional(string)
       path     = optional(string)
       service  = string
+      # Optional per-rule origin settings — needed when the origin is behind a
+      # reverse proxy reached by IP (set Host + TLS SNI/verify name), e.g. routing
+      # a container-only service through SWAG at the host LAN IP.
+      origin_request = optional(object({
+        http_host_header   = optional(string)
+        origin_server_name = optional(string)
+        no_tls_verify      = optional(bool)
+      }))
     }))
   }))
   default = {}

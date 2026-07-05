@@ -44,11 +44,19 @@ inputs = {
       secret = get_env("CF_TUNNEL_SECRET_HOMEASSISTANT_REMOTE_ACCESS", "placeholder-set-to-rotate")
       ingress = [
         { hostname = local.svc.ha.fqdn, service = local.url.ha },
-        # LiteLLM is container-only on homelab-net (no host port), so this
-        # bypasses the fleet.json ip:port derivation and targets the container by
-        # name — cloudflared shares homelab-net with litellm. Edge auth is CF
-        # Access (cloudflare/access); LiteLLM then checks the scoped bearer key.
-        { hostname = local.svc.whisper.fqdn, service = "http://litellm:4000" },
+        # LiteLLM is container-only (no host port). cloudflared's proxy dialer
+        # 502s on the bare container name `litellm` (even though its netns can
+        # resolve it), so route through SWAG at discovery's LAN IP with the Host
+        # header — same LAN-IP pattern that works for HA. Edge auth is CF Access;
+        # LiteLLM then checks the scoped bearer key.
+        {
+          hostname = local.svc.whisper.fqdn
+          service  = "https://192.168.10.210"
+          origin_request = {
+            http_host_header   = "litellm.homelab.pastelariadev.com"
+            origin_server_name = "litellm.homelab.pastelariadev.com"
+          }
+        },
         { service = "http_status:404" }, # catch-all (required last)
       ]
     }

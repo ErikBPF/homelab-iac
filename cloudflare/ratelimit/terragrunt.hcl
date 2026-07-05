@@ -17,11 +17,15 @@ inputs = {
 
   rules = {
     whisper = {
-      description         = "whisper public STT — per-IP rate limit"
-      expression          = "(http.host eq \"whisper.pastelariadev.com\")"
-      period              = 60
-      requests_per_period = 120 # a device syncs a handful of short clips; 120/min is generous
-      mitigation_timeout  = 600
+      description = "whisper public STT — per-IP rate limit"
+      expression  = "(http.host eq \"whisper.pastelariadev.com\")"
+      # plan entitlement caps period at 10s; 20 req / 10s ≈ 120/min, generous for
+      # a device syncing a handful of short clips.
+      # plan caps: period=10 only, mitigation_timeout must equal period,
+      # characteristics must include cf.colo.id (module sets ip.src+cf.colo.id).
+      period              = 10
+      requests_per_period = 20
+      mitigation_timeout  = 10
     }
   }
 }

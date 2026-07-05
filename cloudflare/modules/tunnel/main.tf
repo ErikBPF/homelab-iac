@@ -31,6 +31,15 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "this" {
         hostname = ingress_rule.value.hostname
         path     = ingress_rule.value.path
         service  = ingress_rule.value.service
+
+        dynamic "origin_request" {
+          for_each = ingress_rule.value.origin_request != null ? [ingress_rule.value.origin_request] : []
+          content {
+            http_host_header   = origin_request.value.http_host_header
+            origin_server_name = origin_request.value.origin_server_name
+            no_tls_verify      = origin_request.value.no_tls_verify
+          }
+        }
       }
     }
   }
