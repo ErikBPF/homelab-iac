@@ -1,11 +1,13 @@
 # homelab-iac
 
 > **SSOT role (desktop-nixos RFC 2026-06-29):** owns the **network substrate** —
-> UniFi VLAN/WLAN/DHCP reservations + static DNS, Tailscale ACL, Cloudflare.
+> UniFi VLAN/WLAN/DHCP reservations + static DNS, Tailscale ACL, Cloudflare — and
+> the **GitHub repo settings** of the fleet's flake-input repos (a declarative
+> config surface the fleet depends on, same drift-check discipline).
 > Consumes desktop-nixos's vendored, pinned `fleet.json`.
 
 Declarative, git-versioned **homelab infrastructure-as-code** (OpenTofu +
-Terragrunt). Three components, each under its own top-level dir:
+Terragrunt). Components, each under its own top-level dir:
 
 - **`unifi/`** — the UniFi network layer (`filipowm/unifi`): networks/VLANs,
   WLANs, DNS, DHCP reservations. The substrate the fleet sits on.
@@ -14,6 +16,10 @@ Terragrunt). Three components, each under its own top-level dir:
   file + DNS (nameservers, MagicDNS, search paths). The overlay-network layer.
 - **`cloudflare/`** — the public edge (`cloudflare/cloudflare`): DNS records for
   `pastelariadev.com` (tunnel CNAMEs). The public-DNS layer.
+- **`github/`** — repo settings + Actions/workflow-token permissions
+  (`integrations/github`) for the desktop-nixos flake-input repos
+  (`codex-flake`, `opencode-flake`, `hermes-flake`). Codifies the toggles whose
+  drift broke the auto-update lanes. See `docs/2026-07-08-github-repo-iac.md`.
 
 Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
