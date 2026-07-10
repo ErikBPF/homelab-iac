@@ -9,6 +9,7 @@
 		"swag":       "192.168.10.210",
 		"kepler":     "100.94.239.46",
 		"orion":      "100.102.11.127",
+		"archinaut":  "100.75.250.107",
 	},
 
 	// Auto-approve discovery's advertised routes (the node is owned by this
@@ -66,7 +67,10 @@
 		// 7. Fleet Alloy -> discovery's observability sinks: Loki :3100 (logs) +
 		//    Prometheus remote_write :9090 (metrics). Every host's Alloy pushes
 		//    here; k3s in-cluster Alloy egresses SNAT'd to kepler's TS IP too.
-		{"action": "accept", "src": ["laptop", "pathfinder", "orion", "kepler"], "dst": ["discovery:3100,9090"]},
+		//    archinaut ships journal logs via vector (lite alloy; the 1 GB Pi
+		//    can't run full alloy) — logs-only, but the bundled :9090 grant is
+		//    harmless.
+		{"action": "accept", "src": ["laptop", "pathfinder", "orion", "kepler", "archinaut"], "dst": ["discovery:3100,9090"]},
 
 		// 8. Admin devices reach the whole LAN through discovery's subnet route,
 		//    so tailnet devices can hit LAN-only hosts (swOS switches, UDM,
