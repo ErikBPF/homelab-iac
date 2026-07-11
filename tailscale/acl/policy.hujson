@@ -10,6 +10,7 @@
 		"kepler":     "100.94.239.46",
 		"orion":      "100.102.11.127",
 		"archinaut":  "100.67.123.113",
+		"vanguard":   "100.90.247.79",
 	},
 
 	// Auto-approve discovery's advertised routes (the node is owned by this
@@ -39,8 +40,11 @@
 		// 1. Admin devices: OpenSSH (port 2222) into everything.
 		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["*:2222"]},
 
-		// 2. Everyone: DNS to discovery (MagicDNS nameserver / AdGuard).
-		{"action": "accept", "src": ["*"], "dst": ["discovery:53", "swag:53"]},
+		// 2. Everyone: DNS to discovery (MagicDNS nameserver / AdGuard) and to
+		//    vanguard's secondary CoreDNS resolver (R1, services.fleetDns) — the
+		//    offsite fallback in the global nameserver list, so fleet-name
+		//    resolution survives discovery being down.
+		{"action": "accept", "src": ["*"], "dst": ["discovery:53", "swag:53", "vanguard:53"]},
 
 		// 3. Everyone: the SWAG ingress only. All services are published as
 		//    *.homelab.pastelariadev.com -> swag, which reverse-proxies them.
@@ -131,6 +135,7 @@
 		{"src": "kepler", "accept": ["orion:5000"]},     // fleet pulls orion nix cache
 		{"src": "laptop", "accept": ["orion:4321"]},     // workstation reaches sccache cache
 		{"src": "kepler", "accept": ["orion:4321"]},     // servers may share the sccache cache too
+		{"src": "orion", "accept": ["vanguard:53"]},     // fleet reaches vanguard's secondary resolver
 		{"src": "laptop", "accept": ["discovery:8443"]}, // admin reaches the NetBird control plane
 		{"src": "orion", "deny": ["discovery:8443"]},    // non-admin cannot reach the NetBird control plane
 		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
