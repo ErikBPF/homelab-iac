@@ -161,3 +161,9 @@ variable "boot_volume_gb" {
     error_message = "A1 boot volume min is 50 GB; Always-Free block storage total is 200 GB."
   }
 }
+
+variable "instance_state" {
+  description = "Instance power state (RUNNING/STOPPED). Set STOPPED then RUNNING to cold-reboot."
+  type        = string
+  default     = "RUNNING"
+}

@@ -183,6 +183,7 @@ resource "oci_core_instance" "voyager" {
   availability_domain = var.availability_domain != "" ? var.availability_domain : data.oci_identity_availability_domains.ads.availability_domains[0].name
   display_name        = var.display_name
   shape               = var.shape
+  state               = var.instance_state
 
   # Flex shapes (A1.Flex) size via shape_config; fixed shapes (E2.1.Micro) are
   # 1 OCPU / 1 GB and reject shape_config, so only emit it for Flex.
