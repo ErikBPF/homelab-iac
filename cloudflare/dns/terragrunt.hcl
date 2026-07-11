@@ -16,6 +16,10 @@ locals {
   # TODO(Phase-O, human op): replace with oracle/compute's `reserved_public_ip`
   # output once `reserve_public_ip = true` has been applied there.
   voyager_relay_ip = "203.0.113.10"
+  # vanguard's current EPHEMERAL Oracle public IP (R3a relay2). Static TF record
+  # — no ddclient/CF-token on the host; bump this on a vanguard reprovision,
+  # same cadence as the console tools' OCID pins (just prints it via ip_vanguard).
+  vanguard_relay_ip = "163.176.206.86"
 }
 
 # Cloudflare Tunnel CNAMEs (proxied) — the public edge for tunnel-exposed
@@ -46,13 +50,12 @@ inputs = {
       value   = local.voyager_relay_ip
       proxied = false
     }
-    # TODO(§4a, Track 1, human op): relay2 is voyager's placeholder for now
-    # (the 2nd OCI VM doesn't exist yet). Once that VM lands with its own
-    # services.ddclient-maintained ephemeral IP, repoint this record at it
-    # instead of voyager (relay2 becomes a distinct failure domain from relay).
+    # relay2 (R3a): vanguard's public NetBird relay — a distinct failure domain
+    # from voyager's relay. Static A at vanguard's ephemeral IP (see local);
+    # DNS-only (grey) so QUIC/UDP + the relay's own Let's-Encrypt cert work.
     "relay2.pastelariadev.com" = {
       type    = "A"
-      value   = local.voyager_relay_ip
+      value   = local.vanguard_relay_ip
       proxied = false
     }
   }
