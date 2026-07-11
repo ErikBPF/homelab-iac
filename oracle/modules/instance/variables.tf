@@ -76,7 +76,14 @@ variable "budget_alert_email" {
   description = "Email to notify when the budget alert fires."
 }
 
-# --- Network (all created by this project — clean slate) -------------------
+# --- Network -----------------------------------------------------------
+# Default (existing_vcn_id = "") is the original clean-slate behavior: this
+# module creates and owns its own VCN/IGW/route-table/security-list end to
+# end (voyager). Setting existing_vcn_id switches to shared-VCN mode: skip
+# creating those four resources and carve only a subnet inside the given
+# VCN, using existing_route_table_id / existing_security_list_id (vanguard,
+# telstar — Oracle Always-Free caps a region at 2 VCNs, so only one unit can
+# own the VCN).
 variable "vcn_cidr" {
   type    = string
   default = "10.0.0.0/16"
@@ -85,6 +92,24 @@ variable "vcn_cidr" {
 variable "subnet_cidr" {
   type    = string
   default = "10.0.1.0/24"
+}
+
+variable "existing_vcn_id" {
+  type        = string
+  default     = ""
+  description = "OCID of an existing VCN to reuse instead of creating one. When set, this module skips oci_core_vcn/internet_gateway/route_table/security_list and creates only a subnet inside it. Empty (default) = own VCN, unchanged behavior."
+}
+
+variable "existing_route_table_id" {
+  type        = string
+  default     = ""
+  description = "Route table OCID to attach the subnet to when existing_vcn_id is set. Ignored otherwise."
+}
+
+variable "existing_security_list_id" {
+  type        = string
+  default     = ""
+  description = "Security list OCID to attach the subnet to when existing_vcn_id is set. Ignored otherwise. Typically the owning unit's security list (voyager's), so the new subnet inherits the same ingress/egress posture."
 }
 
 variable "ssh_ingress_cidr" {

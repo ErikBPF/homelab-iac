@@ -6,6 +6,12 @@
 # compartment), so create_budget is false here, same as telstar. Unlike
 # telstar's A1 (scarce capacity), the AMD micro shape is reliably
 # provisionable now — same shape/path as voyager, not a capacity-retry target.
+#
+# Shared-VCN model (Always-Free caps a region at 2 VCNs): vanguard does NOT
+# create its own VCN. It carves a subnet inside voyager's existing VCN
+# (oracle/compute), reusing voyager's route table + security list. OCIDs
+# below are hardcoded from `terragrunt state show` on oracle/compute, per this
+# repo's no-dependency-blocks convention.
 # After it lands: take public_ip → set fleet.hosts.vanguard.ip in desktop-nixos
 # meta.nix (regenerate fleet.json) → `just deploy vanguard <ip> 2222`
 # (nixos-infect path, per voyager).
@@ -42,7 +48,11 @@ inputs = {
   boot_volume_gb    = 50
   custom_image_ocid = get_env("OCI_IMAGE_OCID", "")
 
-  # Own VCN, disjoint from voyager's 10.0.0.0/16 and telstar's 10.1.0.0/16.
-  vcn_cidr    = "10.2.0.0/16"
-  subnet_cidr = "10.2.1.0/24"
+  # Shared VCN: voyager's (oracle/compute), not a new one. vanguard's slice is
+  # 10.0.2.0/24, disjoint from voyager's own subnet (10.0.1.0/24) and
+  # telstar's (10.0.3.0/24).
+  subnet_cidr               = "10.0.2.0/24"
+  existing_vcn_id           = "ocid1.vcn.oc1.sa-saopaulo-1.amaaaaaaxbqhvsiab5gfcbv3u7jya2jytackfyqowla4ctze5qhy5y4mnzua"
+  existing_route_table_id   = "ocid1.routetable.oc1.sa-saopaulo-1.aaaaaaaamdmjdvjgjge5gdhdxpwyavjs7hsn5zizgcpugnpkpijpbtoukw3a"
+  existing_security_list_id = "ocid1.securitylist.oc1.sa-saopaulo-1.aaaaaaaauivzi747bnsixxa7sbciilyq35mrafbvokwvvr5nvv6ygr53prna"
 }

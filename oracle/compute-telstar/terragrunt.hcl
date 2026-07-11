@@ -4,6 +4,13 @@
 # the voyager unit (one COMPARTMENT budget per compartment), so create_budget is
 # false here. A1 capacity is scarce in sa-saopaulo-1 — `terragrunt apply` may
 # fail with "Out of host capacity"; a retry cron drives it until capacity frees.
+#
+# Shared-VCN model (Always-Free caps a region at 2 VCNs): telstar's own VCN
+# (10.1.0.0/16, network-only — instance never landed) is retired. telstar now
+# carves a subnet inside voyager's existing VCN (oracle/compute), reusing
+# voyager's route table + security list. OCIDs below are hardcoded from
+# `terragrunt state show` on oracle/compute, per this repo's
+# no-dependency-blocks convention.
 # After it lands: take public_ip → set hosts.telstar.ip in desktop-nixos
 # meta.nix (regenerate fleet.json) → `just deploy-telstar` (nixos-anywhere).
 
@@ -42,8 +49,11 @@ inputs = {
   # to NixOS via nixos-anywhere (A1 has the RAM the x86 micro lacked).
   custom_image_ocid = get_env("OCI_IMAGE_OCID", "")
 
-  # Distinct network from voyager's 10.0.0.0/16 (separate VCN/state regardless,
-  # but keep CIDRs disjoint for sanity).
-  vcn_cidr    = "10.1.0.0/16"
-  subnet_cidr = "10.1.1.0/24"
+  # Shared VCN: voyager's (oracle/compute), not a new one. telstar's slice is
+  # 10.0.3.0/24, disjoint from voyager's own subnet (10.0.1.0/24) and
+  # vanguard's (10.0.2.0/24).
+  subnet_cidr               = "10.0.3.0/24"
+  existing_vcn_id           = "ocid1.vcn.oc1.sa-saopaulo-1.amaaaaaaxbqhvsiab5gfcbv3u7jya2jytackfyqowla4ctze5qhy5y4mnzua"
+  existing_route_table_id   = "ocid1.routetable.oc1.sa-saopaulo-1.aaaaaaaamdmjdvjgjge5gdhdxpwyavjs7hsn5zizgcpugnpkpijpbtoukw3a"
+  existing_security_list_id = "ocid1.securitylist.oc1.sa-saopaulo-1.aaaaaaaauivzi747bnsixxa7sbciilyq35mrafbvokwvvr5nvv6ygr53prna"
 }

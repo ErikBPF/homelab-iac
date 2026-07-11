@@ -1,7 +1,10 @@
-# voyager — offsite backup receiver on an Oracle Always-Free Ampere A1 VM,
-# with its whole network created here (clean slate; nothing pre-existing
-# reused). Ubuntu image is the install entrypoint; the host is then converted
-# to NixOS via `just deploy-voyager` (nixos-anywhere) from desktop-nixos.
+# voyager — offsite backup receiver on an Oracle Always-Free Ampere A1 VM.
+# Shared instance module: by default (existing_vcn_id = "") it creates its
+# whole network from a clean slate (voyager owns the shared VCN); other units
+# (vanguard, telstar) set existing_vcn_id to instead carve a subnet inside
+# voyager's VCN, since Always-Free caps a region at 2 VCNs. Ubuntu image is
+# the install entrypoint; the host is then converted to NixOS via
+# `just deploy-<host>` (nixos-anywhere) from desktop-nixos.
 
 data "oci_identity_availability_domains" "ads" {
   compartment_id = var.oci_tenancy_ocid
@@ -20,33 +23,57 @@ data "oci_core_images" "ubuntu" {
 }
 
 # --- Network ---------------------------------------------------------------
+# Skipped when existing_vcn_id is set (vanguard/telstar reuse voyager's shared
+# VCN instead of getting their own — Always-Free caps a region at 2 VCNs).
+# The `moved` blocks keep voyager's state addresses stable across the
+# count-guard being added here (count=1 for voyager -> same object, renamed
+# in state, not destroyed/recreated).
 resource "oci_core_vcn" "voyager" {
+  count          = var.existing_vcn_id == "" ? 1 : 0
   compartment_id = var.compartment_ocid
   cidr_blocks    = [var.vcn_cidr]
   display_name   = "${var.name}-vcn"
   dns_label      = var.name
 }
 
+moved {
+  from = oci_core_vcn.voyager
+  to   = oci_core_vcn.voyager[0]
+}
+
 resource "oci_core_internet_gateway" "voyager" {
+  count          = var.existing_vcn_id == "" ? 1 : 0
   compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.voyager.id
+  vcn_id         = oci_core_vcn.voyager[0].id
   display_name   = "${var.name}-igw"
 }
 
+moved {
+  from = oci_core_internet_gateway.voyager
+  to   = oci_core_internet_gateway.voyager[0]
+}
+
 resource "oci_core_route_table" "voyager" {
+  count          = var.existing_vcn_id == "" ? 1 : 0
   compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.voyager.id
+  vcn_id         = oci_core_vcn.voyager[0].id
   display_name   = "${var.name}-rt"
 
   route_rules {
     destination       = "0.0.0.0/0"
-    network_entity_id = oci_core_internet_gateway.voyager.id
+    network_entity_id = oci_core_internet_gateway.voyager[0].id
   }
 }
 
+moved {
+  from = oci_core_route_table.voyager
+  to   = oci_core_route_table.voyager[0]
+}
+
 resource "oci_core_security_list" "voyager" {
+  count          = var.existing_vcn_id == "" ? 1 : 0
   compartment_id = var.compartment_ocid
-  vcn_id         = oci_core_vcn.voyager.id
+  vcn_id         = oci_core_vcn.voyager[0].id
   display_name   = "${var.name}-sl"
 
   # All egress (tailscale, git, nix substituters, restic clients dialing out).
@@ -124,14 +151,29 @@ resource "oci_core_security_list" "voyager" {
   }
 }
 
+moved {
+  from = oci_core_security_list.voyager
+  to   = oci_core_security_list.voyager[0]
+}
+
+locals {
+  # Either this module's own freshly-created network (voyager), or the
+  # existing shared VCN/route-table/security-list handed in by
+  # existing_vcn_id (vanguard, telstar) — same subnet CIDR carve-out either
+  # way, just a different parent VCN.
+  vcn_id           = var.existing_vcn_id != "" ? var.existing_vcn_id : oci_core_vcn.voyager[0].id
+  route_table_id   = var.existing_vcn_id != "" ? var.existing_route_table_id : oci_core_route_table.voyager[0].id
+  security_list_id = var.existing_vcn_id != "" ? var.existing_security_list_id : oci_core_security_list.voyager[0].id
+}
+
 resource "oci_core_subnet" "voyager" {
   compartment_id    = var.compartment_ocid
-  vcn_id            = oci_core_vcn.voyager.id
+  vcn_id            = local.vcn_id
   cidr_block        = var.subnet_cidr
   display_name      = "${var.name}-subnet"
   dns_label         = var.name
-  route_table_id    = oci_core_route_table.voyager.id
-  security_list_ids = [oci_core_security_list.voyager.id]
+  route_table_id    = local.route_table_id
+  security_list_ids = [local.security_list_id]
 }
 
 # --- Instance --------------------------------------------------------------
