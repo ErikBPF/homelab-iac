@@ -127,6 +127,13 @@
 		//     identity); a dedicated grant keeps rule 7's Alloy-push semantics
 		//     clean and avoids handing gemini the bundled Loki :3100 it never uses.
 		{"action": "accept", "src": ["gemini"], "dst": ["discovery:9090"]},
+
+		// 15. gemini dev sandbox -> orion host SSH (:2222). The container's RO
+		//     store can't build new derivations, so `nix build`/dev loops run on
+		//     the orion host; this also makes `ssh orion` resolve by MagicDNS from
+		//     inside the container. Scoped to orion alone — the sandbox is not an
+		//     admin device (rule 1), so it gets no fleet-wide :2222.
+		{"action": "accept", "src": ["gemini"], "dst": ["orion:2222"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -153,6 +160,8 @@
 		{"src": "orion", "deny": ["discovery:5432"]},      // only vanguard reaches the DB, not other peers
 		{"src": "gemini", "accept": ["discovery:9090"]},   // grafatui reads fleet metrics
 		{"src": "gemini", "deny": ["discovery:3100"]},     // dev sandbox has no Loki grant
+		{"src": "gemini", "accept": ["orion:2222"]},       // build-on-host SSH from the sandbox
+		{"src": "gemini", "deny": ["kepler:2222"]},        // but not admin SSH into the rest of the fleet
 		{"src": "laptop", "accept": ["discovery:8443"]}, // admin reaches the NetBird control plane
 		{"src": "orion", "deny": ["discovery:8443"]},    // non-admin cannot reach the NetBird control plane
 		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
