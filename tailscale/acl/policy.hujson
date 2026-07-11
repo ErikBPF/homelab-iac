@@ -11,6 +11,7 @@
 		"orion":      "100.102.11.127",
 		"archinaut":  "100.67.123.113",
 		"vanguard":   "100.90.247.79",
+		"gemini":     "100.127.231.110",
 	},
 
 	// Auto-approve discovery's advertised routes (the node is owned by this
@@ -114,6 +115,18 @@
 		//    netbird-server module's actual SWAG proxy-conf binding (TODO
 		//    Phase-O) — update this port to match once that lands.
 		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["discovery:8443"]},
+
+		// 13. vanguard's Postgres DR replica (R3b) streams from discovery's
+		//     shared cluster over the tailnet. discovery publishes :5432 on its
+		//     tailnet IP (servarr infra stack), gated to vanguard alone here.
+		{"action": "accept", "src": ["vanguard"], "dst": ["discovery:5432"]},
+
+		// 14. gemini dev sandbox -> discovery's Prometheus :9090 (read path). The
+		//     grafatui TUI (`fleet-metrics`) in the dev container queries fleet
+		//     metrics from discovery. gemini is a tag:server node (own tailnet
+		//     identity); a dedicated grant keeps rule 7's Alloy-push semantics
+		//     clean and avoids handing gemini the bundled Loki :3100 it never uses.
+		{"action": "accept", "src": ["gemini"], "dst": ["discovery:9090"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -136,6 +149,10 @@
 		{"src": "laptop", "accept": ["orion:4321"]},     // workstation reaches sccache cache
 		{"src": "kepler", "accept": ["orion:4321"]},     // servers may share the sccache cache too
 		{"src": "orion", "accept": ["vanguard:53"]},     // fleet reaches vanguard's secondary resolver
+		{"src": "vanguard", "accept": ["discovery:5432"]}, // DR replica streams from discovery Postgres
+		{"src": "orion", "deny": ["discovery:5432"]},      // only vanguard reaches the DB, not other peers
+		{"src": "gemini", "accept": ["discovery:9090"]},   // grafatui reads fleet metrics
+		{"src": "gemini", "deny": ["discovery:3100"]},     // dev sandbox has no Loki grant
 		{"src": "laptop", "accept": ["discovery:8443"]}, // admin reaches the NetBird control plane
 		{"src": "orion", "deny": ["discovery:8443"]},    // non-admin cannot reach the NetBird control plane
 		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
