@@ -10,3 +10,8 @@ output "private_ip" {
 output "instance_ocid" {
   value = try(oci_core_instance.voyager[0].id, null)
 }
+
+output "reserved_public_ip" {
+  value       = try(oci_core_public_ip.voyager[0].ip_address, null)
+  description = "The RESERVED public IP (survives recreate). null until reserve_public_ip=true is applied. Set this as the relay/relay2 A-record target in cloudflare/dns once known."
+}

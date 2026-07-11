@@ -30,6 +30,8 @@ entrypoint; `desktop-nixos` then converts them to NixOS via nixos-anywhere.
 Optional: `OCI_availability_domain`, `OCI_SSH_PUBKEY_FILE`, shape knobs
 `OCI_OCPUS` / `OCI_MEMORY_GBS`. Also `MINIO_TFSTATE_ROOT_USER` / `_PASSWORD`
 (S3 backend, mapped to `AWS_*`) and `UNIFI_STATE_PASSPHRASE` (state encryption).
+NetBird public relay (voyager only, default off — see `netbird/`):
+`OCI_RESERVE_PUBLIC_IP` / `OCI_RELAY_PUBLIC_SURFACE` (each `"true"`/`"false"`).
 
 ## Apply
 ```

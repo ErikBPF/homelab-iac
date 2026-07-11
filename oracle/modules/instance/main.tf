@@ -55,22 +55,61 @@ resource "oci_core_security_list" "voyager" {
     protocol    = "all"
   }
 
-  # SSH: 22 for the Ubuntu entrypoint + nixos-anywhere, 2222 for fleet SSH
-  # after the NixOS cutover. sshd is key-only.
-  ingress_security_rules {
-    protocol = "6" # TCP
-    source   = var.ssh_ingress_cidr
-    tcp_options {
-      min = 22
-      max = 22
+  # SSH 22: the Ubuntu entrypoint + nixos-anywhere path. Closed entirely once
+  # this host becomes a NetBird public relay (relay_public_surface = true,
+  # NetBird RFC §6b-H2/Q8-b) — a standing public IP is a scan-accreting target
+  # and 22 isn't needed post-cutover; 2222 (below) stays as the hardened
+  # break-glass path.
+  dynamic "ingress_security_rules" {
+    for_each = var.relay_public_surface ? [] : [1]
+    content {
+      protocol = "6" # TCP
+      source   = var.ssh_ingress_cidr
+      tcp_options {
+        min = 22
+        max = 22
+      }
     }
   }
+
+  # 2222: fleet SSH after the NixOS cutover. Kept world-open even under
+  # relay_public_surface (Q8-b: DR-entry independence over scan-surface) —
+  # sshd is key-only, non-root, fail2ban/crowdsec-hardened (host-side, out of
+  # this module's scope).
   ingress_security_rules {
     protocol = "6"
     source   = var.ssh_ingress_cidr
     tcp_options {
       min = 2222
       max = 2222
+    }
+  }
+
+  # NetBird relay public surface (RFC §5/§6b-H2, TODO(Phase-O): apply only from
+  # a wired LAN host; verify billing — reserved IP is free within 1/tenancy).
+  # The relay's single port, two protocols: WSS(tcp) + QUIC(udp), world-open by
+  # design (a public relay must be reachable by any peer). NB_ENABLE_STUN stays
+  # unset (host-side), so no UDP/3478 is ever opened here.
+  dynamic "ingress_security_rules" {
+    for_each = var.relay_public_surface ? [1] : []
+    content {
+      protocol = "6" # TCP
+      source   = "0.0.0.0/0"
+      tcp_options {
+        min = 443
+        max = 443
+      }
+    }
+  }
+  dynamic "ingress_security_rules" {
+    for_each = var.relay_public_surface ? [1] : []
+    content {
+      protocol = "17" # UDP
+      source   = "0.0.0.0/0"
+      udp_options {
+        min = 443
+        max = 443
+      }
     }
   }
 
@@ -122,8 +161,11 @@ resource "oci_core_instance" "voyager" {
   }
 
   create_vnic_details {
-    subnet_id        = oci_core_subnet.voyager.id
-    assign_public_ip = true
+    subnet_id = oci_core_subnet.voyager.id
+    # An ephemeral public IP and a reserved public IP can't both sit on the
+    # same private IP — when reserve_public_ip takes over the address (below),
+    # don't also assign the ephemeral one.
+    assign_public_ip = var.reserve_public_ip ? false : true
   }
 
   metadata = {
@@ -139,4 +181,29 @@ resource "oci_core_instance" "voyager" {
   lifecycle {
     ignore_changes = [source_details[0].source_id]
   }
+}
+
+# --- Reserved public IP (NetBird RFC §4/§4a) --------------------------------
+# TODO(Phase-O): apply only from a wired LAN host; verify billing (reserved IP
+# free within 1/tenancy). Oracle Always-Free includes exactly one reserved
+# public IP per tenancy — it survives instance recreate/terminate, unlike the
+# ephemeral IP above. Attached to this instance's primary private IP so
+# `relay.<zone>`/`relay2.<zone>` (cloudflare/dns) never need updating.
+data "oci_core_vnic_attachments" "voyager" {
+  count          = var.create_instance && var.reserve_public_ip ? 1 : 0
+  compartment_id = var.compartment_ocid
+  instance_id    = oci_core_instance.voyager[0].id
+}
+
+data "oci_core_private_ips" "voyager" {
+  count   = var.create_instance && var.reserve_public_ip ? 1 : 0
+  vnic_id = data.oci_core_vnic_attachments.voyager[0].vnic_attachments[0].vnic_id
+}
+
+resource "oci_core_public_ip" "voyager" {
+  count          = var.create_instance && var.reserve_public_ip ? 1 : 0
+  compartment_id = var.compartment_ocid
+  display_name   = "${var.name}-reserved-ip"
+  lifetime       = "RESERVED"
+  private_ip_id  = data.oci_core_private_ips.voyager[0].private_ips[0].id
 }

@@ -98,6 +98,18 @@
 		//    modules/services/sccache.nix). Broad src so servers can share the
 		//    cache too; actual use is opt-in per host (sccacheClient.enable).
 		{"action": "accept", "src": ["*"], "dst": ["orion:4321"]},
+
+		// 12. NetBird control-plane admin-only (self-hosted overlay RFC §6
+		//    flat-trust fix): nb.<zone>/id.<zone> (management/signal/dashboard/
+		//    PocketID on discovery) must NOT inherit rule 3's "everyone -> swag
+		//    :80,443" grant the way every other *.homelab.pastelariadev.com
+		//    vhost does — Tailscale ACLs are L3/L4 and can't discriminate by
+		//    HTTP Host header the way SWAG's vhosts do, so the control plane
+		//    needs its OWN port, not swag's shared 443. Mirrors rule 1's admin
+		//    set. Port 8443 is a PLACEHOLDER pending the desktop-nixos WP2
+		//    netbird-server module's actual SWAG proxy-conf binding (TODO
+		//    Phase-O) — update this port to match once that lands.
+		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["discovery:8443"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -119,6 +131,8 @@
 		{"src": "kepler", "accept": ["orion:5000"]},     // fleet pulls orion nix cache
 		{"src": "laptop", "accept": ["orion:4321"]},     // workstation reaches sccache cache
 		{"src": "kepler", "accept": ["orion:4321"]},     // servers may share the sccache cache too
+		{"src": "laptop", "accept": ["discovery:8443"]}, // admin reaches the NetBird control plane
+		{"src": "orion", "deny": ["discovery:8443"]},    // non-admin cannot reach the NetBird control plane
 		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
 		{"src": "galaxy", "accept": ["192.168.10.2:80"]},  // admin phone reaches a LAN-only switch UI
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route

@@ -93,6 +93,19 @@ variable "ssh_ingress_cidr" {
   description = "Source allowed to reach SSH (22 + 2222). sshd is key-only; tighten to your egress IP if desired."
 }
 
+# --- NetBird public relay (RFC §4/§4a/§6b-H2) — additive, default off -------
+variable "reserve_public_ip" {
+  type        = bool
+  default     = false
+  description = "Convert the instance's ephemeral public IP into a reserved (static) public IP. Oracle Always-Free includes exactly 1 reserved IP per tenancy — only one host's unit should set this true. Written for voyager (NetBird relay); telstar and any future unit stay on the default (false, ephemeral IP, unaffected)."
+}
+
+variable "relay_public_surface" {
+  type        = bool
+  default     = false
+  description = "Swap the security list's public surface to the NetBird relay posture: close 22, open ONLY 443/tcp+udp, keep 2222 hardened (Q8-b). Default false leaves the original 22+2222+ICMP posture untouched (telstar and any future unit are unaffected unless they opt in)."
+}
+
 # --- Always-Free guard rails ----------------------------------------------
 # The Always-Free Ampere A1 pool is 4 OCPU / 24 GB RAM total and 200 GB block
 # storage. These validations make a plan that would leave the free tier FAIL

@@ -45,6 +45,15 @@ inputs = {
   # Free-tier guard: alert on any real spend. Override via OCI_BUDGET_EMAIL.
   budget_alert_email = get_env("OCI_BUDGET_EMAIL", "erikbogado@gmail.com")
 
+  # NetBird public relay (self-hosted overlay RFC §4/§4a/§6b-H2). Written but
+  # NOT applied — this is a live-network + billing change, human-gated
+  # (Phase O). TODO(Phase-O): apply only from a wired LAN host; verify billing
+  # (reserved IP is free within 1/tenancy) before running `terragrunt apply`.
+  # telstar (compute-telstar/terragrunt.hcl) does not set these, so it stays on
+  # the module's defaults (ephemeral IP, original 22+2222+ICMP SL) — unaffected.
+  reserve_public_ip    = get_env("OCI_RESERVE_PUBLIC_IP", "false") == "true"
+  relay_public_surface = get_env("OCI_RELAY_PUBLIC_SURFACE", "false") == "true"
+
   # Always-Free A1 allocation (pool total is 4 OCPU / 24 GB). Starts at 1/6 to
   # land scarce capacity and validate the flow; upgrade later by exporting
   # OCI_OCPUS=2 OCI_MEMORY_GBS=12 and re-applying (see oracle/README.md).
