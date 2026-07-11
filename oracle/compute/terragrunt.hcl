@@ -32,10 +32,13 @@ inputs = {
   display_name   = "voyager"
   ssh_public_key = local.ssh_public_key
 
-  # Shape. Default A1.Flex (Ampere/aarch64) is the steady-state goal, but its
-  # capacity is scarce in sa-saopaulo-1. Set OCI_SHAPE=VM.Standard.E2.1.Micro
-  # to land an x86 free instance now; flip back to A1 when capacity frees.
-  shape = get_env("OCI_SHAPE", "VM.Standard.A1.Flex")
+  # Shape. voyager actually runs the AMD micro (E2.1.Micro, x86_64) — A1.Flex
+  # capacity is scarce in sa-saopaulo-1, so the default matches reality (a
+  # stale A1.Flex default made every apply want to reshape the live DR anchor).
+  # E2.1.Micro is fixed 1 OCPU/1 GB; the module ignores shape_config for it, so
+  # ocpus/memory_in_gbs below are inert unless OCI_SHAPE flips back to A1.Flex
+  # (steady-state goal for a future capacity window).
+  shape = get_env("OCI_SHAPE", "VM.Standard.E2.1.Micro")
 
   # Boot from a prebuilt NixOS custom image (imported into OCI) instead of the
   # stock Ubuntu entrypoint. Set OCI_IMAGE_OCID to the imported image's OCID —

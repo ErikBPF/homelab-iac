@@ -16,7 +16,7 @@ resource "oci_budget_budget" "voyager" {
   target_type    = "COMPARTMENT"
   targets        = [var.compartment_ocid]
   display_name   = "${var.name}-freetier-guard"
-  description    = "Free-tier guard for the offsite Oracle resources — expected spend is $0."
+  description    = "Free-tier guard for the offsite Oracle resources -- expected spend is $0."
 }
 
 resource "oci_budget_alert_rule" "voyager_any_spend" {
