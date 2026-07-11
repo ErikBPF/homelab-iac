@@ -9,7 +9,7 @@
 		"swag":       "192.168.10.210",
 		"kepler":     "100.94.239.46",
 		"orion":      "100.102.11.127",
-		"archinaut":  "100.75.250.107",
+		"archinaut":  "100.67.123.113",
 	},
 
 	// Auto-approve discovery's advertised routes (the node is owned by this
