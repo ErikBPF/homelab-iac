@@ -20,6 +20,13 @@ Terragrunt). Components, each under its own top-level dir:
   (`integrations/github`) for the desktop-nixos flake-input repos
   (`codex-flake`, `opencode-flake`, `hermes-flake`). Codifies the toggles whose
   drift broke the auto-update lanes. See `docs/2026-07-08-github-repo-iac.md`.
+- **`netbird/`** — the self-hosted NetBird overlay admin (`netbirdio/netbird`):
+  setup keys, groups, default-deny policy, split-DNS (`nameservers/`), routes.
+  The declarative replacement for the netbird dashboard (whose SSO is deferred —
+  upstream bug). Control plane lives on `discovery` (desktop-nixos). Tailnet-only
+  endpoint; apply from a wired LAN host. See `netbird/APPLY.md`.
+- **`pocketid/`** — the NetBird OIDC client (`Trozz/pocketid`): public + PKCE,
+  imported so the live client-id is never re-issued. Pairs with `netbird/`.
 
 Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
