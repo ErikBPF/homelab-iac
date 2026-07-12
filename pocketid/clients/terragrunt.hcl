@@ -30,14 +30,23 @@ terraform {
 # map to it (do not apply over it blindly). See IMPORT.md alongside this file.
 inputs = {
   clients = {
+    # Reconciled to the live client on import (2026-07-11): name casing
+    # "Netbird", plus the launch + logout URLs it already had. Map key stays the
+    # "netbird" slug (the resource address); `name` carries the display value.
     "netbird" = {
-      client_id    = "579d2f64-2bd0-4c5d-9796-f5a4ba2268d0"
+      name = "Netbird"
+      # client_id is 579d2f64-2bd0-4c5d-9796-f5a4ba2268d0 (pinned in state by the
+      # import). NOT set here: the provider does not return client_id on read, so
+      # declaring it produces a perpetual no-op diff. It is create-time only and
+      # the imported resource already carries it as its `id`.
       is_public    = true
       pkce_enabled = true
       callback_urls = [
         "https://nb.homelab.pastelariadev.com/",
         "http://localhost:53000",
       ]
+      logout_callback_urls = ["https://nb.homelab.pastelariadev.com/"]
+      launch_url           = "https://nb.homelab.pastelariadev.com"
     }
   }
 }

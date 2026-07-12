@@ -7,14 +7,16 @@ variable "clients" {
     must MATCH the live client on import or the first plan shows a diff.
   EOT
   type = map(object({
+    # Display name; defaults to the map key when omitted.
+    name = optional(string)
     # Pin to import an existing client with ZERO change; omit (null) to auto-gen.
     client_id            = optional(string)
     is_public            = optional(bool, false)
     pkce_enabled         = optional(bool, true)
     callback_urls        = list(string)
     logout_callback_urls = optional(list(string), [])
-    # PocketID group IDs allowed to use the client; empty = all users.
-    allowed_user_groups = optional(list(string), [])
+    # PocketID group IDs allowed to use the client; null/unset = all users.
+    allowed_user_groups = optional(list(string))
     launch_url          = optional(string)
   }))
   default = {}

@@ -1,6 +1,7 @@
 # NetBird + PocketID declarative admin — apply runbook (human, one-time)
 
-**Status:** scaffold (code-only — nothing applied). Implements RFC
+**Status:** ✅ APPLIED 2026-07-11 (except managed-peer host-enable §3, gated on
+a host choice). Implements RFC
 `desktop-nixos/docs/proposals/2026-07-11-netbird-terraform-declarative-admin.md`
 §8. `tofu/terragrunt apply` is **human-run, from a wired LAN host joined to the
 tailnet** (the control-plane endpoints `nb.<zone>` / `id.<zone>` are tailnet-only;
@@ -12,7 +13,41 @@ netbird dashboard is never on the critical path.
 
 This repo has **no cross-stack `dependency` blocks** (same as `unifi/`): each unit
 is applied in order and real IDs are pasted forward from the previous unit's
-output. The `TODO-paste-group-id-…` placeholders below are that handoff.
+output.
+
+## As-applied (2026-07-11)
+
+Everything below except §3 (managed peers) ran. Group IDs are already pasted into
+the `policies`/`setup-keys`/`nameservers` locals (no `TODO-paste-…` left).
+
+- **Tokens minted → sops** (`.env.sops`): PocketID API key (via the passkey-free
+  `one-time-access-token` session flow) + NetBird PAT (via the OIDC PKCE flow
+  with that session). `POCKETID_*` + `NETBIRD_*` present.
+- **pocketid/clients**: imported the live client `579d2f64…` and reconciled the
+  config to it (name `Netbird`, launch + logout URLs; `client_id` intentionally
+  not declared — the provider does not return it on read). `plan` = **No changes**.
+- **netbird/**: applied `groups` (admins/fleet-servers/fleet-clients/netbird-relays),
+  `posture-checks`, `policies` (`admin-ssh` only), `setup-keys`
+  (`fleet-server-bootstrap`), `nameservers` (`homelab-split-dns`).
+- **Imperative API steps** (no TF resource in the 0.0.9 provider — recorded here):
+  - Deleted the implicit **`Default` allow-all** policy → default-deny is now
+    effective (only `admin-ssh` remains).
+  - Set account **`network_range` = `10.100.0.0/16`** (was `100.110.0.0/16`) via
+    `PUT /api/accounts/{id}` settings — the CIDR fix (G4). Re-run this after any
+    account reset; it is not in Terraform state.
+  - Deleted the stale `laptop` peer (`100.110.244.80`, from the torn-down ad-hoc
+    daemon).
+- **desktop-nixos sops**: the `fleet-server-bootstrap` setup-key value is stored
+  as `netbird/setup_key` in `secrets/sops/secrets.yaml` (ready for §3). ⚠️ the key
+  expires **7 days** after mint — re-apply `setup-keys` + re-store if it lapses
+  before a host enrolls.
+
+**Still open:** §3 managed peers (enable `netbird-client` on a host + deploy) —
+a host-choice + switch decision (G5).
+
+---
+
+## Original runbook (for a fresh re-apply)
 
 ## 0. Bootstrap tokens → sops (Phase S)
 

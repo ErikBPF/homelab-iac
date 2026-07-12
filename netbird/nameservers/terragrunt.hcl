@@ -30,8 +30,8 @@ terraform {
 # group_ids map is a placeholder and won't apply cleanly — fine, code-only.
 locals {
   group_ids = {
-    fleet-servers = "TODO-paste-group-id-from-netbird-groups-output"
-    fleet-clients = "TODO-paste-group-id-from-netbird-groups-output"
+    fleet-servers = "d99f2h8i7llg00bf0ki0"
+    fleet-clients = "d99f2h8i7llg00bf0kj0"
   }
 }
 

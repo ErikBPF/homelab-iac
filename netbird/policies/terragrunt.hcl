@@ -27,10 +27,10 @@ terraform {
 # code-only.
 locals {
   group_ids = {
-    admins         = "TODO-paste-group-id-from-netbird-groups-output"
-    fleet-servers  = "TODO-paste-group-id-from-netbird-groups-output"
-    fleet-clients  = "TODO-paste-group-id-from-netbird-groups-output"
-    netbird-relays = "TODO-paste-group-id-from-netbird-groups-output"
+    admins         = "d99f2h8i7llg00bf0kig"
+    fleet-servers  = "d99f2h8i7llg00bf0ki0"
+    fleet-clients  = "d99f2h8i7llg00bf0kj0"
+    netbird-relays = "d99f2h8i7llg00bf0khg"
   }
 }
 

@@ -21,7 +21,7 @@ terraform {
 # apply cleanly — fine, WP4 is code-only.
 locals {
   group_ids = {
-    "fleet-servers" = "TODO-paste-group-id-from-netbird-groups-output"
+    "fleet-servers" = "d99f2h8i7llg00bf0ki0"
   }
 }
 

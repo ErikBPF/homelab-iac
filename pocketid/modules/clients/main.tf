@@ -1,7 +1,7 @@
 resource "pocketid_client" "this" {
   for_each = var.clients
 
-  name                 = each.key
+  name                 = coalesce(each.value.name, each.key)
   client_id            = each.value.client_id
   is_public            = each.value.is_public
   pkce_enabled         = each.value.pkce_enabled
