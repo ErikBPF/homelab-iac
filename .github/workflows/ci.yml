@@ -50,4 +50,8 @@ jobs:
         run: terragrunt hcl format --check --diff
 
       - name: tflint
-        run: tflint --recursive
+        run: |
+          git ls-files '*.tf' \
+            | xargs -n1 dirname \
+            | sort -u \
+            | xargs -n1 tflint --chdir
