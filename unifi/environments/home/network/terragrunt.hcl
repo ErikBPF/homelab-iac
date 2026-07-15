@@ -20,14 +20,18 @@ inputs = {
       multicast_dns = true
     }
     "Main" = {
-      purpose       = "corporate"
-      subnet        = "192.168.10.1/24"
-      vlan_id       = 2
-      dhcp_enabled  = true
-      dhcp_start    = "192.168.10.60"
-      dhcp_stop     = "192.168.10.230"
-      dhcp_dns      = ["192.168.10.210", "192.168.10.230"]
-      multicast_dns = true
+      purpose      = "corporate"
+      subnet       = "192.168.10.1/24"
+      vlan_id      = 2
+      dhcp_enabled = true
+      dhcp_start   = "192.168.10.60"
+      dhcp_stop    = "192.168.10.230"
+      dhcp_dns     = ["192.168.10.210", "192.168.10.230"]
+      # Explicitly disable automatic DHCPv6 DNS and intentionally omit DNS1..4.
+      # Whether the controller suppresses RDNSS while preserving RA is experimental.
+      dhcp_v6_dns_auto = false
+      dhcp_v6_dns      = []
+      multicast_dns    = true
     }
   }
 }

@@ -11,11 +11,13 @@ resource "unifi_network" "this" {
   igmp_snooping = each.value.igmp_snooping
   multicast_dns = each.value.multicast_dns
 
-  dhcp_enabled = each.value.dhcp_enabled
-  dhcp_start   = each.value.dhcp_start
-  dhcp_stop    = each.value.dhcp_stop
-  dhcp_lease   = each.value.dhcp_lease
-  dhcp_dns     = each.value.dhcp_dns
+  dhcp_enabled     = each.value.dhcp_enabled
+  dhcp_start       = each.value.dhcp_start
+  dhcp_stop        = each.value.dhcp_stop
+  dhcp_lease       = each.value.dhcp_lease
+  dhcp_dns         = each.value.dhcp_dns
+  dhcp_v6_dns_auto = each.value.dhcp_v6_dns_auto
+  dhcp_v6_dns      = each.value.dhcp_v6_dns
 
   # IPv6 prefix-delegation / RA is auto-derived from the WAN (ISP-driven), not
   # declarative intent — leave it to the controller so plans stay clean.
