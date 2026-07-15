@@ -8,7 +8,7 @@ TEST_TMP=$(mktemp -d "${TMPDIR:-/tmp}/infra-ssot-contract.XXXXXX")
 export TEST_TMP
 trap 'rm -rf "$TEST_TMP"' EXIT
 
-# shellcheck source=helpers/contract-lib.sh
+# shellcheck source=tests/helpers/contract-lib.sh
 source "$SCRIPT_DIR/helpers/contract-lib.sh"
 
 if [[ $# -ne 1 ]]; then
