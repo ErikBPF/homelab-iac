@@ -41,7 +41,7 @@ jobs:
       - name: Infrastructure SSOT contract
         run: bats tests/infra-ssot-contract.bats
         env:
-          GOFLAGS: "-mod=readonly -modcacherw"
+          GOMODCACHE: ${{ runner.temp }}/go-mod
 
       - name: tofu fmt
         run: tofu fmt -check -recursive
