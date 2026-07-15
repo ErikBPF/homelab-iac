@@ -39,7 +39,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y bats
 
       - name: Infrastructure SSOT contract
-        run: bats tests/infra-ssot-contract.bats
+        run: bats tests/*.bats
         env:
           GOMODCACHE: ${{ runner.temp }}/go-mod
 
