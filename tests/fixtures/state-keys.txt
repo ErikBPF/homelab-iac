@@ -4,6 +4,8 @@ cloudflare/dns cloudflare/dns/terraform.tfstate
 cloudflare/ratelimit cloudflare/ratelimit/terraform.tfstate
 cloudflare/swag-token cloudflare/swag-token/terraform.tfstate
 cloudflare/tunnel cloudflare/tunnel/terraform.tfstate
+components/litellm/environments/home/canary components/litellm/environments/home/canary/terraform.tfstate
+components/litellm/environments/home/production components/litellm/environments/home/production/terraform.tfstate
 github/repos github/repos/terraform.tfstate
 netbird/groups netbird/groups/terraform.tfstate
 netbird/nameservers netbird/nameservers/terraform.tfstate
