@@ -1,0 +1,50 @@
+name: Zen model catalog review
+
+on:
+  schedule:
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+
+      - name: Fetch source catalog
+        run: curl --fail --silent --show-error --location https://models.dev/api.json --output "$RUNNER_TEMP/models.json"
+
+      - name: Normalize Zen catalog
+        run: bin/update-zen-catalog.sh --input "$RUNNER_TEMP/models.json" --output catalogs/opencode-zen.json
+
+      - name: Open review pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if git diff --quiet -- catalogs/opencode-zen.json; then
+            echo "Zen catalog unchanged"
+            exit 0
+          fi
+          branch=automation/zen-model-catalog
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          if git ls-remote --exit-code --heads origin "$branch" >/dev/null; then
+            git fetch origin "refs/heads/$branch:refs/remotes/origin/$branch"
+          fi
+          git checkout -B "$branch"
+          git add catalogs/opencode-zen.json
+          git commit -m "chore(catalog): refresh OpenCode Zen models"
+          git push --force-with-lease origin "$branch"
+          if ! gh pr view "$branch" >/dev/null 2>&1; then
+            gh pr create \
+              --base main \
+              --head "$branch" \
+              --title "chore(catalog): refresh OpenCode Zen models" \
+              --label dependencies \
+              --label infrastructure \
+              --body "Automated discovery only. Review pricing, capabilities, privacy, lifecycle, and any separate alias change."
+          fi

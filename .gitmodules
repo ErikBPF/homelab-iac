@@ -1,0 +1,3 @@
+[submodule "components/litellm/provider"]
+	path = components/litellm/provider
+	url = https://github.com/ErikBPF/terraform-provider-litellm.git

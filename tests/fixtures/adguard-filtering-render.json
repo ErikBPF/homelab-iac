@@ -1,0 +1,44 @@
+{
+  "generate": {
+    "encryption": {
+      "contents": "variable \"state_passphrase\" {\n  type      = string\n  sensitive = true\n}\n\nterraform {\n  encryption {\n    key_provider \"pbkdf2\" \"k\" {\n      passphrase = var.state_passphrase\n    }\n    method \"aes_gcm\" \"m\" {\n      keys = key_provider.pbkdf2.k\n    }\n    state {\n      method = method.aes_gcm.m\n    }\n    plan {\n      method = method.aes_gcm.m\n    }\n  }\n}\n",
+      "if_exists": "overwrite",
+      "path": "encryption_gen.tf"
+    },
+    "provider": {
+      "contents": "provider \"adguard\" {\n  host     = \"adguard.homelab.pastelariadev.com\"\n  username = \"erik\"\n  scheme   = \"https\"\n  # password from ADGUARD_PASSWORD env\n}\n",
+      "if_exists": "overwrite",
+      "path": "provider_gen.tf"
+    }
+  },
+  "input_keys": [
+    "list_filters",
+    "rewrites",
+    "state_passphrase",
+    "user_rules"
+  ],
+  "remote_state": {
+    "backend": "s3",
+    "config": {
+      "bucket": "tofu-state",
+      "endpoints": {
+        "s3": "https://minio-tfstate.homelab.pastelariadev.com"
+      },
+      "key": "adguard/filtering/terraform.tfstate",
+      "region": "us-east-1",
+      "skip_credentials_validation": true,
+      "skip_metadata_api_check": true,
+      "skip_region_validation": true,
+      "skip_requesting_account_id": true,
+      "use_lockfile": true,
+      "use_path_style": true
+    },
+    "generate": {
+      "if_exists": "overwrite",
+      "path": "backend_gen.tf"
+    }
+  },
+  "terraform": {
+    "source": "<REPO>/adguard/modules//filtering"
+  }
+}

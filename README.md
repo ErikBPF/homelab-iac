@@ -30,6 +30,12 @@ Terragrunt). Components, each under its own top-level dir:
 
 Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
+## Active implementation plan
+
+- [`docs/2026-07-12-infrastructure-ssot-implementation-plan.md`](docs/2026-07-12-infrastructure-ssot-implementation-plan.md) — fleet-wide infrastructure-resource SSOT, LiteLLM Terraform control plane, runtime-secret cutover, DR, and bounded chaos engineering.
+- [`docs/2026-07-12-litellm-provider-strategy.md`](docs/2026-07-12-litellm-provider-strategy.md) — provider importer, metadata parity, least-privilege authentication, and temporary-fork exit criteria.
+- [`docs/behaviors/infra-ssot-hard-cutover/`](docs/behaviors/infra-ssot-hard-cutover/) — human behavior seed and TDD contract.
+
 ## Where this fits — the homelab fleet
 
 This repo is the **network substrate**; the sister repos run *on top of* the

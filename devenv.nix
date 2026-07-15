@@ -20,11 +20,13 @@
     pkgs.git
     pkgs.opentofu
     pkgs.terragrunt
-    pkgs.tflint
     pkgs.jq
     pkgs.curl
     pkgs.sops
     pkgs.age
+    pkgs.bats
+    pkgs.shellcheck
+    pkgs.go
   ];
 
   enterShell = ''

@@ -33,6 +33,12 @@ jobs:
         with:
           tflint_version: latest
 
+      - name: Install contract-test runner
+        run: sudo apt-get update && sudo apt-get install -y bats
+
+      - name: Infrastructure SSOT contract
+        run: bats tests/infra-ssot-contract.bats
+
       - name: tofu fmt
         run: tofu fmt -check -recursive
 

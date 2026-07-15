@@ -1,0 +1,8 @@
+{
+  "source_repository": "https://github.com/ErikBPF/terraform-provider-litellm",
+  "commit": "19158c1f277643f6d69421aef320f85ad9c52016",
+  "version": "1.1.1",
+  "artifact_sha256": "0f7f63b1b76f7496cb0efc87c1117a0299e99c2bdee15448fb4c209e702438a9",
+  "release_url": "https://github.com/ErikBPF/terraform-provider-litellm/releases/tag/v1.1.1",
+  "signing_key_fingerprint": "817A482B5313F28EC8E12613B025710D7A6FBE7F"
+}

@@ -1,0 +1,17 @@
+{
+  "base_model": "big-pickle",
+  "context_limit": 200000,
+  "custom_llm_provider": "openai",
+  "input_modalities": [
+    "text"
+  ],
+  "model_id": "model-tf-canary-big-pickle",
+  "model_name": "tf-canary-big-pickle",
+  "output_limit": 32000,
+  "output_modalities": [
+    "text"
+  ],
+  "supports_reasoning": true,
+  "supports_tools": true,
+  "team_id": "team-terraform-litellm"
+}

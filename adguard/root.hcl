@@ -11,22 +11,6 @@
 # cleanly (its update rejects the disabled-DHCP block). `just sync-servarr`
 # excludes config/adguard/AdGuardHome.yaml so a sync can't clobber TF's changes.
 
-locals {
-  state_passphrase = get_env("UNIFI_STATE_PASSPHRASE")
-  backend          = read_terragrunt_config(find_in_parent_folders("backend.hcl"))
-}
-
-remote_state {
-  backend = "s3"
-  generate = {
-    path      = "backend_gen.tf"
-    if_exists = "overwrite"
-  }
-  config = merge(local.backend.locals.s3, {
-    key = "${basename(get_parent_terragrunt_dir())}/${path_relative_to_include()}/terraform.tfstate"
-  })
-}
-
 generate "provider" {
   path      = "provider_gen.tf"
   if_exists = "overwrite"
@@ -38,36 +22,4 @@ generate "provider" {
       # password from ADGUARD_PASSWORD env
     }
   EOT
-}
-
-generate "encryption" {
-  path      = "encryption_gen.tf"
-  if_exists = "overwrite"
-  contents  = <<-EOT
-    variable "state_passphrase" {
-      type      = string
-      sensitive = true
-    }
-
-    terraform {
-      encryption {
-        key_provider "pbkdf2" "k" {
-          passphrase = var.state_passphrase
-        }
-        method "aes_gcm" "m" {
-          keys = key_provider.pbkdf2.k
-        }
-        state {
-          method = method.aes_gcm.m
-        }
-        plan {
-          method = method.aes_gcm.m
-        }
-      }
-    }
-  EOT
-}
-
-inputs = {
-  state_passphrase = local.state_passphrase
 }

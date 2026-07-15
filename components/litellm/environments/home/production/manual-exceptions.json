@@ -1,0 +1,14 @@
+{
+  "mimo": {
+    "reason": "OpenCode Go exposes MiMo V2.5 under an account route not represented by the reviewed Zen catalog; preserve the deployed free-beta route and zero proxy price until catalog parity exists.",
+    "reviewed_on": "2026-07-13"
+  },
+  "mimo-pro": {
+    "reason": "MiMo V2.5 Pro has no reviewed Zen catalog entry; preserve the deployed route and explicit DeepSeek V4 Pro proxy price pending provider-published pricing.",
+    "reviewed_on": "2026-07-13"
+  },
+  "qwen3-max": {
+    "reason": "The deployed OpenCode Go qwen3.7-max identifier is absent from the reviewed Zen catalog; preserve its existing spelling and manually reviewed proxy price.",
+    "reviewed_on": "2026-07-13"
+  }
+}

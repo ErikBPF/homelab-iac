@@ -1,0 +1,54 @@
+{
+  "generate_names": [
+    "encryption"
+  ],
+  "models": {
+    "tf-canary-big-pickle": {
+      "additional_litellm_params": {},
+      "base_model": "big-pickle",
+      "context_limit": 200000,
+      "custom_llm_provider": "openai",
+      "input_cost_per_million_tokens": 0,
+      "input_modalities": [
+        "text"
+      ],
+      "lifecycle": "canary",
+      "mode": "chat",
+      "model_api_base": "https://opencode.ai/zen/v1",
+      "model_api_key": "os.environ/OPENCODE_ZEN_KEY",
+      "output_cost_per_million_tokens": 0,
+      "output_limit": 32000,
+      "output_modalities": [
+        "text"
+      ],
+      "privacy_tier": "non-confidential",
+      "supports_reasoning": true,
+      "supports_tools": true,
+      "team_id": ""
+    }
+  },
+  "remote_state": {
+    "backend": "s3",
+    "config": {
+      "bucket": "tofu-state",
+      "endpoints": {
+        "s3": "https://minio-tfstate.homelab.pastelariadev.com"
+      },
+      "key": "components/litellm/environments/home/canary/terraform.tfstate",
+      "region": "us-east-1",
+      "skip_credentials_validation": true,
+      "skip_metadata_api_check": true,
+      "skip_region_validation": true,
+      "skip_requesting_account_id": true,
+      "use_lockfile": true,
+      "use_path_style": true
+    },
+    "generate": {
+      "if_exists": "overwrite",
+      "path": "backend_gen.tf"
+    }
+  },
+  "terraform": {
+    "source": "<REPO>/components/litellm/modules//model"
+  }
+}

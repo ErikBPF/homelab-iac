@@ -1,0 +1,206 @@
+{
+  "models": {
+    "glm-5": {
+      "custom_llm_provider": "openai",
+      "base_model": "glm-5.2",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 1.4,
+      "output_cost_per_million_tokens": 4.4,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "context_limit": 1000000,
+      "output_limit": 131072,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    },
+    "kimi-k2-code": {
+      "custom_llm_provider": "openai",
+      "base_model": "kimi-k2.7-code",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.95,
+      "output_cost_per_million_tokens": 4,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "context_limit": 262144,
+      "output_limit": 262144,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    },
+    "mimo": {
+      "custom_llm_provider": "openai",
+      "base_model": "mimo-v2.5",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "additional_litellm_params": {
+        "timeout": "300"
+      },
+      "max_tokens": 204800,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "manual"
+    },
+    "mimo-pro": {
+      "custom_llm_provider": "openai",
+      "base_model": "mimo-v2.5-pro",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.435,
+      "output_cost_per_million_tokens": 0.87,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "max_tokens": 204800,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "manual"
+    },
+    "minimax-m2": {
+      "custom_llm_provider": "openai",
+      "base_model": "minimax-m2.7",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.3,
+      "output_cost_per_million_tokens": 1.2,
+      "additional_litellm_params": {
+        "timeout": "300"
+      },
+      "context_limit": 204800,
+      "output_limit": 131072,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    },
+    "qwen-chat": {
+      "custom_llm_provider": "openai",
+      "base_model": "qwen-chat",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://orion:8080/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.25,
+      "output_cost_per_million_tokens": 0.75,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "max_tokens": 196608,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "privacy_tier": "confidential",
+      "lifecycle": "production"
+    },
+    "qwen3-max": {
+      "custom_llm_provider": "openai",
+      "base_model": "qwen3.7-max",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 2.5,
+      "output_cost_per_million_tokens": 7.5,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "max_tokens": 262144,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "manual"
+    },
+    "zen-free": {
+      "custom_llm_provider": "openai",
+      "base_model": "deepseek-v4-flash-free",
+      "model_api_key": "os.environ/OPENCODE_ZEN_KEY",
+      "model_api_base": "https://opencode.ai/zen/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "additional_litellm_params": {
+        "timeout": "300"
+      },
+      "context_limit": 200000,
+      "output_limit": 128000,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    },
+    "zen-free-pickle": {
+      "custom_llm_provider": "openai",
+      "base_model": "big-pickle",
+      "model_api_key": "os.environ/OPENCODE_ZEN_KEY",
+      "model_api_base": "https://opencode.ai/zen/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "context_limit": 200000,
+      "output_limit": 32000,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    }
+  }
+}

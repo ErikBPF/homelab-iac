@@ -1,0 +1,23 @@
+{
+  "models": [
+    {
+      "context_limit": 200000,
+      "input_modalities": [
+        "text"
+      ],
+      "input_price_per_million": 0,
+      "is_free": true,
+      "lifecycle": "discovered",
+      "output_limit": 32000,
+      "output_modalities": [
+        "text"
+      ],
+      "output_price_per_million": 0,
+      "privacy_tier": "unknown",
+      "source_id": "big-pickle",
+      "supports_reasoning": true,
+      "supports_tools": true
+    }
+  ],
+  "source": "opencode-zen"
+}
