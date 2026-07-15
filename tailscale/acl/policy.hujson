@@ -3,6 +3,7 @@
 	// discovery's advertised subnet, where *.homelab.pastelariadev.com resolves).
 	"hosts": {
 		"laptop":     "100.74.137.124",
+		"endeavour":  "100.107.225.13",
 		"pathfinder": "100.104.92.5",
 		"galaxy":     "100.66.253.15",
 		"discovery":  "100.76.140.121",
@@ -39,7 +40,7 @@
 
 	"acls": [
 		// 1. Admin devices: OpenSSH (port 2222) into everything.
-		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["*:2222"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "galaxy"], "dst": ["*:2222"]},
 
 		// 2. Everyone: DNS to discovery (MagicDNS nameserver / AdGuard) and to
 		//    vanguard's secondary CoreDNS resolver (R1, services.fleetDns) — the
@@ -58,14 +59,14 @@
 		// 5. Preserved: Syncthing between fleet hosts.
 		{
 			"action": "accept",
-			"src":    ["laptop", "pathfinder", "kepler", "orion", "discovery"],
-			"dst":    ["laptop:22000", "pathfinder:22000", "kepler:22000", "orion:22000", "discovery:22000"],
+			"src":    ["laptop", "endeavour", "pathfinder", "kepler", "orion", "discovery"],
+			"dst":    ["laptop:22000", "endeavour:22000", "pathfinder:22000", "kepler:22000", "orion:22000", "discovery:22000"],
 		},
 
 		// 6. Preserved: NFS / SMB to the kepler NAS from fleet hosts.
 		{
 			"action": "accept",
-			"src":    ["laptop", "pathfinder", "orion", "discovery"],
+			"src":    ["laptop", "endeavour", "pathfinder", "orion", "discovery"],
 			"dst":    ["kepler:111,445,2049,4000,4001,4002"],
 		},
 
@@ -75,20 +76,20 @@
 		//    archinaut ships journal logs via vector (lite alloy; the 1 GB Pi
 		//    can't run full alloy) — logs-only, but the bundled :9090 grant is
 		//    harmless.
-		{"action": "accept", "src": ["laptop", "pathfinder", "orion", "kepler", "archinaut"], "dst": ["discovery:3100,9090"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "orion", "kepler", "archinaut"], "dst": ["discovery:3100,9090"]},
 
 		// 8. Admin devices reach the whole LAN through discovery's subnet route,
 		//    so tailnet devices can hit LAN-only hosts (swOS switches, UDM,
 		//    printer, IoT) that can't run Tailscale. Admin-only preserves the
 		//    posture — other tailnet devices still get only SWAG (rule 3). SNAT
 		//    on the router means no return route is needed on the UDM.
-		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["192.168.10.0/24:*"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "galaxy"], "dst": ["192.168.10.0/24:*"]},
 
 		// 9. Fleet pulls from orion's nix binary cache (nix-serve :5000) over
 		//    MagicDNS (http://orion:5000, see desktop-nixos common.nix). The LAN
 		//    path works via rule 8's subnet route, but non-admin hosts and the
 		//    MagicDNS name need this explicit grant or the substituter times out.
-		{"action": "accept", "src": ["laptop", "pathfinder", "kepler"], "dst": ["orion:5000"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "kepler"], "dst": ["orion:5000"]},
 
 		// 10. Lab ESO (kepler) -> the platform OpenBao on discovery :8200 (P3.1b).
 		//    External Secrets in the kepler lab cluster repoints off the disposable
@@ -114,7 +115,7 @@
 		//    set. Port 8443 is a PLACEHOLDER pending the desktop-nixos WP2
 		//    netbird-server module's actual SWAG proxy-conf binding (TODO
 		//    Phase-O) — update this port to match once that lands.
-		{"action": "accept", "src": ["laptop", "pathfinder", "galaxy"], "dst": ["discovery:8443"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "galaxy"], "dst": ["discovery:8443"]},
 
 		// 13. vanguard's Postgres DR replica (R3b) streams from discovery's
 		//     shared cluster over the tailnet. discovery publishes :5432 on its
@@ -142,6 +143,7 @@
 
 	"tests": [
 		{"src": "laptop", "accept": ["kepler:2222"]},    // admin can SSH
+		{"src": "endeavour", "accept": ["kepler:2222", "kepler:2049", "orion:4321"]}, // replacement workstation
 		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
 		{"src": "galaxy", "accept": ["swag:443"]},       // anyone reaches SWAG
 		{"src": "orion", "deny": ["kepler:8001"]},       // no direct backend access
