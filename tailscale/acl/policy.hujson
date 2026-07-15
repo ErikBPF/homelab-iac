@@ -9,7 +9,7 @@
 		"discovery":  "100.76.140.121",
 		"swag":       "192.168.10.210",
 		"kepler":     "100.94.239.46",
-		"orion":      "100.102.11.127",
+		"orion":      "100.72.85.73",
 		"archinaut":  "100.67.123.113",
 		"vanguard":   "100.90.247.79",
 		"gemini":     "100.127.231.110",
@@ -143,7 +143,7 @@
 
 	"tests": [
 		{"src": "laptop", "accept": ["kepler:2222"]},    // admin can SSH
-		{"src": "endeavour", "accept": ["kepler:2222", "kepler:2049", "orion:4321"]}, // replacement workstation
+		{"src": "endeavour", "accept": ["kepler:2222", "kepler:2049", "orion:2222", "orion:4321"]}, // replacement workstation
 		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
 		{"src": "galaxy", "accept": ["swag:443"]},       // anyone reaches SWAG
 		{"src": "orion", "deny": ["kepler:8001"]},       // no direct backend access
