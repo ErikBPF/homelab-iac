@@ -44,7 +44,7 @@ jobs:
           GOMODCACHE: ${{ runner.temp }}/go-mod
 
       - name: tofu fmt
-        run: tofu fmt -check -recursive
+        run: git ls-files -z '*.tf' '*.tfvars' | xargs -0 -r tofu fmt -check
 
       - name: terragrunt hcl format
         run: terragrunt hcl format --check --diff
