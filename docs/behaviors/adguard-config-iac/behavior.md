@@ -16,7 +16,7 @@ The stock provider is the required production lane. Setting
 isolated OpenTofu CLI development override for the GREEN lane. The override and
 symlink exist only under the test temporary directory.
 
-Provider `ErikBPF/adguardhome` 0.1.6 passes the complete disposable lifecycle when
+Provider `ErikBPF/adguardhome` 0.1.7 passes the complete disposable lifecycle when
 the test uses a normal refreshed plan. An earlier refresh-only assertion
 mistook state refresh (`-detailed-exitcode` 2) for actionable configuration
 drift; it was not a valid admission failure. No provider fork is required by

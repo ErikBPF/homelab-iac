@@ -19,7 +19,7 @@ for forbidden in ("password","private_key","certificate_chain","users","static_l
 assert 'source = "${dirname(find_in_parent_folders("root.hcl"))}/modules//config"' in inputs
 versions=(module.parent/"versions.tf").read_text()
 assert 'source  = "registry.terraform.io/ErikBPF/adguardhome"' in versions
-assert 'version = "= 0.1.6"' in versions
+assert 'version = "= 0.1.7"' in versions
 assert "runtime" not in combined and ".state" not in combined
 PY
 tofu fmt -check "$root/adguard/modules/config" >/dev/null
