@@ -1,7 +1,7 @@
 {
   "generate": {
     "encryption": {
-      "contents": "variable \"state_passphrase\" {\n  type      = string\n  sensitive = true\n}\n\nterraform {\n  encryption {\n    key_provider \"pbkdf2\" \"k\" {\n      passphrase = var.state_passphrase\n    }\n    method \"aes_gcm\" \"m\" {\n      keys = key_provider.pbkdf2.k\n    }\n    state {\n      method = method.aes_gcm.m\n    }\n    plan {\n      method = method.aes_gcm.m\n    }\n  }\n}\n",
+      "contents": "variable \"state_passphrase\" {\n  type      = string\n  sensitive = true\n}\n\nterraform {\n  encryption {\n    key_provider \"pbkdf2\" \"primary\" {\n      passphrase = var.state_passphrase\n    }\n    method \"aes_gcm\" \"primary\" {\n      keys = key_provider.pbkdf2.primary\n    }\n    state {\n      method = method.aes_gcm.primary\n    }\n    plan {\n      method = method.aes_gcm.primary\n    }\n  }\n}\n",
       "if_exists": "overwrite",
       "path": "encryption_gen.tf"
     },

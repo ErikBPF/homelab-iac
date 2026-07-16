@@ -67,17 +67,17 @@ generate "encryption" {
 
     terraform {
       encryption {
-        key_provider "pbkdf2" "k" {
+        key_provider "pbkdf2" "primary" {
           passphrase = var.state_passphrase
         }
-        method "aes_gcm" "m" {
-          keys = key_provider.pbkdf2.k
+        method "aes_gcm" "primary" {
+          keys = key_provider.pbkdf2.primary
         }
         state {
-          method = method.aes_gcm.m
+          method = method.aes_gcm.primary
         }
         plan {
-          method = method.aes_gcm.m
+          method = method.aes_gcm.primary
         }
       }
     }
