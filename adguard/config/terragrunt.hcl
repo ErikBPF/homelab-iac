@@ -12,16 +12,16 @@ terraform {
 
 inputs = {
   config = {
-    blocked_services = []
+    blocked_services = null
     blocked_services_pause_schedule = {
       time_zone = "UTC"
     }
     dns = {
-      allowed_clients            = []
+      allowed_clients            = null
       blocked_hosts              = ["version.bind", "id.server", "hostname.bind"]
       blocked_response_ttl       = 10
-      blocking_ipv4              = ""
-      blocking_ipv6              = ""
+      blocking_ipv4              = null
+      blocking_ipv6              = null
       blocking_mode              = "default"
       bootstrap_dns              = ["9.9.9.9", "149.112.112.112", "2620:fe::9", "2620:fe::fe:9"]
       cache_enabled              = true
@@ -30,7 +30,7 @@ inputs = {
       cache_ttl_max              = 86400
       cache_ttl_min              = 300
       disable_ipv6               = false
-      disallowed_clients         = []
+      disallowed_clients         = null
       dnssec_enabled             = true
       edns_cs_custom_ip          = ""
       edns_cs_enabled            = false
@@ -68,7 +68,7 @@ inputs = {
     }
     stats = {
       enabled         = true
-      ignored         = []
+      ignored         = null
       ignored_enabled = false
       interval        = 2160
     }
