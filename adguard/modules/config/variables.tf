@@ -2,7 +2,7 @@ variable "config" {
   description = "Provider-supported, non-secret AdGuard Home configuration."
   type = object({
     blocked_services                = optional(set(string))
-    blocked_services_pause_schedule = object({ time_zone = string })
+    blocked_services_pause_schedule = optional(object({ time_zone = string }))
     dns = object({
       allowed_clients            = optional(set(string))
       blocked_hosts              = set(string)
@@ -19,16 +19,16 @@ variable "config" {
       disable_ipv6               = bool
       disallowed_clients         = optional(set(string))
       dnssec_enabled             = bool
-      edns_cs_custom_ip          = string
+      edns_cs_custom_ip          = optional(string)
       edns_cs_enabled            = bool
       edns_cs_use_custom         = bool
-      fallback_dns               = list(string)
-      local_ptr_upstreams        = set(string)
+      fallback_dns               = optional(list(string))
+      local_ptr_upstreams        = optional(set(string))
       protection_enabled         = bool
       rate_limit                 = number
       rate_limit_subnet_len_ipv4 = number
       rate_limit_subnet_len_ipv6 = number
-      rate_limit_whitelist       = list(string)
+      rate_limit_whitelist       = optional(list(string))
       resolve_clients            = bool
       upstream_dns               = list(string)
       upstream_mode              = string
@@ -43,7 +43,7 @@ variable "config" {
     querylog = object({
       anonymize_client_ip = bool
       enabled             = bool
-      ignored             = set(string)
+      ignored             = optional(set(string))
       ignored_enabled     = bool
       interval            = number
     })

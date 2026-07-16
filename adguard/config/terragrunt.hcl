@@ -12,10 +12,8 @@ terraform {
 
 inputs = {
   config = {
-    blocked_services = null
-    blocked_services_pause_schedule = {
-      time_zone = "UTC"
-    }
+    blocked_services                = null
+    blocked_services_pause_schedule = null
     dns = {
       allowed_clients            = null
       blocked_hosts              = ["version.bind", "id.server", "hostname.bind"]
@@ -32,16 +30,16 @@ inputs = {
       disable_ipv6               = false
       disallowed_clients         = null
       dnssec_enabled             = true
-      edns_cs_custom_ip          = ""
+      edns_cs_custom_ip          = null
       edns_cs_enabled            = false
       edns_cs_use_custom         = false
-      fallback_dns               = []
-      local_ptr_upstreams        = []
+      fallback_dns               = null
+      local_ptr_upstreams        = null
       protection_enabled         = true
       rate_limit                 = 0
       rate_limit_subnet_len_ipv4 = 24
       rate_limit_subnet_len_ipv6 = 56
-      rate_limit_whitelist       = []
+      rate_limit_whitelist       = null
       resolve_clients            = true
       upstream_dns               = ["tls://dns.quad9.net", "tls://1dot1dot1dot1.cloudflare-dns.com", "tls://dns.google"]
       upstream_mode              = "parallel"
@@ -56,7 +54,7 @@ inputs = {
     querylog = {
       anonymize_client_ip = false
       enabled             = true
-      ignored             = []
+      ignored             = null
       ignored_enabled     = false
       interval            = 2160
     }
