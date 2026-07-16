@@ -6,7 +6,7 @@
       "path": "encryption_gen.tf"
     },
     "provider": {
-      "contents": "provider \"adguard\" {\n  host     = \"adguard.homelab.pastelariadev.com\"\n  username = \"erik\"\n  scheme   = \"https\"\n  # password from ADGUARD_PASSWORD env\n}\n",
+      "contents": "provider \"adguardhome\" {\n  host     = \"adguard.homelab.pastelariadev.com\"\n  username = \"erik\"\n  scheme   = \"https\"\n  # password from ADGUARD_PASSWORD env\n}\n",
       "if_exists": "overwrite",
       "path": "provider_gen.tf"
     }

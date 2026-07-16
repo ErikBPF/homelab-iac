@@ -48,11 +48,11 @@ run_phase init init -backend=false
 if test -n "${ADGUARD_PROVIDER_DEV_BINARY:-}"; then
   test -x "$ADGUARD_PROVIDER_DEV_BINARY" || { echo 'RED: provider dev binary is not executable' >&2; exit 1; }
   mkdir "$tmp/provider-dev"
-  ln -s "$ADGUARD_PROVIDER_DEV_BINARY" "$tmp/provider-dev/terraform-provider-adguard"
+  ln -s "$ADGUARD_PROVIDER_DEV_BINARY" "$tmp/provider-dev/terraform-provider-adguardhome"
   cat >"$tmp/tofu.rc" <<EOF
 provider_installation {
   dev_overrides {
-    "gmichels/adguard" = "$tmp/provider-dev"
+    "registry.terraform.io/ErikBPF/adguardhome" = "$tmp/provider-dev"
   }
   direct {}
 }

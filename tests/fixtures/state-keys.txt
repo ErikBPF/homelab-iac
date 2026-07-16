@@ -1,3 +1,4 @@
+adguard/config adguard/config/terraform.tfstate
 adguard/filtering adguard/filtering/terraform.tfstate
 cloudflare/access cloudflare/access/terraform.tfstate
 cloudflare/dns cloudflare/dns/terraform.tfstate

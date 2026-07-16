@@ -1,4 +1,4 @@
-resource "adguard_config" "this" {
+resource "adguardhome_config" "this" {
   blocked_services                = var.config.blocked_services
   blocked_services_pause_schedule = var.config.blocked_services_pause_schedule
   dns                             = var.config.dns
