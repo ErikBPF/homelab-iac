@@ -1,0 +1,45 @@
+http:
+  address: 0.0.0.0:3000
+  session_ttl: 1h
+users: []
+auth_attempts: 5
+block_auth_min: 1
+language: en
+theme: auto
+dns:
+  bind_hosts:
+    - 0.0.0.0
+  port: 5353
+  upstream_dns:
+    - 1.1.1.1
+  bootstrap_dns:
+    - 1.1.1.1
+  upstream_mode: load_balance
+  cache_enabled: true
+  cache_size: 1024
+  ratelimit: 0
+  refuse_any: true
+tls:
+  enabled: false
+querylog:
+  enabled: false
+statistics:
+  enabled: false
+filters: []
+whitelist_filters: []
+user_rules: []
+dhcp:
+  enabled: false
+  interface_name: eth0
+filtering:
+  filtering_enabled: true
+  protection_enabled: true
+clients:
+  runtime_sources:
+    whois: false
+    arp: false
+    rdns: false
+    dhcp: false
+    hosts: false
+  persistent: []
+schema_version: 29
