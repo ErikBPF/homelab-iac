@@ -11,13 +11,15 @@ python3 - "$module" "$variables" "$unit" "$contract" <<'PY'
 import json,pathlib,re,sys
 module,variables,unit=map(pathlib.Path,sys.argv[1:4]);contract=json.loads(pathlib.Path(sys.argv[4]).read_text())
 main=module.read_text();types=variables.read_text();inputs=unit.read_text();combined="\n".join((main,types,inputs)).lower()
-assert 'resource "adguard_config" "this"' in main
+assert 'resource "adguardhome_config" "this"' in main
 for field in contract["provider_fields"]:
     assert re.search(rf"^\s*{field}\s*=",main,re.M),field
 for forbidden in ("password","private_key","certificate_chain","users","static_leases"):
     assert forbidden not in combined,forbidden
 assert 'source = "${dirname(find_in_parent_folders("root.hcl"))}/modules//config"' in inputs
-assert 'version = "= 1.7.0"' in (module.parent/"versions.tf").read_text()
+versions=(module.parent/"versions.tf").read_text()
+assert 'source  = "registry.terraform.io/ErikBPF/adguardhome"' in versions
+assert 'version = "= 0.1.7"' in versions
 assert "runtime" not in combined and ".state" not in combined
 PY
 tofu fmt -check "$root/adguard/modules/config" >/dev/null

@@ -68,10 +68,10 @@ static DNS) · **tailnet** (Tailscale MagicDNS) · **filtering** (AdGuard).
 
 > **AdGuard ownership split:** Terraform owns rewrites / user_rules / filters via
 > the API. The **base config** (DNS upstreams, dhcp, tls, querylog/stats) stays
-> in servarr's `AdGuardHome.yaml` — `adguard_config` can't be managed cleanly
-> (its update rejects the disabled-DHCP block). `just sync-servarr` excludes that
-> file so a sync can't clobber Terraform. AdGuard rewrites the YAML at runtime,
-> so its base config effectively self-persists on the host.
+> in servarr's `AdGuardHome.yaml` until the singleton apply and second no-op plan
+> pass. `just sync-servarr` excludes that file during this transition. AdGuard
+> rewrites the YAML at runtime, so its base config effectively self-persists on
+> the host.
 
 **Not manageable with the `filipowm/unifi` provider — stays UI-managed:**
 
