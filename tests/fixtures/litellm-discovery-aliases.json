@@ -6,6 +6,7 @@
   "minimax-m2",
   "qwen-chat",
   "qwen3-max",
+  "whisper-pt-br",
   "zen-free",
   "zen-free-pickle"
 ]

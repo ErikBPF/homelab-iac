@@ -4,6 +4,7 @@ resource "litellm_model" "this" {
   model_name                     = each.key
   custom_llm_provider            = each.value.custom_llm_provider
   base_model                     = each.value.base_model
+  pricing_base_model             = each.value.pricing_base_model
   team_id                        = each.value.team_id
   model_api_key                  = each.value.model_api_key
   model_api_base                 = each.value.model_api_base
