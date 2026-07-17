@@ -12,28 +12,37 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           submodules: true
 
-      - uses: opentofu/setup-opentofu@v1
+      - uses: opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f # v1
         with:
           tofu_version: "1.12.1"
 
       - name: Install terragrunt
+        env:
+          TERRAGRUNT_VERSION: "1.1.1"
+          TERRAGRUNT_SHA256: "98b0400ba1ae27120adeeb98ba97e75eba0bab0b4cbd7b8bb148d4ed29e2f823"
         run: |
-          curl -fsSL -o /usr/local/bin/terragrunt \
-            https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_linux_amd64
-          chmod +x /usr/local/bin/terragrunt
+          curl -fsSL -o "$RUNNER_TEMP/terragrunt" \
+            "https://github.com/gruntwork-io/terragrunt/releases/download/v${TERRAGRUNT_VERSION}/terragrunt_linux_amd64"
+          echo "${TERRAGRUNT_SHA256}  ${RUNNER_TEMP}/terragrunt" | sha256sum --check
+          sudo install "$RUNNER_TEMP/terragrunt" /usr/local/bin/terragrunt
           terragrunt --version
 
-      - uses: terraform-linters/setup-tflint@v4
+      - uses: terraform-linters/setup-tflint@90f302c255ef959cbfb4bd10581afecdb7ece3e6 # v4
         with:
-          tflint_version: latest
+          tflint_version: v0.64.0
 
       - name: Install contract-test runner
         run: sudo apt-get update && sudo apt-get install -y bats
