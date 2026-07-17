@@ -4,6 +4,7 @@ output "model_contract" {
     for alias, model in var.models : alias => {
       custom_llm_provider            = model.custom_llm_provider
       base_model                     = model.base_model
+      pricing_base_model             = model.pricing_base_model
       team_id                        = model.team_id
       model_api_base                 = model.model_api_base
       mode                           = model.mode

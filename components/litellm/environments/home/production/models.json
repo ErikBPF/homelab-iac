@@ -156,6 +156,25 @@
       "privacy_tier": "non-confidential",
       "lifecycle": "manual"
     },
+    "whisper-pt-br": {
+      "custom_llm_provider": "openai",
+      "base_model": "whisper-1",
+      "pricing_base_model": "large-v3-turbo",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://kepler:5092/v1",
+      "mode": "audio_transcription",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "input_modalities": [
+        "audio"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_language": "pt",
+      "privacy_tier": "confidential",
+      "lifecycle": "production"
+    },
     "zen-free": {
       "custom_llm_provider": "openai",
       "base_model": "deepseek-v4-flash-free",

@@ -3,6 +3,7 @@ variable "models" {
   type = map(object({
     custom_llm_provider            = string
     base_model                     = string
+    pricing_base_model             = optional(string, "")
     team_id                        = optional(string, "")
     model_api_key                  = string
     model_api_base                 = string
