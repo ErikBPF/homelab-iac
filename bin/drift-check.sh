@@ -18,7 +18,10 @@ export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${MINIO_TFSTATE_ROOT_PASS
 # Measure drift against the latest committed IaC, not a stale local checkout.
 git pull --ff-only 2>/dev/null || true
 
-out=$(terragrunt run --all --non-interactive -- plan -detailed-exitcode -no-color 2>&1)
+# Telstar's capture loop owns this state while it retries OCI capacity. Planning
+# it concurrently races the remote state lock; its service provides the health
+# signal instead.
+out=$(terragrunt run --all --filter '!oracle/compute-telstar' --non-interactive -- plan -detailed-exitcode -no-color 2>&1)
 code=$?
 
 case "$code" in
