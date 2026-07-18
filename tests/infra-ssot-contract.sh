@@ -317,15 +317,24 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 10 and
-    (unique | length) == 10 and
+    length == 11 and
+    (unique | length) == 11 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 10 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 11 unique sorted aliases"
 
   jq -e '
     . as $aliases |
-    ["bge-m3", "bge-reranker-v2-m3", "tts-pt-br", "tts-pt-br-piper"] as $retired |
+    [
+      "bge-m3",
+      "bge-reranker-v2-m3",
+      "faster-whisper-pt-br",
+      "faster-whisper-turbo-pt-br",
+      "parakeet-pt-br",
+      "tagarela-pt-br",
+      "tts-pt-br",
+      "tts-pt-br-piper"
+    ] as $retired |
     all($retired[]; . as $alias | $aliases | index($alias) == null)
   ' "$aliases" >/dev/null \
     || fail "S05 RED: retired Kepler aliases remain declared"
@@ -334,7 +343,7 @@ check_s05() {
     (.models | type == "object") and
     ((.models | keys) == $aliases[0]) and
     ([.models[].mode] | unique) == ["audio_transcription", "chat"] and
-    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode)) == ["audio_transcription"] and
+    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription", "chat"] and
     ([.models[] | select((.context_limit // null) == null)] | length) > 0 and
     ([.models[] | select((.output_limit // null) == null)] | length) > 0 and
     (all(.models[];
