@@ -317,15 +317,24 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 15 and
-    (unique | length) == 15 and
+    length == 11 and
+    (unique | length) == 11 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 15 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 11 unique sorted aliases"
 
   jq -e '
     . as $aliases |
-    ["bge-m3", "bge-reranker-v2-m3", "tts-pt-br", "tts-pt-br-piper"] as $retired |
+    [
+      "bge-m3",
+      "bge-reranker-v2-m3",
+      "faster-whisper-pt-br",
+      "faster-whisper-turbo-pt-br",
+      "parakeet-pt-br",
+      "tagarela-pt-br",
+      "tts-pt-br",
+      "tts-pt-br-piper"
+    ] as $retired |
     all($retired[]; . as $alias | $aliases | index($alias) == null)
   ' "$aliases" >/dev/null \
     || fail "S05 RED: retired Kepler aliases remain declared"
