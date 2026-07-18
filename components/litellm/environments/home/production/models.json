@@ -238,7 +238,7 @@
     },
     "faster-whisper-turbo-pt-br": {
       "custom_llm_provider": "openai",
-      "base_model": "whisper-turbo-pt-br",
+      "base_model": "mobiuslabsgmbh/faster-whisper-large-v3-turbo",
       "pricing_base_model": "whisper-large-v3-turbo",
       "model_api_key": "sk-no-key-required",
       "model_api_base": "http://kepler:9000/v1",
