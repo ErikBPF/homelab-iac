@@ -1,16 +1,12 @@
 [
-  "faster-whisper-pt-br",
-  "faster-whisper-turbo-pt-br",
   "glm-5",
   "ha-agent-qwen4b",
   "kimi-k2-code",
   "mimo",
   "mimo-pro",
   "minimax-m2",
-  "parakeet-pt-br",
   "qwen-chat",
   "qwen3-max",
-  "tagarela-pt-br",
   "whisper-pt-br",
   "zen-free",
   "zen-free-pickle"
