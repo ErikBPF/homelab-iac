@@ -181,10 +181,10 @@
     },
     "whisper-pt-br": {
       "custom_llm_provider": "openai",
-      "base_model": "whisper-1",
-      "pricing_base_model": "large-v3-turbo",
+      "base_model": "tagarela-pt-br",
+      "pricing_base_model": "parakeet-tdt-0.6b-v3",
       "model_api_key": "sk-no-key-required",
-      "model_api_base": "http://kepler:5092/v1",
+      "model_api_base": "http://kepler:5093/v1",
       "mode": "audio_transcription",
       "input_cost_per_million_tokens": 0,
       "output_cost_per_million_tokens": 0,
