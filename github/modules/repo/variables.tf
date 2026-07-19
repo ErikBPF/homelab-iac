@@ -27,7 +27,10 @@ variable "repos" {
 
     # Optional branch protection on main. Off by default — these repos have
     # none today, so leaving it off keeps the initial import a pure no-op.
-    protect_main    = optional(bool, false)
-    required_checks = optional(list(string), [])
+    protect_main                    = optional(bool, false)
+    required_checks                 = optional(list(string), [])
+    require_conversation_resolution = optional(bool, false)
+    require_pull_request_reviews    = optional(bool, false)
+    dismiss_stale_reviews           = optional(bool, false)
   }))
 }
