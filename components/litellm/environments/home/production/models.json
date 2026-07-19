@@ -134,6 +134,29 @@
       "privacy_tier": "confidential",
       "lifecycle": "production"
     },
+    "ha-agent-qwen4b": {
+      "custom_llm_provider": "openai",
+      "base_model": "ha-agent-qwen4b",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://kepler:8088/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "additional_litellm_params": {
+        "timeout": "60"
+      },
+      "max_tokens": 4096,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_tools": true,
+      "probe_text": "liga a luz do escritório",
+      "privacy_tier": "confidential",
+      "lifecycle": "canary"
+    },
     "qwen3-max": {
       "custom_llm_provider": "openai",
       "base_model": "qwen3.7-max",
@@ -158,10 +181,10 @@
     },
     "whisper-pt-br": {
       "custom_llm_provider": "openai",
-      "base_model": "whisper-1",
+      "base_model": "aTrain-core/faster-whisper-large-v3-turbo",
       "pricing_base_model": "large-v3-turbo",
       "model_api_key": "sk-no-key-required",
-      "model_api_base": "http://kepler:5092/v1",
+      "model_api_base": "http://kepler:9000/v1",
       "mode": "audio_transcription",
       "input_cost_per_million_tokens": 0,
       "output_cost_per_million_tokens": 0,
