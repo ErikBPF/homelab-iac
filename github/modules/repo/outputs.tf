@@ -12,3 +12,13 @@ output "workflow_permissions" {
     }
   }
 }
+
+output "app_installation_repositories" {
+  description = "GitHub App installations managed by this component."
+  value = {
+    for k, r in github_app_installation_repository.this : k => {
+      installation_id = r.installation_id
+      repository      = r.repository
+    }
+  }
+}
