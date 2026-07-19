@@ -56,12 +56,21 @@ resource "github_workflow_repository_permissions" "this" {
 resource "github_branch_protection" "main" {
   for_each = { for k, v in var.repos : k => v if v.protect_main }
 
-  repository_id  = github_repository.this[each.key].node_id
-  pattern        = "main"
-  enforce_admins = false
+  repository_id                   = github_repository.this[each.key].node_id
+  pattern                         = "main"
+  enforce_admins                  = false
+  require_conversation_resolution = each.value.require_conversation_resolution
 
   required_status_checks {
     strict   = true
     contexts = each.value.required_checks
+  }
+
+  dynamic "required_pull_request_reviews" {
+    for_each = each.value.require_pull_request_reviews ? [1] : []
+    content {
+      dismiss_stale_reviews           = each.value.dismiss_stale_reviews
+      required_approving_review_count = 0
+    }
   }
 }

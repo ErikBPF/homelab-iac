@@ -17,6 +17,26 @@ inputs = {
     codex-flake    = {}
     opencode-flake = {}
     hermes-flake   = {}
+    kindle-dash = {
+      allow_merge_commit              = false
+      delete_branch_on_merge          = true
+      default_workflow_permissions    = "read"
+      can_approve_pull_requests       = false
+      protect_main                    = true
+      required_checks                 = ["validate", "secrets"]
+      require_conversation_resolution = true
+      require_pull_request_reviews    = true
+      dismiss_stale_reviews           = true
+    }
+    servarr = {
+      visibility                   = "private"
+      allow_auto_merge             = false
+      allow_merge_commit           = false
+      allow_rebase_merge           = false
+      delete_branch_on_merge       = true
+      default_workflow_permissions = "read"
+      can_approve_pull_requests    = false
+    }
     # Renovate runner (RFC 2026-07-11). Private, so it overrides the public
     # default; brand-new repo, so its auto-merge is still off (GitHub default) —
     # expect the import plan to show +1 change flipping allow_auto_merge on.
@@ -35,19 +55,23 @@ generate "imports" {
   disable   = true
   contents  = <<-EOT
     import {
-      for_each = var.repos
+      for_each = toset(["kindle-dash", "servarr"])
       to       = github_repository.this[each.key]
       id       = each.key
     }
     import {
-      for_each = var.repos
+      for_each = toset(["kindle-dash", "servarr"])
       to       = github_actions_repository_permissions.this[each.key]
       id       = each.key
     }
     import {
-      for_each = var.repos
+      for_each = toset(["kindle-dash", "servarr"])
       to       = github_workflow_repository_permissions.this[each.key]
       id       = each.key
+    }
+    import {
+      to = github_branch_protection.main["kindle-dash"]
+      id = "kindle-dash:main"
     }
   EOT
 }
