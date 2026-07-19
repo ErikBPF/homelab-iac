@@ -39,8 +39,20 @@ generate "provider" {
       type = string
     }
 
+    variable "github_app_management_token" {
+      type      = string
+      sensitive = true
+      default   = ""
+    }
+
     provider "github" {
       token = var.github_token
+      owner = var.github_owner
+    }
+
+    provider "github" {
+      alias = "app_management"
+      token = var.github_app_management_token
       owner = var.github_owner
     }
   EOT
@@ -77,6 +89,7 @@ generate "encryption" {
 inputs = {
   state_passphrase = local.state_passphrase
 
-  github_token = get_env("GITHUB_TOKEN")
-  github_owner = get_env("GITHUB_OWNER", "ErikBPF")
+  github_token                = get_env("GITHUB_TOKEN")
+  github_owner                = get_env("GITHUB_OWNER", "ErikBPF")
+  github_app_management_token = get_env("GITHUB_APP_MANAGEMENT_TOKEN", "")
 }
