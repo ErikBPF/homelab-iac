@@ -5,6 +5,9 @@ terraform {
     github = {
       source  = "integrations/github"
       version = "~> 6.0"
+      configuration_aliases = [
+        github.app_management,
+      ]
     }
   }
 }

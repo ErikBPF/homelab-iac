@@ -77,6 +77,7 @@ resource "github_branch_protection" "main" {
 
 resource "github_app_installation_repository" "this" {
   for_each = var.app_installation_repositories
+  provider = github.app_management
 
   installation_id = each.value.installation_id
   repository      = each.value.repository
