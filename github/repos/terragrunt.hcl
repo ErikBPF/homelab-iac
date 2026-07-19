@@ -6,6 +6,17 @@ terraform {
   source = "${dirname(find_in_parent_folders("root.hcl"))}/modules//repo"
 }
 
+locals {
+  kindle_release_app_id          = get_env("KINDLE_RELEASE_APP_ID", "")
+  kindle_release_installation_id = get_env("KINDLE_RELEASE_INSTALLATION_ID", "")
+  kindle_release_private_key_b64 = get_env("KINDLE_RELEASE_PRIVATE_KEY_B64", "")
+  kindle_release_ready = alltrue([
+    local.kindle_release_app_id != "",
+    local.kindle_release_installation_id != "",
+    local.kindle_release_private_key_b64 != "",
+  ])
+}
+
 # Fleet repos whose GitHub settings we keep drift-proof: the flake-input repos
 # consumed by desktop-nixos, plus the self-hosted Renovate runner. Values mirror
 # current live state so the initial import is a zero-diff no-op; the defaults
@@ -42,6 +53,26 @@ inputs = {
     # expect the import plan to show +1 change flipping allow_auto_merge on.
     renovate-config = { visibility = "private" }
   }
+
+  app_installation_repositories = local.kindle_release_ready ? {
+    kindle-release-servarr = {
+      installation_id = local.kindle_release_installation_id
+      repository      = "servarr"
+    }
+  } : {}
+
+  actions_secrets = local.kindle_release_ready ? {
+    kindle-release-app-id = {
+      repository  = "kindle-dash"
+      secret_name = "KINDLE_RELEASE_APP_ID"
+      value       = local.kindle_release_app_id
+    }
+    kindle-release-private-key = {
+      repository  = "kindle-dash"
+      secret_name = "KINDLE_RELEASE_PRIVATE_KEY"
+      value       = base64decode(local.kindle_release_private_key_b64)
+    }
+  } : {}
 }
 
 # One-time state migration (config-driven import). Flip `disable = false`, run

@@ -74,3 +74,18 @@ resource "github_branch_protection" "main" {
     }
   }
 }
+
+resource "github_app_installation_repository" "this" {
+  for_each = var.app_installation_repositories
+
+  installation_id = each.value.installation_id
+  repository      = each.value.repository
+}
+
+resource "github_actions_secret" "this" {
+  for_each = nonsensitive(var.actions_secrets)
+
+  repository  = each.value.repository
+  secret_name = each.value.secret_name
+  value       = each.value.value
+}
