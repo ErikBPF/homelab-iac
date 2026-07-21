@@ -6,7 +6,7 @@
 fixture image on loopback, and waits for its local control endpoint. It copies
 only the dummy fixture configuration into temporary storage.
 
-The OpenTofu fixture pins `ErikBPF/adguardhome` 0.1.7 and declares one
+The OpenTofu fixture pins `ErikBPF/adguardhome` 0.1.8 and declares one
 `adguardhome_config` while omitting disabled DHCP. The required sequence is:
 
 1. init and validate;
@@ -17,10 +17,10 @@ The OpenTofu fixture pins `ErikBPF/adguardhome` 0.1.7 and declares one
 6. destroy.
 
 Any provider rejection, actionable drift, missing cleanup, non-local endpoint,
-or enabled DHCP is a test failure. Fork provider 0.1.7 completes the sequence.
+or enabled DHCP is a test failure. Owned provider 0.1.8 completes the sequence.
 
 When `ADGUARD_PROVIDER_DEV_BINARY` is set, init still resolves the declared
-stock provider and lock metadata first; subsequent validate/lifecycle commands
+Registry provider and lock metadata first; subsequent validate/lifecycle commands
 use only the isolated CLI development override. The supplied binary must be an
-executable local file. Omitting the variable exercises the pinned stock
+executable local file. Omitting the variable exercises the pinned Registry
 provider and is the required green admission path.

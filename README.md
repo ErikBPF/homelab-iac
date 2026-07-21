@@ -62,17 +62,18 @@ WLANs (×3), static DNS (×2), DHCP reservations (×22); _Tailscale_ — ACL pol
 file (`tailscale/acl/policy.hujson`) + DNS (nameservers, MagicDNS, search paths);
 _Cloudflare_ — public DNS for `pastelariadev.com` (3 tunnel CNAMEs) + the
 `homeassistant-remote-access` tunnel ingress (ha, rpg);
-_AdGuard_ — DNS rewrites, `user_rules`, blocklist filters.
+_AdGuard_ — provider-supported singleton config, DNS rewrites, `user_rules`,
+blocklist filters.
 
 This gives DNS-as-code at every layer: **public** (Cloudflare) · **LAN** (UniFi
 static DNS) · **tailnet** (Tailscale MagicDNS) · **filtering** (AdGuard).
 
-> **AdGuard ownership split:** Terraform owns rewrites / user_rules / filters via
-> the API. The **base config** (DNS upstreams, dhcp, tls, querylog/stats) stays
-> in servarr's `AdGuardHome.yaml` until the singleton apply and second no-op plan
-> pass. `just sync-servarr` excludes that file during this transition. AdGuard
-> rewrites the YAML at runtime, so its base config effectively self-persists on
-> the host.
+> **AdGuard ownership split:** Terraform owns every field supported by the
+> pinned `ErikBPF/adguardhome` provider, including the singleton base config,
+> rewrites, user rules, and filters. Credentials, users, TLS key/certificate
+> material, DHCP, runtime data, and provider-unsupported bootstrap fields remain
+> Servarr/Vault/SOPS-owned. `AdGuardHome.yaml` remains runtime persistence, not
+> the authority for provider-supported fields.
 
 **Not manageable with the `filipowm/unifi` provider — stays UI-managed:**
 
