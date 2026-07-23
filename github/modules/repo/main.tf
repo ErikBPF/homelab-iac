@@ -52,18 +52,23 @@ resource "github_workflow_repository_permissions" "this" {
   can_approve_pull_request_reviews = each.value.can_approve_pull_requests
 }
 
-# Opt-in branch protection on main (none of these repos have it today).
+# Branch protection for each managed default branch.
 resource "github_branch_protection" "main" {
   for_each = { for k, v in var.repos : k => v if v.protect_main }
 
   repository_id                   = github_repository.this[each.key].node_id
-  pattern                         = "main"
-  enforce_admins                  = false
+  pattern                         = each.value.branch_pattern
+  enforce_admins                  = true
+  allows_deletions                = false
+  allows_force_pushes             = false
   require_conversation_resolution = each.value.require_conversation_resolution
 
-  required_status_checks {
-    strict   = true
-    contexts = each.value.required_checks
+  dynamic "required_status_checks" {
+    for_each = length(each.value.required_checks) == 0 ? [] : [true]
+    content {
+      strict   = true
+      contexts = each.value.required_checks
+    }
   }
 
   dynamic "required_pull_request_reviews" {

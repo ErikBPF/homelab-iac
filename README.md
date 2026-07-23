@@ -2,7 +2,7 @@
 
 > **SSOT role (desktop-nixos RFC 2026-06-29):** owns the **network substrate** —
 > UniFi VLAN/WLAN/DHCP reservations + static DNS, Tailscale ACL, Cloudflare — and
-> the **GitHub repo settings** of the fleet's flake-input repos (a declarative
+> the **GitHub repo settings** of every active owned repository (a declarative
 > config surface the fleet depends on, same drift-check discipline).
 > Consumes desktop-nixos's vendored, pinned `fleet.json`.
 
@@ -17,8 +17,7 @@ Terragrunt). Components, each under its own top-level dir:
 - **`cloudflare/`** — the public edge (`cloudflare/cloudflare`): DNS records for
   `pastelariadev.com` (tunnel CNAMEs). The public-DNS layer.
 - **`github/`** — repo settings + Actions/workflow-token permissions
-  (`integrations/github`) for the desktop-nixos flake-input repos
-  (`codex-flake`, `opencode-flake`, `hermes-flake`). Codifies the toggles whose
+  (`integrations/github`) for all active `ErikBPF` repositories. Codifies the toggles whose
   drift broke the auto-update lanes. See `docs/2026-07-08-github-repo-iac.md`.
 - **`netbird/`** — the self-hosted NetBird overlay admin (`netbirdio/netbird`):
   setup keys, groups, default-deny policy, split-DNS (`nameservers/`), routes.
