@@ -1,11 +1,11 @@
 # GitHub repo settings as IaC — `github/` component
 
-**Status:** Ready to migrate (module built, import validated zero-diff; apply pending)
-**Date:** 2026-07-08
+**Status:** Implemented for all 27 active owned repositories on 2026-07-22.
+**Date:** 2026-07-08; fleet hardening expanded 2026-07-22
 
 ## Why
 
-The desktop-nixos flake-input repos (`codex-flake`, `opencode-flake`,
+The desktop-nixos flake-input repos (`codex-flake`, `opencode-flake`, and
 `hermes-flake`) each run a scheduled "auto-update" lane: bump the upstream
 version → open a PR → enable auto-merge. On 2026-07-08 the codex and opencode
 lanes were failing, in two stages, both caused by **repo settings that had
@@ -44,8 +44,11 @@ delete a repo from a stray destroy) and `ignore_changes` on
 description/topics/issue-wiki-project-download toggles — this component owns
 **only** the merge/auto-merge/permission surface, not repo features.
 
-Branch protection is a per-repo opt-in (`protect_main`, default off) — none of
-these repos have protection today, so leaving it off keeps the import a no-op.
+Branch protection is enabled on every public repository: administrators are
+enforced, force-push and deletion are disabled, conversations must resolve,
+and proven CI checks remain required. GitHub Free does not offer branch
+protection for private repositories; those are explicitly marked unsupported
+while still receiving merge-strategy and Actions-permission hardening.
 `required_checks` are recorded in the map for when it is turned on.
 
 ## Auth

@@ -17,41 +17,135 @@ locals {
   ])
 }
 
-# Fleet repos whose GitHub settings we keep drift-proof: the flake-input repos
-# consumed by desktop-nixos, plus the self-hosted Renovate runner. Values mirror
-# current live state so the initial import is a zero-diff no-op; the defaults
-# (see modules/repo/variables.tf) already encode the fleet norm, so most repos
-# need no explicit fields. required_checks are the gates each repo's auto-merge
-# lane waits on — recorded here for when protect_main is turned on later.
+# Every active repository owned by ErikBPF. Actions token overrides preserve
+# live automation capabilities; all other settings use hardened defaults.
 inputs = {
   repos = {
-    codex-flake    = {}
-    opencode-flake = {}
-    hermes-flake   = {}
+    agentmemory = {
+      protect_main = true
+    }
+    ai-server = {
+      visibility   = "private"
+      protect_main = false # GitHub Free does not support private branch protection.
+    }
+    codex-flake = {
+      protect_main                 = true
+      required_checks              = ["check", "package-build"]
+      default_workflow_permissions = "write"
+      can_approve_pull_requests    = true
+    }
+    datafoundation-support-scripts = {
+      visibility   = "private"
+      protect_main = false
+    }
+    desktop-nixos = {
+      protect_main = true
+      required_checks = [
+        "lint", "flake-lock", "k3s-smoke", "eval (pathfinder)",
+        "eval (laptop)", "eval (orion)", "eval (discovery)", "eval (kepler)",
+      ]
+    }
+    hermes-flake = {
+      protect_main = true
+      required_checks = [
+        "build (x86_64-linux, ubuntu-latest)",
+        "build (aarch64-linux, ubuntu-24.04-arm)",
+      ]
+      default_workflow_permissions = "write"
+      can_approve_pull_requests    = true
+    }
+    hermes-skills = {
+      visibility   = "private"
+      protect_main = false
+    }
+    home-assistant-config = {
+      visibility   = "private"
+      protect_main = false
+    }
+    homelab-gitops = {
+      visibility   = "private"
+      protect_main = false
+    }
+    homelab-iac = {
+      protect_main    = true
+      required_checks = ["lint"]
+    }
     kindle-dash = {
-      allow_merge_commit              = false
-      delete_branch_on_merge          = true
-      default_workflow_permissions    = "read"
-      can_approve_pull_requests       = false
-      protect_main                    = true
-      required_checks                 = ["validate", "secrets"]
-      require_conversation_resolution = true
-      require_pull_request_reviews    = true
-      dismiss_stale_reviews           = true
+      default_workflow_permissions = "read"
+      can_approve_pull_requests    = false
+      protect_main                 = true
+      required_checks              = ["validate", "secrets"]
+    }
+    klipper-biqu = {
+      visibility   = "private"
+      protect_main = false
+    }
+    nanda_colors = {
+      visibility   = "private"
+      protect_main = false
+    }
+    nstech-dev-technical-test = {
+      protect_main                 = true
+      default_workflow_permissions = "write"
+      can_approve_pull_requests    = true
+    }
+    nstech-mdm-technical-test = {
+      protect_main = true
+    }
+    opencode-flake = {
+      protect_main                 = true
+      required_checks              = ["check", "package-build"]
+      default_workflow_permissions = "write"
+      can_approve_pull_requests    = true
+    }
+    renovate-config = {
+      visibility                   = "private"
+      protect_main                 = false
+      default_workflow_permissions = "write"
+      can_approve_pull_requests    = true
+    }
+    romozinha = {
+      visibility   = "private"
+      protect_main = false
+    }
+    sail = {
+      protect_main = true
+    }
+    sail-dev = {
+      visibility                   = "private"
+      protect_main                 = false
+      default_workflow_permissions = "write"
     }
     servarr = {
       visibility                   = "private"
       allow_auto_merge             = false
-      allow_merge_commit           = false
-      allow_rebase_merge           = false
-      delete_branch_on_merge       = true
+      protect_main                 = false
       default_workflow_permissions = "read"
       can_approve_pull_requests    = false
     }
-    # Renovate runner (RFC 2026-07-11). Private, so it overrides the public
-    # default; brand-new repo, so its auto-merge is still off (GitHub default) —
-    # expect the import plan to show +1 change flipping allow_auto_merge on.
-    renovate-config = { visibility = "private" }
+    spicyphus = {
+      protect_main = true
+    }
+    terraform-provider-adguardhome = {
+      protect_main    = true
+      required_checks = ["unit", "generated-docs"]
+    }
+    terraform-provider-litellm = {
+      protect_main = true
+    }
+    terraform-provider-netbird = {
+      protect_main = true
+    }
+    vault = {
+      visibility   = "private"
+      protect_main = false
+    }
+    zmk-config-chary = {
+      branch_pattern               = "master"
+      protect_main                 = true
+      default_workflow_permissions = "write"
+      can_approve_pull_requests    = true
+    }
   }
 
   app_installation_repositories = local.kindle_release_ready ? {
@@ -86,23 +180,51 @@ generate "imports" {
   disable   = true
   contents  = <<-EOT
     import {
-      for_each = toset(["kindle-dash", "servarr"])
+      for_each = toset([
+        "agentmemory", "ai-server", "datafoundation-support-scripts",
+        "desktop-nixos", "hermes-skills", "home-assistant-config",
+        "homelab-gitops", "homelab-iac", "klipper-biqu", "nanda_colors",
+        "nstech-dev-technical-test", "nstech-mdm-technical-test", "romozinha",
+        "sail", "sail-dev", "spicyphus", "terraform-provider-adguardhome",
+        "terraform-provider-litellm", "terraform-provider-netbird", "vault",
+        "zmk-config-chary",
+      ])
       to       = github_repository.this[each.key]
       id       = each.key
     }
     import {
-      for_each = toset(["kindle-dash", "servarr"])
+      for_each = toset([
+        "agentmemory", "ai-server", "datafoundation-support-scripts",
+        "desktop-nixos", "hermes-skills", "home-assistant-config",
+        "homelab-gitops", "homelab-iac", "klipper-biqu", "nanda_colors",
+        "nstech-dev-technical-test", "nstech-mdm-technical-test", "romozinha",
+        "sail", "sail-dev", "spicyphus", "terraform-provider-adguardhome",
+        "terraform-provider-litellm", "terraform-provider-netbird", "vault",
+        "zmk-config-chary",
+      ])
       to       = github_actions_repository_permissions.this[each.key]
       id       = each.key
     }
     import {
-      for_each = toset(["kindle-dash", "servarr"])
+      for_each = toset([
+        "agentmemory", "ai-server", "datafoundation-support-scripts",
+        "desktop-nixos", "hermes-skills", "home-assistant-config",
+        "homelab-gitops", "homelab-iac", "klipper-biqu", "nanda_colors",
+        "nstech-dev-technical-test", "nstech-mdm-technical-test", "romozinha",
+        "sail", "sail-dev", "spicyphus", "terraform-provider-adguardhome",
+        "terraform-provider-litellm", "terraform-provider-netbird", "vault",
+        "zmk-config-chary",
+      ])
       to       = github_workflow_repository_permissions.this[each.key]
       id       = each.key
     }
     import {
-      to = github_branch_protection.main["kindle-dash"]
-      id = "kindle-dash:main"
+      for_each = toset([
+        "codex-flake", "desktop-nixos", "hermes-flake", "homelab-iac",
+        "opencode-flake", "spicyphus", "terraform-provider-adguardhome",
+      ])
+      to = github_branch_protection.main[each.key]
+      id = "$${each.key}:main"
     }
   EOT
 }

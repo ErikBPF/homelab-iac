@@ -11,10 +11,10 @@ variable "repos" {
     # Repo settings (github_repository).
     visibility             = optional(string, "public")
     allow_auto_merge       = optional(bool, true) # `gh pr merge --auto` needs this
-    allow_merge_commit     = optional(bool, true)
+    allow_merge_commit     = optional(bool, false)
     allow_squash_merge     = optional(bool, true)
-    allow_rebase_merge     = optional(bool, true)
-    delete_branch_on_merge = optional(bool, false)
+    allow_rebase_merge     = optional(bool, false)
+    delete_branch_on_merge = optional(bool, true)
 
     # Actions policy (github_actions_repository_permissions).
     allowed_actions = optional(string, "all") # all | local_only | selected
@@ -22,16 +22,16 @@ variable "repos" {
     # Default workflow token scope (github_workflow_repository_permissions).
     # can_approve_pull_requests=true == "Allow GitHub Actions to create and
     # approve pull requests"; the create-pull-request step fails without it.
-    default_workflow_permissions = optional(string, "write") # read | write
-    can_approve_pull_requests    = optional(bool, true)
+    default_workflow_permissions = optional(string, "read") # read | write
+    can_approve_pull_requests    = optional(bool, false)
 
-    # Optional branch protection on main. Off by default — these repos have
-    # none today, so leaving it off keeps the initial import a pure no-op.
+    # Optional protection for the repository's default branch.
     protect_main                    = optional(bool, false)
+    branch_pattern                  = optional(string, "main")
     required_checks                 = optional(list(string), [])
-    require_conversation_resolution = optional(bool, false)
-    require_pull_request_reviews    = optional(bool, false)
-    dismiss_stale_reviews           = optional(bool, false)
+    require_conversation_resolution = optional(bool, true)
+    require_pull_request_reviews    = optional(bool, true)
+    dismiss_stale_reviews           = optional(bool, true)
   }))
 }
 
