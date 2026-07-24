@@ -169,42 +169,14 @@ inputs = {
   } : {}
 }
 
-# One-time state migration (config-driven import). Flip `disable = false`, run
-# `terragrunt plan` (expect "3 to import, 0 to change" per repo), then
-# `terragrunt apply`, then set `disable = true` again and commit. Import IDs:
-# repo name for the three per-repo resources; "<repo>:main" for branch
-# protection (unused until protect_main).
+# One-time state migration for the 21 workflow-permission resources missing
+# from state. Existing repository, Actions, and branch-protection resources
+# are already imported.
 generate "imports" {
   path      = "imports_gen.tf"
   if_exists = "overwrite"
-  disable   = true
+  disable   = false
   contents  = <<-EOT
-    import {
-      for_each = toset([
-        "agentmemory", "ai-server", "datafoundation-support-scripts",
-        "desktop-nixos", "hermes-skills", "home-assistant-config",
-        "homelab-gitops", "homelab-iac", "klipper-biqu", "nanda_colors",
-        "nstech-dev-technical-test", "nstech-mdm-technical-test", "romozinha",
-        "sail", "sail-dev", "spicyphus", "terraform-provider-adguardhome",
-        "terraform-provider-litellm", "terraform-provider-netbird", "vault",
-        "zmk-config-chary",
-      ])
-      to       = github_repository.this[each.key]
-      id       = each.key
-    }
-    import {
-      for_each = toset([
-        "agentmemory", "ai-server", "datafoundation-support-scripts",
-        "desktop-nixos", "hermes-skills", "home-assistant-config",
-        "homelab-gitops", "homelab-iac", "klipper-biqu", "nanda_colors",
-        "nstech-dev-technical-test", "nstech-mdm-technical-test", "romozinha",
-        "sail", "sail-dev", "spicyphus", "terraform-provider-adguardhome",
-        "terraform-provider-litellm", "terraform-provider-netbird", "vault",
-        "zmk-config-chary",
-      ])
-      to       = github_actions_repository_permissions.this[each.key]
-      id       = each.key
-    }
     import {
       for_each = toset([
         "agentmemory", "ai-server", "datafoundation-support-scripts",
@@ -217,14 +189,6 @@ generate "imports" {
       ])
       to       = github_workflow_repository_permissions.this[each.key]
       id       = each.key
-    }
-    import {
-      for_each = toset([
-        "codex-flake", "desktop-nixos", "hermes-flake", "homelab-iac",
-        "opencode-flake", "spicyphus", "terraform-provider-adguardhome",
-      ])
-      to = github_branch_protection.main[each.key]
-      id = "$${each.key}:main"
     }
   EOT
 }
