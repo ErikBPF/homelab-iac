@@ -25,6 +25,32 @@ jobs:
         with:
           submodules: true
 
+      - name: Scan infrastructure
+        id: trivy
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          skip-dirs: '**/.terragrunt-cache'
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+
+      - name: Notify security channel
+        if: always() && github.event_name == 'push' && steps.trivy.outcome == 'failure'
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_SECURITY_WEBHOOK }}
+        run: |
+          if [[ -z "$WEBHOOK" ]]; then
+            echo "::notice::DISCORD_SECURITY_WEBHOOK not configured"
+            exit 0
+          fi
+          jq -nc \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg ref "$GITHUB_REF_NAME" \
+            --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            '{allowed_mentions:{parse:[]},embeds:[{title:"INFRASTRUCTURE SECURITY SCAN FAILED",description:("**Repository:** `"+$repo+"`\n**Ref:** `"+$ref+"`\nReview required; findings withheld from Discord.\n[Open workflow]("+$url+")"),color:15548997}]}' \
+            | curl -fsS -H "Content-Type: application/json" --data @- "$WEBHOOK"
+
       - uses: opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f # v1
         with:
           tofu_version: "1.12.1"
