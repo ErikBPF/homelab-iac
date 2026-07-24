@@ -15,8 +15,8 @@ terraform {
 }
 
 inputs = {
-  mount   = "secret"
-  name    = "home/ha-harness-litellm"
-  data    = { LITELLM_API_KEY = dependency.ha_harness_key.outputs.key }
-  version = 1
+  mount         = "secret"
+  name          = "home/ha-harness-litellm"
+  data          = { LITELLM_API_KEY = dependency.ha_harness_key.outputs.key }
+  write_version = 1
 }

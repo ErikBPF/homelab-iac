@@ -12,6 +12,6 @@ variable "data" {
   ephemeral = true
 }
 
-variable "version" {
+variable "write_version" {
   type = number
 }

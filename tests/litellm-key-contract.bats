@@ -12,6 +12,8 @@
 
 @test "OpenBao handoff owns only the LiteLLM key path" {
   grep -q 'dependency "ha_harness_key"' components/openbao/environments/home/ha-harness-litellm/terragrunt.hcl
-  grep -Fq 'name    = "home/ha-harness-litellm"' components/openbao/environments/home/ha-harness-litellm/terragrunt.hcl
+  grep -Eq 'name[[:space:]]*=[[:space:]]*"home/ha-harness-litellm"' components/openbao/environments/home/ha-harness-litellm/terragrunt.hcl
+  grep -q 'variable "write_version"' components/openbao/modules/kv-secret/variables.tf
+  ! grep -q 'variable "version"' components/openbao/modules/kv-secret/variables.tf
   ! grep -R -q 'HA_HARNESS_TOKEN' components/openbao
 }
