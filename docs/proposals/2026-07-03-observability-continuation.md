@@ -11,6 +11,14 @@ items are independent and ranked inside each section.
 control-plane targets verified `up=1`; that work is no longer part of this
 backlog.
 
+**Shipped 2026-07-24:** the first k8s telemetry-health slice now alerts on
+Alloy OOMs, restarts, readiness, sustained remote-write backlog/retries, and
+missing etcd targets. The live retry incident was a temporary Discovery
+Prometheus outage during stack recreation; retries now require a 5-minute
+rolling increase sustained for 10 minutes, so recovered maintenance does not
+page late. `servarr#109` passed 79 Discovery tests plus 30 subtests and was
+deployed to Discovery.
+
 ## Context
 
 The 2026-06-29 fleet-monitoring RFC shipped: 15 provisioned dashboards, the
