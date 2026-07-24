@@ -25,6 +25,7 @@ git pull --ff-only 2>/dev/null || true
 out=$(terragrunt run --all \
   --filter '!oracle/compute-telstar' \
   --filter '!components/litellm/environments/home/canary' \
+  --filter '!components/openbao/environments/home/runtime-secret-foundation' \
   --non-interactive -- plan -detailed-exitcode -no-color 2>&1)
 code=$?
 

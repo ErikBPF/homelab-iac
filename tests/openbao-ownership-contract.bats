@@ -2,15 +2,17 @@
 
 @test "S08 imports the existing OpenBao runtime-secret foundation" {
   module=components/openbao/modules/runtime-secret-foundation/main.tf
-  imports=components/openbao/modules/runtime-secret-foundation/imports.tf
-
   grep -q 'resource "vault_mount" "secret"' "$module"
   grep -q 'resource "vault_auth_backend" "approle"' "$module"
   grep -q 'resource "vault_policy" "home_read"' "$module"
   grep -q 'resource "vault_policy" "iac_writer"' "$module"
   grep -q 'resource "vault_approle_auth_backend_role" "vault_agent"' "$module"
   grep -q 'resource "vault_approle_auth_backend_role" "iac_writer"' "$module"
-  [ "$(grep -c '^import {' "$imports")" -eq 6 ]
+  ! grep -R -q '^import {' components/openbao
+}
+
+@test "S08 root-bootstrap unit is excluded from unattended AppRole drift" {
+  grep -Fq -- "--filter '!components/openbao/environments/home/runtime-secret-foundation'" bin/drift-check.sh
 }
 
 @test "S08 preserves every live Vault Agent policy and TTL" {
