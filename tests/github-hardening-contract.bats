@@ -69,20 +69,13 @@ PY
   [ "$status" -eq 0 ]
 }
 
-@test "migration imports only the 21 missing workflow permission resources" {
+@test "completed migration leaves no import blocks" {
   run python3 - "$REPO_ROOT/github/repos/terragrunt.hcl" <<'PY'
-import pathlib, re, sys
+import pathlib, sys
 
 text = pathlib.Path(sys.argv[1]).read_text()
-imports = text.split('generate "imports"', 1)[1]
-assert "disable   = false" in imports
-assert imports.count("import {") == 1
-assert "github_workflow_repository_permissions.this[each.key]" in imports
-assert "github_repository.this[each.key]" not in imports
-assert "github_actions_repository_permissions.this[each.key]" not in imports
-assert "github_branch_protection.main[each.key]" not in imports
-names = re.findall(r'"([a-z0-9_-]+)"', imports.split("toset([", 1)[1].split("])", 1)[0])
-assert len(names) == 21, names
+assert 'generate "imports"' not in text
+assert "import {" not in text
 PY
   [ "$status" -eq 0 ]
 }

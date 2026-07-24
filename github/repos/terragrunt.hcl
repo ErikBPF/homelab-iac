@@ -168,27 +168,3 @@ inputs = {
     }
   } : {}
 }
-
-# One-time state migration for the 21 workflow-permission resources missing
-# from state. Existing repository, Actions, and branch-protection resources
-# are already imported.
-generate "imports" {
-  path      = "imports_gen.tf"
-  if_exists = "overwrite"
-  disable   = false
-  contents  = <<-EOT
-    import {
-      for_each = toset([
-        "agentmemory", "ai-server", "datafoundation-support-scripts",
-        "desktop-nixos", "hermes-skills", "home-assistant-config",
-        "homelab-gitops", "homelab-iac", "klipper-biqu", "nanda_colors",
-        "nstech-dev-technical-test", "nstech-mdm-technical-test", "romozinha",
-        "sail", "sail-dev", "spicyphus", "terraform-provider-adguardhome",
-        "terraform-provider-litellm", "terraform-provider-netbird", "vault",
-        "zmk-config-chary",
-      ])
-      to       = github_workflow_repository_permissions.this[each.key]
-      id       = each.key
-    }
-  EOT
-}
