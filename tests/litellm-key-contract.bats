@@ -5,7 +5,8 @@
   ! grep -q 'variable "key"' components/litellm/modules/key/variables.tf
   grep -q 'resource "litellm_key" "rotation"' components/litellm/modules/key/main.tf
   grep -Fq 'ignore_changes = all' components/litellm/modules/key/main.tf
-  grep -q 'value *= *litellm_key\.rotation\.key' components/litellm/modules/key/outputs.tf
+  grep -q 'value *= *litellm_key\.rotation\.generated_key' components/litellm/modules/key/outputs.tf
+  grep -Fq 'version = "1.1.2"' components/litellm/modules/key/versions.tf
   grep -q 'sensitive *= *true' components/litellm/modules/key/outputs.tf
 }
 
