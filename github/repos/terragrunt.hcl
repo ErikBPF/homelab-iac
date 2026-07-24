@@ -34,6 +34,13 @@ inputs = {
       default_workflow_permissions = "write"
       can_approve_pull_requests    = true
     }
+    cosmo-notes = {
+      visibility                   = "private"
+      allow_auto_merge             = false
+      protect_main                 = false
+      default_workflow_permissions = "read"
+      can_approve_pull_requests    = false
+    }
     datafoundation-support-scripts = {
       visibility   = "private"
       protect_main = false
@@ -57,6 +64,13 @@ inputs = {
     hermes-skills = {
       visibility   = "private"
       protect_main = false
+    }
+    ha-harness = {
+      visibility                   = "private"
+      allow_auto_merge             = false
+      protect_main                 = false
+      default_workflow_permissions = "read"
+      can_approve_pull_requests    = false
     }
     home-assistant-config = {
       visibility   = "private"
