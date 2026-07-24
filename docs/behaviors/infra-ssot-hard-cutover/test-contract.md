@@ -341,3 +341,19 @@ Before implementation, `tests/infra-ssot-contract.sh s04` must fail with:
 ```text
 S04 RED: LiteLLM provider importer/metadata/read-back boundary not implemented
 ```
+
+## S08: Vault runtime-secret canary
+
+S08 closes only when all of these are evidenced:
+
+1. A scoped LiteLLM provider resource mints the canary credential.
+2. The OpenBao write uses an ephemeral input and `data_json_wo`; sanitized
+   target-state inspection proves the copied value is absent.
+3. One workload consumes only the Vault Agent render, with least-privilege file
+   mode and a successful value-free runtime probe.
+4. The live KV mount, read policy, and AppRole are imported into the OpenBao
+   component before Terraform may claim ownership. The import plan must be
+   zero-create, zero-destroy and preserve every existing policy attached to the
+   shared `vault-agent` role.
+
+Passing the first three checks is partial progress, not S08 completion.

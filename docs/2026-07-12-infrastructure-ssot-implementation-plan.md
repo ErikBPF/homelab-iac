@@ -1,6 +1,6 @@
 # Infrastructure SSOT hard-cutover implementation plan
 
-**Status:** In progress — S01–S04 complete; S05 implementation and plan green, production cutover pending
+**Status:** In progress — S01–S04 complete; S05 implementation and plan green; S08 runtime/data gates green, ownership gate pending
 
 ## Outcome
 
@@ -47,7 +47,7 @@ Official `BerriAI/litellm` v0.2.2 must pass a canary against LiteLLM 1.91.2. It 
 - [ ] **S07: Finish OpenCode routing** `risk:medium` `depends:[S05,S06]`
   > New sessions start on LiteLLM GLM; Architect reviews with GLM; General/Explore implement, debug, and explore with MiMo.
 - [ ] **S08: Vault runtime-secret canary** `risk:high` `depends:[S01]` `HITL`
-  > One workload consumes an operator-reminted Vault value through Terraform-owned mount/policy/auth wiring with no value in state.
+  > One workload consumes a provider-minted value through a write-only OpenBao handoff and Terraform-owned mount/policy/auth wiring, with no copied value in the OpenBao state.
 - [ ] **S09: Discovery runtime-secret cutover** `risk:high` `depends:[S08]` `HITL`
   > Discovery dotenv/sops sources retain config/bootstrap only; runtime stacks consume Vault Agent renders.
 - [ ] **S10: Remaining compose/host secret cutovers** `risk:high` `depends:[S08]` `HITL`
@@ -81,6 +81,19 @@ Official `BerriAI/litellm` v0.2.2 must pass a canary against LiteLLM 1.91.2. It 
 - LiteLLM OSS rejects team-owned model administration as Enterprise-only. A dedicated sops-held proxy-admin bootstrap credential is therefore required for Terraform; generated management keys remain insufficient. Production migration remains maintenance-gated until the reviewed DB-model/YAML cutoff sequence is executed.
 - 2026-07-12: S03 seeded the normalized OpenCode Zen catalog from models.dev (79 models: 6 active free, 24 deprecated). Renovate and the scheduled catalog workflow are review-only and cannot plan/apply/import infrastructure.
 - 2026-07-13: the AdGuard filtering canary initialized through the canonical shared Terragrunt root and returned `No changes`; the preserved state-key and rendered-contract checks also passed.
+- 2026-07-24: the LiteLLM provider minted the scoped `ha-harness` key and the
+  OpenBao unit handed it to `secret/home/ha-harness-litellm` through
+  `data_json_wo`. Sanitized state inspection found `data = {}`,
+  `data_json = null`, and `data_json_wo = null`; only write version `1`
+  persists in the OpenBao unit state. The encrypted LiteLLM source state still
+  necessarily owns its generated credential.
+- 2026-07-24: Discovery's existing Vault Agent rendered
+  `/run/vault-agent/ha-harness.env` as `0440 root:docker`; `erik` could read it
+  through group membership and `nobody` could not. The existing synthetic
+  `ha-agent-qwen4b` request returned a valid tool decision. S08 remains open
+  because the live `secret/` mount, read policy, and `vault-agent` AppRole are
+  pre-existing imperative resources and have not yet been imported under the
+  OpenBao Terraform component.
 
 ## Initial verification commands
 
