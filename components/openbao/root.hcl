@@ -12,7 +12,8 @@ generate "provider" {
       ephemeral = true
     }
     provider "vault" {
-      address = "https://openbao.homelab.pastelariadev.com"
+      address          = "https://openbao.homelab.pastelariadev.com"
+      skip_child_token = true
       auth_login {
         path = "auth/approle/login"
         parameters = {

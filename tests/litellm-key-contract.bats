@@ -16,4 +16,5 @@
   grep -q 'variable "write_version"' components/openbao/modules/kv-secret/variables.tf
   ! grep -q 'variable "version"' components/openbao/modules/kv-secret/variables.tf
   ! grep -R -q 'HA_HARNESS_TOKEN' components/openbao
+  grep -q 'skip_child_token *= *true' components/openbao/root.hcl
 }
