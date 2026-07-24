@@ -4,7 +4,7 @@
   ! grep -q 'key *= *var\.key' components/litellm/modules/key/main.tf
   ! grep -q 'variable "key"' components/litellm/modules/key/variables.tf
   grep -q 'resource "litellm_key" "rotation"' components/litellm/modules/key/main.tf
-  grep -Fq 'ignore_changes = [key]' components/litellm/modules/key/main.tf
+  grep -Fq 'ignore_changes = all' components/litellm/modules/key/main.tf
   grep -q 'value *= *litellm_key\.rotation\.key' components/litellm/modules/key/outputs.tf
   grep -q 'sensitive *= *true' components/litellm/modules/key/outputs.tf
 }
