@@ -55,8 +55,8 @@
     "responsibility": "Codex package and Home Manager module"
   },
   {
-    "name": "ha-agent",
-    "path": "references/repos/ha-agent",
+    "name": "ha-harness",
+    "path": "references/repos/ha-harness",
     "responsibility": "Private Home Assistant tool-calling model and safety harness"
   },
   {

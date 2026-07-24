@@ -21,3 +21,5 @@ done
 
 "$root/bin/homelab" audit
 "$root/bin/homelab" docs-check
+bash "$root/tests/security-notification-contract.sh"
+bash "$root/tests/deploy-notification-contract.sh"
