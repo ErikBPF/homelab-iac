@@ -1,3 +1,18 @@
+moved {
+  from = github_repository.this["ha-toolcaller"]
+  to   = github_repository.this["ha-harness"]
+}
+
+moved {
+  from = github_actions_repository_permissions.this["ha-toolcaller"]
+  to   = github_actions_repository_permissions.this["ha-harness"]
+}
+
+moved {
+  from = github_workflow_repository_permissions.this["ha-toolcaller"]
+  to   = github_workflow_repository_permissions.this["ha-harness"]
+}
+
 # Repo settings. Owns `allow_auto_merge` — the toggle that broke the
 # codex/opencode update lanes at the `gh pr merge --auto` step ("Auto merge is
 # not allowed for this repository") — plus the merge-strategy surface.
@@ -37,7 +52,7 @@ resource "github_repository" "this" {
 # Which actions / reusable workflows may run in the repo.
 resource "github_actions_repository_permissions" "this" {
   for_each        = var.repos
-  repository      = each.key
+  repository      = github_repository.this[each.key].name
   enabled         = true
   allowed_actions = each.value.allowed_actions
 }
@@ -47,7 +62,7 @@ resource "github_actions_repository_permissions" "this" {
 # create-pull-request step on codex/opencode. Codified so it can't drift off.
 resource "github_workflow_repository_permissions" "this" {
   for_each                         = var.repos
-  repository                       = each.key
+  repository                       = github_repository.this[each.key].name
   default_workflow_permissions     = each.value.default_workflow_permissions
   can_approve_pull_request_reviews = each.value.can_approve_pull_requests
 }
