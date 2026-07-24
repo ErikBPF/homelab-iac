@@ -12,7 +12,8 @@ text = pathlib.Path(sys.argv[1]).read_text()
 repos = text.split("  repos = {", 1)[1].split("\n  }\n\n  app_installation_repositories", 1)[0]
 expected = {
     "agentmemory", "ai-server", "codex-flake", "datafoundation-support-scripts",
-    "desktop-nixos", "hermes-flake", "hermes-skills", "home-assistant-config",
+    "cosmo-notes", "desktop-nixos", "ha-harness", "hermes-flake",
+    "hermes-skills", "home-assistant-config",
     "homelab-gitops", "homelab-iac", "kindle-dash", "klipper-biqu",
     "nanda_colors", "nstech-dev-technical-test", "nstech-mdm-technical-test",
     "opencode-flake", "renovate-config", "romozinha", "sail", "sail-dev",
@@ -29,7 +30,7 @@ private = {name for name in expected if re.search(
 for name in expected:
     block = re.search(rf"^    {re.escape(name)} = \{{(?:(?!^    \}}).)*^    \}}", repos, re.M | re.S).group()
     assert f"protect_main = {'false' if name in private else 'true'}" in re.sub(r"\s+", " ", block), name
-assert len(private) == 12
+assert len(private) == 14
 PY
   [ "$status" -eq 0 ]
 }
