@@ -19,9 +19,10 @@ rolling increase sustained for 10 minutes, so recovered maintenance does not
 page late. `servarr#109` passed 79 Discovery tests plus 30 subtests and was
 deployed to Discovery.
 
-**Shipped 2026-07-24:** node NotReady, CrashLoopBackOff, PVC Pending, job
-failure, and Alloy resilience rules. Deployment, HPA, and Argo health/sync
-rules remain.
+**Shipped 2026-07-24:** k8s alerting depth is complete: node NotReady,
+CrashLoopBackOff, deployment replicas unavailable, PVC Pending, job failure,
+HPA saturation, Argo health/sync, and Alloy resilience. `servarr#111` passed
+83 Discovery tests plus 30 subtests and was deployed to Discovery.
 
 ## Context
 
@@ -35,17 +36,9 @@ for that backlog so the implemented doc can stay a closed record.
 
 ## A. Alerting depth (highest value — no new infra)
 
-1. **k8s alert rules** — partially shipped. KSM + kubelet cAdvisor + Argo CD
-   metrics all flow. Node NotReady, CrashLoopBackOff, PVC Pending, job failed,
-   and Alloy resilience rules exist. Complete the fitting subset with
-   kube-prometheus set as file-provisioned Grafana rules (`rules.yaml`,
-   new `k8s` group): node `NotReady`, `CrashLoopBackOff`
-   (`max_over_time(kube_pod_container_status_waiting_reason{reason=
-   "CrashLoopBackOff"}[5m]) >= 1`), deployment replicas unavailable, PVC
-   `Pending`, job failed, HPA at max. Plus the GitOps rule the original RFC
-   couldn't have: `argocd_app_info{health_status!="Healthy"}` /
-   `sync_status!="Synced"` sustained 15m. Mind the 5–15 min remote_write
-   lag (≥15m windows) and the `deleteRules` tombstone gotcha.
+1. **k8s alert rules — shipped 2026-07-24.** KSM, kubelet cAdvisor, Argo CD,
+   etcd, and Alloy health rules are file-provisioned with 15-minute workload
+   windows to tolerate remote-write lag.
 2. **AdGuard down = whole-LAN DNS outage** — highest-value single alert
    available today (`up{job="adguard"} == 0` or `adguard_running == 0`,
    short `for:`). The exporter is live; the rule was never written.
