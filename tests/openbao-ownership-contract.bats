@@ -24,5 +24,5 @@
 @test "S08 bootstrap can use an ephemeral root token without storing it" {
   grep -q 'variable "vault_token"' components/openbao/root.hcl
   grep -q 'dynamic "auth_login"' components/openbao/root.hcl
-  grep -Eq 'vault_token[[:space:]]*=[[:space:]]*get_env\\("VAULT_TOKEN", ""\\)' components/openbao/root.hcl
+  grep -Fq 'vault_token     = get_env("VAULT_TOKEN", "")' components/openbao/root.hcl
 }
