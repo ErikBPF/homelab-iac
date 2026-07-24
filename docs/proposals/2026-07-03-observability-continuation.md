@@ -33,6 +33,13 @@ ten minutes. GPU and llama.cpp targets remain dashboard-only because their
 stacks are intentionally stopped. `servarr#113` passed 85 Discovery tests plus
 30 subtests and was deployed to Discovery.
 
+**Investigated 2026-07-24:** compose-host cAdvisor now has an explicit `host`
+label and permanent live diagnostics (`desktop-nixos#101`, `#102`). Live
+Prometheus counts are discovery=66, kepler=87, orion=106, but none has a
+container `name`. Socket ACLs and root execution ruled out permissions:
+Docker needs its actual containerd endpoint, while Alloy's embedded cAdvisor
+component exposes no Podman endpoint. B.1 remains open for that exporter split.
+
 ## Context
 
 The 2026-06-29 fleet-monitoring RFC shipped: 15 provisioned dashboards, the
@@ -60,14 +67,20 @@ for that backlog so the implemented doc can stay a closed record.
 
 ## B. Coverage gaps (need new components or upstream fixes)
 
-1. **cadvisor name-label gap on compose hosts** (carried over, still the
-   real Phase-2 blocker): rootless podman `/run/user/1000` is 0700 so the
-   servarr-side Alloy cadvisor can't resolve container names on
-   kepler/orion, and discovery's docker emits none either. Until fixed, the
-   tombstoned `container-critical-down` / `container-restart-storm` rules
-   stay dead and compose dashboards stay nameless. Candidate fixes:
-   podman socket group/ACL for the alloy user, or scraping podman's own
-   `--metrics` socket instead of cadvisor.
+1. **cadvisor name-label gap on compose hosts** (partially diagnosed, still
+   the real Phase-2 blocker): `desktop-nixos#101` added a host relabel,
+   Discovery's Docker collector, and `just verify-container-metrics`;
+   `desktop-nixos#102` fixed that verifier and proved permissions were not
+   the remaining cause. Prometheus receives cAdvisor series from all three
+   hosts, but `container_last_seen{name!=""}` still returns zero for each.
+   Discovery logs show cAdvisor using the default absent
+   `/run/containerd/containerd.sock`; point `containerd_host` at Docker's real
+   endpoint. Kepler/orion use rootless Podman, which Alloy's embedded cAdvisor
+   component cannot select. Deploy `prometheus-podman-exporter` there and
+   scrape it through Alloy; it emits container `name`, state, CPU, and memory.
+   Until both paths verify non-zero named containers, the tombstoned
+   `container-critical-down` / `container-restart-storm` rules stay dead and
+   compose dashboards stay nameless.
 2. **Compose container logs → Loki** — the deploy audit proved only
    journal + k8s streams exist; container stdout never reaches Loki. The
    four `machines/*/config/alloy/config.alloy` files in servarr are dead
