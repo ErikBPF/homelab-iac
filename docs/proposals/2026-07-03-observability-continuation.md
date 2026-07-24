@@ -1,6 +1,6 @@
 # Observability continuation — alerting depth, coverage gaps, cleanups
 
-**Status:** Proposed — backlog carried over from
+**Status:** Partially implemented — backlog carried over from
 `implemented/2026-06-29-grafana-fleet-monitoring.md` (shipped 2026-07-03)
 plus new items surfaced during that deploy. Nothing here is scheduled;
 items are independent and ranked inside each section.
@@ -19,6 +19,10 @@ rolling increase sustained for 10 minutes, so recovered maintenance does not
 page late. `servarr#109` passed 79 Discovery tests plus 30 subtests and was
 deployed to Discovery.
 
+**Shipped 2026-07-24:** node NotReady, CrashLoopBackOff, PVC Pending, job
+failure, and Alloy resilience rules. Deployment, HPA, and Argo health/sync
+rules remain.
+
 ## Context
 
 The 2026-06-29 fleet-monitoring RFC shipped: 15 provisioned dashboards, the
@@ -31,8 +35,9 @@ for that backlog so the implemented doc can stay a closed record.
 
 ## A. Alerting depth (highest value — no new infra)
 
-1. **k8s alert rules** — the biggest gap. KSM + kubelet cAdvisor + Argo CD
-   metrics all flow; zero k8s rules exist. Port the fitting subset of the
+1. **k8s alert rules** — partially shipped. KSM + kubelet cAdvisor + Argo CD
+   metrics all flow. Node NotReady, CrashLoopBackOff, PVC Pending, job failed,
+   and Alloy resilience rules exist. Complete the fitting subset with
    kube-prometheus set as file-provisioned Grafana rules (`rules.yaml`,
    new `k8s` group): node `NotReady`, `CrashLoopBackOff`
    (`max_over_time(kube_pod_container_status_waiting_reason{reason=

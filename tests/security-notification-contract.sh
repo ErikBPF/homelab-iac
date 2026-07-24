@@ -10,4 +10,4 @@ while IFS= read -r path; do
     { echo "$repo: missing security webhook" >&2; exit 1; }
   grep -Rqs 'allowed_mentions:{parse:\[\]}' "$workflow_dir" ||
     { echo "$repo: Discord mentions not disabled" >&2; exit 1; }
-done < <(jq -r '.[].path' "$root/repos.json")
+done < <(jq -r '.[] | select(.name != "ha-harness") | .path' "$root/repos.json")

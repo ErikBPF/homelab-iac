@@ -1,6 +1,7 @@
 # Hermes Argus as N0 — first-line incident/deploy responder
 
-**Status:** Staged (phases 1/2/4 code landed, deploy gated on manual secrets).
+**Status:** Staged (terminal disabled, alert/deploy payloads improved; deploy
+gated on manual Discord secret).
 **Date:** 2026-07-21. **Seed:** Erik — "secondary agent as our N0: see incidents
 and deploys in Discord, act on them; integrate with llm-wiki + obsidian +
 agentmemory."
@@ -50,21 +51,17 @@ hermes V2 verifies `ts.body` (dot) — incompatible. Never set
 `timestampHeader`. Replay-window loss accepted: route is homelab-net-only,
 port unpublished.
 
-**D5 — agentmemory via its REST bridge, not MCP.** agentmemory (live on
-discovery :3111) exposes a self-describing surface —
-`GET /agentmemory/mcp/tools` + `POST /agentmemory/mcp/call` (Bearer
-`AGENTMEMORY_SECRET`) — reachable by name over homelab-net; Argus calls it
-from the terminal per its SOUL. *Rejected:* stdio MCP (`agentmemory-mcp` npm
-binary) inside the vendor OCI image — node/npm fragility. Incident lessons
-live in agentmemory (dedupe index + postmortem seeds); `/opt/wiki` stays RO
-for Argus (single-writer-per-branch: only Romozina's container writes the
-`hermes` branch). This is the first consumer of the deferred-improvements P6
-"unified approach".
+**D5 — no generic terminal in v1.** Discord messages and alert annotations are
+untrusted input. Hermes has no command allowlist, while its local terminal can
+read process secrets and reach the shared container network. Argus therefore
+sets `terminal=false` and assesses only evidence carried by the alert. A
+read-only investigation proxy or narrow native tools may restore live queries
+later; generic shell access does not.
 
 **D6 — Read-only in v1.** No remediation: Argus recommends the documented
-entry point (`just …`); execution stays human. Guarded actions (allowlisted
-verbs via forced-command SSH or host-side action oneshot) are a separate
-future RFC, gated on triage quality.
+entry point (`just …`); execution stays human. This is enforced by disabling
+terminal tools, not only by SOUL text. Guarded actions are a separate future
+RFC, gated on triage quality.
 
 ## What landed (this repo unless noted)
 
@@ -73,9 +70,10 @@ future RFC, gated on triage quality.
   (`deliver_only=true`); `lib.recursiveUpdate` for the settings merge (shallow
   `//` would drop `platforms.telegram.enabled=false`).
 - `modules/hosts/discovery/argus-SOUL.md` — N0 triage protocol: dedupe →
-  read-only investigate (`grafana:3000` w/ `$GRAFANA_RO_TOKEN`,
-  `prometheus:9090`, `loki:3100`) → thread verdict → escalation rules →
-  silence on no-signal; agentmemory bridge usage; hard read-only limit.
+  assess supplied evidence → thread verdict → escalation rules → silence on
+  no-signal; alert text is explicitly untrusted.
+- `modules/hosts/discovery/hermes-agents.nix` — Argus `terminal=false`;
+  prompt-only read-only rules are not treated as a security boundary.
 - `modules/hosts/discovery/homelab-SOUL.md` — de-persona'd to shared doctrine
   (sole consumer: Argus context mount); RO-wiki capture path → agentmemory.
 - `modules/hosts/discovery/hermes-agent.nix` — deleted (superseded nspawn
@@ -97,19 +95,21 @@ Verified: `just lint` / `just fmt-check` green; `just dry discovery` green
 
 1. Discord application "Argus" (message-content intent), invite to Homelab
    guild → token into sops `hermes_agents/argus_env` `DISCORD_BOT_TOKEN`.
-2. (Optional v1) Grafana read-only service-account token → `GRAFANA_RO_TOKEN`.
-3. OpenBao: write `argus_webhook_hmac` under `secret/shared/discord` (value =
+2. OpenBao: write `argus_webhook_hmac` under `secret/shared/discord` (value =
    `WEBHOOK_GRAFANA_ALERTS_SECRET` from the sops key) → Vault render-refresh
    recipe.
-4. `just switch-discovery` → uncomment the servarr receiver → commit/push
+3. `just switch-discovery` → uncomment the servarr receiver → commit/push
    servarr → `just pull-servarr discovery` → `just kick-stack discovery
    monitoring`.
-5. Verify: test post in #incidents gets a threaded triage; agent log shows
-   `[webhook] … routes: grafana-alerts`; agentmemory call from a live session.
+4. Verify: test post in #incidents gets a threaded triage; agent log shows
+   `[webhook] … routes: grafana-alerts`; adversarial alert text cannot invoke
+   terminal tools.
 
 ## Deferred
 
 - Webhook flip (`deliver_only=false`, Discord as mirror) once triage is trusted.
+- Narrow read-only investigation tools; add only when alert payloads prove
+  insufficient.
 - Same staged webhook receiver on the `discord-deploys` contact point.
 - Guarded remediation verbs (own RFC — D6).
 - `wiki-consolidate` cron's Discord summary is silently skipped:

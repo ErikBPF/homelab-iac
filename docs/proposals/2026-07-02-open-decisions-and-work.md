@@ -1,7 +1,7 @@
 # Backlog da frota — decisões e execução por cluster
 
 **Date:** 2026-07-02
-**Status:** Backlog ativo — reagrupado e reavaliado em 2026-07-15
+**Status:** Backlog ativo — reavaliado em 2026-07-24
 **Regra:** cada concern tem um doc-fonte. Este arquivo decide prioridade e aponta
 o próximo gate; não duplica planos detalhados. IDs antigos permanecem para não
 quebrar referências históricas.
@@ -58,7 +58,7 @@ evidência → aprovação → execução.
 | N3 | **Adotar regra de placement proposta** | [`fleet-container-placement-srp`](2026-07-11-fleet-container-placement-srp.md) | Aprovar regra por propósito/runtime antes de mover qualquer workload. |
 | N4 | **Separar PocketID e quais outros serviços** | mesmo doc | Decidir PocketID primeiro; secondary separations somente por benefício isolado. |
 | C3 | **Adicionar mirror externo de monitoramento** | [`free-tier-cloud-resources`](2026-07-02-free-tier-cloud-resources.md) | Escolher Grafana Cloud ou probe outside-in mínimo; sem duplicar observabilidade inteira. |
-| C4 | **Object storage offsite: OCI, R2 ou B2** | mesmo doc | Só escolher após definir dataset, tamanho, retenção e restore test. |
+| C4 | ~~**Object storage offsite: OCI, R2 ou B2**~~ | mesmo doc | **Resolvido 2026-07-24:** B2 implantado para OpenBao e estado OpenTofu; `restic check --read-data` + restores via stream passaram. |
 | C5 | **Permitir inferência/embeddings cloud com dados privados?** | mesmo doc | Default: não. Exceção exige classificação dos dados e rota degradada explícita. |
 | B9 | **Provisionar Telstar quando A1 liberar** | Telstar RFC | IP → `fleet-json` → deploy → switch → verificação → graduar. |
 | B10 | **Root-cause da instabilidade do Discovery** | discovery resilience | Próximo evento: correlacionar journal persistente, `net-watch` e sysstat. |
@@ -79,12 +79,12 @@ evidência → aprovação → execução.
 
 | ID | Decisão / trabalho | Dono | Próximo gate |
 |----|--------------------|------|--------------|
-| O0 / S0 | **Bootstrap reproduzível do Argo + ESO** | [`kepler-k3s-platform-status`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/reference/kepler-k3s-platform-status.md) | P0: credencial read-only dedicada do repo + `vault-approle` sob sops; provar rebuild sem segredo manual/pessoal. |
+| O0 / S0 | ~~**Bootstrap reproduzível do Argo + ESO**~~ | [`kepler-k3s-platform-status`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/reference/kepler-k3s-platform-status.md) | **Resolvido 2026-07-24:** Argo e ESO reconciliados após reboot completo; segredo do repo, AppRole e `ClusterSecretStore` verificados. |
 | A7 | **Harbor pull-through: Job declarativo ou reconciler atual** | [`harbor-pullthrough-mirror`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-22-harbor-pullthrough-mirror.md) | Auditar se `ExecStartPost` já satisfaz reinstall; só criar Job se existir gap real. |
 | A9 | **Rolling CP restart e helpers k3s valem o custo?** | [`kepler-k3s-microvm-cluster`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-19-kepler-k3s-microvm-cluster.md) | Decidir a partir de histórico de deploy/downtime, não preferência abstrata. |
 | B5 | ~~**Ativar/verificar `k3s-manifest-reconcile`**~~ | módulo compartilhado k3s + Harbor RFC | **Resolvido 2026-07-15:** serviço ativo em cp-1/2/3 após o bounce. |
 | B6 / O1 | ~~**Scrape e dashboard etcd**~~ | [`observability-continuation`](2026-07-03-observability-continuation.md) | **Resolvido 2026-07-15:** três endpoints `:2381` com leader e `up{job="etcd"}=1`; dashboard provisionado. |
-| B7 / O2 | **Alertas KSM do cluster** | mesmo doc | CrashLoop, PVC, node, jobs; verificar firing e recovery. |
+| B7 / O2 | **Alertas KSM do cluster — parcial** | mesmo doc | Node, CrashLoop, PVC e job enviados; faltam deployment, HPA e Argo health/sync com firing/recovery. |
 | B8 / O3 | **Labels de container no pipeline de métricas** | mesmo doc | Corrigir descoberta/labels antes de escrever alert rules por container. |
 | O4 | **Fechar incidentes e cleanups restantes** | mesmo doc | Cada item precisa owner, evidência e regra de remoção. |
 
@@ -113,13 +113,11 @@ evidência → aprovação → execução.
 
 ## Ordem sugerida
 
-1. **O0/S0** — corrigir bootstrap Argo/ESO; hoje `external-secrets` e `demo` estão Degraded.
-2. **R1/R2** — não executar; fechar evidence manifests e trazer aprovação.
-3. **HAI8 + A4** — graduations documentais já decididas.
-4. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
-5. **B7/O2** — alertas KSM depois de restaurar ESO/demo.
-6. **N3/N4** — decidir placement antes de qualquer separação de containers.
-7. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
+1. **R1/R2** — não executar; fechar evidence manifests e trazer aprovação.
+2. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
+3. **B7/O2** — completar deployment, HPA e Argo health/sync.
+4. **N3/N4** — decidir placement antes de qualquer separação de containers.
+5. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
 
 ## Já fechado — não retrabalhar
 
@@ -129,3 +127,5 @@ evidência → aprovação → execução.
 - Deploy layer: deploy-rs é o padrão da frota.
 - Restore Voyager: PASS 2026-07-04.
 - Fleet ESP: Pathfinder, Orion e Kepler concluídos; Laptop retirado do escopo.
+- O0/S0: bootstrap Argo + ESO sobreviveu reboot completo em 2026-07-24.
+- C4: B2 é a perna offsite diversa; checks e restores por stream passaram.
