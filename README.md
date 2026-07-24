@@ -1,9 +1,9 @@
 # homelab-iac
 
-> **SSOT role (desktop-nixos RFC 2026-06-29):** owns the **network substrate** —
-> UniFi VLAN/WLAN/DHCP reservations + static DNS, Tailscale ACL, Cloudflare — and
-> the **GitHub repo settings** of every active owned repository (a declarative
-> config surface the fleet depends on, same drift-check discipline).
+> **SSOT role:** owns **Terraform-managed infrastructure and external/platform
+> control planes** — network and edge resources, GitHub settings, and LiteLLM
+> API resources. Workload lifecycle stays with its workload repo; secret values
+> stay in Vault.
 > Consumes desktop-nixos's vendored, pinned `fleet.json`.
 
 Declarative, git-versioned **homelab infrastructure-as-code** (OpenTofu +
@@ -26,6 +26,9 @@ Terragrunt). Components, each under its own top-level dir:
   endpoint; apply from a wired LAN host. See `netbird/APPLY.md`.
 - **`pocketid/`** — the NetBird OIDC client (`Trozz/pocketid`): public + PKCE,
   imported so the live client-id is never re-issued. Pairs with `netbird/`.
+- **`components/litellm/`** — LiteLLM models, aliases, routing, access, and
+  budgets through the Terraform provider. The runtime container stays in
+  `servarr`; provider secret values stay in Vault.
 
 Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
@@ -38,10 +41,10 @@ Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
 ## Where this fits — the homelab fleet
 
-This repo is the **network substrate**; the sister repos run *on top of* the
-VLANs, reservations, and DNS defined here. [`desktop-nixos`](https://github.com/ErikBPF)
-is the source of truth for the **hosts**; `homelab-iac` is the source of truth
-for the **network they live on**.
+This repo is the declarative infrastructure and control-plane layer.
+[`desktop-nixos`](https://github.com/ErikBPF/desktop-nixos) remains the source
+of truth for hosts; workload repositories remain responsible for runtime
+lifecycle and application behavior.
 
 | Sister repo | Owns | Coupling to this repo |
 |---|---|---|

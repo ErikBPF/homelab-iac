@@ -12,6 +12,12 @@
       "role": "server",
       "tailscaleIp": "100.76.140.121"
     },
+    "endeavour": {
+      "ip": null,
+      "mac": null,
+      "role": "laptop",
+      "tailscaleIp": "100.107.225.13"
+    },
     "homeassistant": {
       "ip": "192.168.10.115",
       "mac": "52:54:00:d6:a5:ce",
@@ -24,12 +30,6 @@
       "role": "server",
       "tailscaleIp": "100.94.239.46"
     },
-    "laptop": {
-      "ip": null,
-      "mac": null,
-      "role": "laptop",
-      "tailscaleIp": "100.74.137.124"
-    },
     "orion": {
       "ip": "192.168.10.220",
       "mac": "b4:2e:99:92:4f:8b",
@@ -40,13 +40,19 @@
       "ip": "192.168.10.125",
       "mac": "54:bf:64:28:cb:2e",
       "role": "workstation",
-      "tailscaleIp": "100.104.92.5"
+      "tailscaleIp": "100.102.248.13"
     },
     "telstar": {
       "ip": null,
       "mac": null,
       "role": "server",
       "tailscaleIp": null
+    },
+    "vanguard": {
+      "ip": "163.176.206.86",
+      "mac": null,
+      "role": "server",
+      "tailscaleIp": "100.90.247.79"
     },
     "voyager": {
       "ip": "147.15.7.254",
@@ -60,6 +66,19 @@
       "host": "discovery",
       "zone": "homelab.pastelariadev.com"
     }
+  },
+  "netbird": {
+    "dnsDomain": "netbird.internal",
+    "managementUrl": "https://nb.homelab.pastelariadev.com",
+    "overlayCidr": "10.100.0.0/16",
+    "relayHosts": [
+      "relay.pastelariadev.com",
+      "relay2.pastelariadev.com"
+    ]
+  },
+  "overlays": {
+    "netbird": "10.100.0.0/16",
+    "tailscale": "100.64.0.0/10"
   },
   "services": {
     "ha": {

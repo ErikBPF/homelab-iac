@@ -50,7 +50,7 @@
     tofu-fmt = {
       enable         = true;
       name           = "tofu fmt";
-      entry          = "${pkgs.opentofu}/bin/tofu fmt -recursive -check";
+      entry          = "sh -c \"git ls-files -z '*.tf' '*.tfvars' | xargs -0 -r ${pkgs.opentofu}/bin/tofu fmt -check\"";
       files          = "\\.tf$";
       pass_filenames = false;
     };
@@ -64,7 +64,7 @@
     tflint = {
       enable         = true;
       name           = "tflint";
-      entry          = "${pkgs.tflint}/bin/tflint --recursive";
+      entry          = "sh -c \"git ls-files '*.tf' | xargs -n1 dirname | sort -u | xargs -n1 ${pkgs.tflint}/bin/tflint --chdir\"";
       files          = "\\.tf$";
       pass_filenames = false;
     };
