@@ -1,0 +1,67 @@
+[
+  {
+    "name": "desktop-nixos",
+    "path": "references/repos/desktop-nixos",
+    "responsibility": "Host OS, fleet metadata, and cluster substrate"
+  },
+  {
+    "name": "homelab-iac",
+    "path": "references/repos/homelab-iac",
+    "responsibility": "Terraform-managed infrastructure and external/platform control planes"
+  },
+  {
+    "name": "servarr",
+    "path": "references/repos/servarr",
+    "responsibility": "Household compose workloads"
+  },
+  {
+    "name": "homelab-gitops",
+    "path": "references/repos/homelab-gitops",
+    "responsibility": "Lab Kubernetes workloads"
+  },
+  {
+    "name": "hermes-flake",
+    "path": "references/repos/hermes-flake",
+    "responsibility": "Hermes package and deployment modules"
+  },
+  {
+    "name": "hermes-skills",
+    "path": "references/repos/hermes-skills",
+    "responsibility": "Hermes skill content"
+  },
+  {
+    "name": "home-assistant-config",
+    "path": "references/repos/home-assistant-config",
+    "responsibility": "Home Assistant application configuration"
+  },
+  {
+    "name": "klipper-biqu",
+    "path": "references/repos/klipper-biqu",
+    "responsibility": "BIQU B1 printer configuration and state"
+  },
+  {
+    "name": "kindle-dash",
+    "path": "references/repos/kindle-dash",
+    "responsibility": "Kindle dashboard software and image"
+  },
+  {
+    "name": "opencode-flake",
+    "path": "references/repos/opencode-flake",
+    "responsibility": "OpenCode package and Home Manager module"
+  },
+  {
+    "name": "codex-flake",
+    "path": "references/repos/codex-flake",
+    "responsibility": "Codex package and Home Manager module"
+  },
+  {
+    "name": "ha-agent",
+    "path": "references/repos/ha-agent",
+    "responsibility": "Private Home Assistant tool-calling model and safety harness"
+  },
+  {
+    "name": "cosmo-notes",
+    "path": "references/repos/cosmo-notes",
+    "responsibility": "Private Cosmo device firmware and transport runbook"
+  }
+]

@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+inventory="$root/repos.json"
+
+repo_path() {
+  jq -er --arg name "$1" '.[] | select(.name == $name) | .path' "$inventory"
+}
+
+audit() {
+  jq -e '
+    length == 13
+    and all(.[]; .name and .responsibility and .path)
+    and ([.[].name] | unique | length) == 13
+  ' "$inventory" >/dev/null
+
+  while IFS=$'\t' read -r name path; do
+    if [[ ! -L "$root/$path" || ! -d "$root/$path/.git" ]]; then
+      echo "invalid repo link: $name -> $path" >&2
+      return 1
+    fi
+  done < <(jq -r '.[] | [.name, .path] | @tsv' "$inventory")
+
+  echo "audit OK: 13 repositories"
+}
+
+docs_check() {
+  local broken=0 file dir link target
+  while IFS= read -r file; do
+    dir="$(dirname "$file")"
+    while IFS= read -r link; do
+      case "$link" in http://*|https://*|mailto:*|\#*|"") continue ;; esac
+      target="${link%%#*}"
+      [[ -z "$target" ]] && continue
+      if [[ ! -e "$dir/$target" ]]; then
+        echo "broken: ${file#"$root/"} -> $link"
+        broken=1
+      fi
+    done < <(grep -oE '\]\([^)]+\)' "$file" | sed -E 's/^\]\(//; s/\)$//' || true)
+  done < <(find "$root/docs" -type f -name '*.md'; printf '%s\n' "$root/README.md")
+  [[ "$broken" -eq 0 ]]
+  echo "docs-check OK"
+}
+
+status_all() {
+  while IFS=$'\t' read -r name path; do
+    printf '\n[%s]\n' "$name"
+    git -C "$root/$path" status --short --branch
+  done < <(jq -r '.[] | [.name, .path] | @tsv' "$inventory")
+}
+
+fleet_paths() {
+  local source servarr iac
+  source="$root/$(repo_path desktop-nixos)/fleet.json"
+  servarr="$root/$(repo_path servarr)/fleet.json"
+  iac="$root/$(repo_path homelab-iac)/fleet.json"
+  printf '%s\n%s\n%s\n' "$source" "$servarr" "$iac"
+}
+
+fleet_drift() {
+  local paths source failed=0
+  mapfile -t paths < <(fleet_paths)
+  source="${paths[0]}"
+  for consumer in "${paths[@]:1}"; do
+    if cmp -s "$source" "$consumer"; then
+      echo "current: $consumer"
+    else
+      echo "stale: $consumer"
+      failed=1
+    fi
+  done
+  return "$failed"
+}
+
+fleet_update() {
+  local paths source
+  mapfile -t paths < <(fleet_paths)
+  source="${paths[0]}"
+  for consumer in "${paths[@]:1}"; do
+    cp "$source" "$consumer"
+    echo "updated: $consumer"
+  done
+}
+
+case "${1:-}" in
+  audit) audit ;;
+  docs-check) docs_check ;;
+  status) status_all ;;
+  fleet-drift) fleet_drift ;;
+  fleet-update) fleet_update ;;
+  *) echo "usage: homelab {audit|docs-check|status|fleet-drift|fleet-update}" >&2; exit 2 ;;
+esac
