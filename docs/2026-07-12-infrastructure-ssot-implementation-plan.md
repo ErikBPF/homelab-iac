@@ -1,6 +1,6 @@
 # Infrastructure SSOT hard-cutover implementation plan
 
-**Status:** In progress — S01–S04 complete; S05 implementation and plan green; S08 runtime/data gates green, ownership gate pending
+**Status:** In progress — S01–S04 and S08 complete; S05 implementation and plan green
 
 ## Outcome
 
@@ -46,7 +46,7 @@ Official `BerriAI/litellm` v0.2.2 must pass a canary against LiteLLM 1.91.2. It 
   > Teams, embedded budgets, credentials, policies, and reminted keys are declarative; a scoped Terraform admin key remains bootstrap sops.
 - [ ] **S07: Finish OpenCode routing** `risk:medium` `depends:[S05,S06]`
   > New sessions start on LiteLLM GLM; Architect reviews with GLM; General/Explore implement, debug, and explore with MiMo.
-- [ ] **S08: Vault runtime-secret canary** `risk:high` `depends:[S01]` `HITL`
+- [x] **S08: Vault runtime-secret canary** `risk:high` `depends:[S01]` `HITL`
   > One workload consumes a provider-minted value through a write-only OpenBao handoff and Terraform-owned mount/policy/auth wiring, with no copied value in the OpenBao state.
 - [ ] **S09: Discovery runtime-secret cutover** `risk:high` `depends:[S08]` `HITL`
   > Discovery dotenv/sops sources retain config/bootstrap only; runtime stacks consume Vault Agent renders.
@@ -90,10 +90,16 @@ Official `BerriAI/litellm` v0.2.2 must pass a canary against LiteLLM 1.91.2. It 
 - 2026-07-24: Discovery's existing Vault Agent rendered
   `/run/vault-agent/ha-harness.env` as `0440 root:docker`; `erik` could read it
   through group membership and `nobody` could not. The existing synthetic
-  `ha-agent-qwen4b` request returned a valid tool decision. S08 remains open
-  because the live `secret/` mount, read policy, and `vault-agent` AppRole are
-  pre-existing imperative resources and have not yet been imported under the
-  OpenBao Terraform component.
+  `ha-agent-qwen4b` request returned a valid tool decision. S08 closed after
+  the live `secret/` mount, read policies, AppRole backend, and writer and
+  consumer roles were imported into the OpenBao foundation unit. The reviewed
+  apply was exactly `6 imported, 0 added, 0 changed, 0 destroyed`; its second
+  plan was zero-diff.
+- 2026-07-24: the foundation unit remains a deliberate root-bootstrap boundary
+  and is excluded from unattended AppRole drift. Giving the writer AppRole
+  permission to update its own policy would permit self-escalation. Manual
+  foundation plans use the ephemeral `VAULT_TOKEN` input; normal units keep
+  AppRole authentication.
 
 ## Initial verification commands
 
