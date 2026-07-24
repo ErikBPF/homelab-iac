@@ -69,6 +69,12 @@ PY
   [ "$status" -eq 0 ]
 }
 
+@test "auto-merge is enabled only where branch protection makes it usable" {
+  run grep -E 'allow_auto_merge[[:space:]]*= each.value.protect_main && each.value.allow_auto_merge' \
+    "$REPO_ROOT/github/modules/repo/main.tf"
+  [ "$status" -eq 0 ]
+}
+
 @test "completed migration leaves no import blocks" {
   run python3 - "$REPO_ROOT/github/repos/terragrunt.hcl" <<'PY'
 import pathlib, sys
