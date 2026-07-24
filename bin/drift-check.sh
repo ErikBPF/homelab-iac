@@ -14,6 +14,7 @@ export TG_TF_PATH="${TG_TF_PATH:-tofu}"
 # secret store; OpenTofu's s3 backend reads AWS_*. Map them if not already set.
 export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${MINIO_TFSTATE_ROOT_USER:-}}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${MINIO_TFSTATE_ROOT_PASSWORD:-}}"
+export TF_VAR_state_passphrase="${TF_VAR_state_passphrase:-${UNIFI_STATE_PASSPHRASE:-}}"
 
 # Measure drift against the latest committed IaC, not a stale local checkout.
 git pull --ff-only 2>/dev/null || true
