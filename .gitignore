@@ -10,6 +10,7 @@ devenv.local.yaml
 # Secrets dropped during exploration (never commit)
 unifi_key
 unifi-api-key.json
+github-app-oauth.json
 cf_tunnel_secret_homeassistant
 
 # Terraform / OpenTofu
