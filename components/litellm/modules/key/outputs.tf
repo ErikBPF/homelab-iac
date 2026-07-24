@@ -1,4 +1,4 @@
 output "key" {
-  value     = litellm_key.this.key
+  value     = litellm_key.rotation.key
   sensitive = true
 }

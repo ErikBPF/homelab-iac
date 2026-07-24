@@ -5,4 +5,17 @@ resource "litellm_key" "this" {
   rpm_limit             = var.rpm_limit
   tpm_limit             = var.tpm_limit
   metadata              = var.metadata
+
+  lifecycle {
+    ignore_changes = [key]
+  }
+}
+
+resource "litellm_key" "rotation" {
+  key_alias             = "${var.key_alias}-green"
+  models                = var.models
+  max_parallel_requests = var.max_parallel_requests
+  rpm_limit             = var.rpm_limit
+  tpm_limit             = var.tpm_limit
+  metadata              = var.metadata
 }
