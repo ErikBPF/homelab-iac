@@ -24,6 +24,10 @@ CrashLoopBackOff, deployment replicas unavailable, PVC Pending, job failure,
 HPA saturation, Argo health/sync, and Alloy resilience. `servarr#111` passed
 83 Discovery tests plus 30 subtests and was deployed to Discovery.
 
+**Shipped 2026-07-24:** AdGuard scrape failure now pages as critical after five
+minutes. `servarr#112` passed 84 Discovery tests plus 30 subtests and was
+deployed to Discovery.
+
 ## Context
 
 The 2026-06-29 fleet-monitoring RFC shipped: 15 provisioned dashboards, the
@@ -39,9 +43,8 @@ for that backlog so the implemented doc can stay a closed record.
 1. **k8s alert rules — shipped 2026-07-24.** KSM, kubelet cAdvisor, Argo CD,
    etcd, and Alloy health rules are file-provisioned with 15-minute workload
    windows to tolerate remote-write lag.
-2. **AdGuard down = whole-LAN DNS outage** — highest-value single alert
-   available today (`up{job="adguard"} == 0` or `adguard_running == 0`,
-   short `for:`). The exporter is live; the rule was never written.
+2. **AdGuard down — shipped 2026-07-24.** The existing
+   `up{job="adguard"}` signal pages as critical after five minutes.
 3. **New-scrape liveness rules** — cloudflared tunnel down (public ingress
    dead), litellm scrape down, nvidia/llama.cpp down *only if* the AI
    stacks' intentional stop-windows (VRAM freeing, gaming) get an
