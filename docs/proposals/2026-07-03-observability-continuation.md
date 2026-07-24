@@ -28,6 +28,11 @@ HPA saturation, Argo health/sync, and Alloy resilience. `servarr#111` passed
 minutes. `servarr#112` passed 84 Discovery tests plus 30 subtests and was
 deployed to Discovery.
 
+**Shipped 2026-07-24:** cloudflared and LiteLLM scrape failures now alert after
+ten minutes. GPU and llama.cpp targets remain dashboard-only because their
+stacks are intentionally stopped. `servarr#113` passed 85 Discovery tests plus
+30 subtests and was deployed to Discovery.
+
 ## Context
 
 The 2026-06-29 fleet-monitoring RFC shipped: 15 provisioned dashboards, the
@@ -45,10 +50,10 @@ for that backlog so the implemented doc can stay a closed record.
    windows to tolerate remote-write lag.
 2. **AdGuard down — shipped 2026-07-24.** The existing
    `up{job="adguard"}` signal pages as critical after five minutes.
-3. **New-scrape liveness rules** — cloudflared tunnel down (public ingress
-   dead), litellm scrape down, nvidia/llama.cpp down *only if* the AI
-   stacks' intentional stop-windows (VRAM freeing, gaming) get an
-   inhibition story — otherwise these stay dashboard-only by design.
+3. **New-scrape liveness rules — shipped 2026-07-24.** Always-on cloudflared
+   and LiteLLM targets alert after ten minutes. Intentionally stoppable
+   nvidia/llama.cpp targets remain dashboard-only until an inhibition story
+   exists.
 4. **Alert-history tuning round 2** — repeat the annotations-API review
    (7d window) a week after the k8s rules land; the first round caught 3
    flappers and one never-fires bug.
