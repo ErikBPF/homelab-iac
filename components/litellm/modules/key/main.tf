@@ -7,7 +7,7 @@ resource "litellm_key" "this" {
   metadata              = var.metadata
 
   lifecycle {
-    ignore_changes = [key]
+    ignore_changes = all
   }
 }
 
