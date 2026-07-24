@@ -8,6 +8,7 @@ cloudflare/tunnel cloudflare/tunnel/terraform.tfstate
 components/litellm/environments/home/canary components/litellm/environments/home/canary/terraform.tfstate
 components/litellm/environments/home/ha-harness-key components/litellm/environments/home/ha-harness-key/terraform.tfstate
 components/litellm/environments/home/production components/litellm/environments/home/production/terraform.tfstate
+components/openbao/environments/home/ha-harness-litellm components/openbao/environments/home/ha-harness-litellm/terraform.tfstate
 github/repos github/repos/terraform.tfstate
 netbird/groups netbird/groups/terraform.tfstate
 netbird/nameservers netbird/nameservers/terraform.tfstate
