@@ -45,6 +45,13 @@ notification paths, then cleared after a pause/unpause state reset
 (`servarr#117`). The fleet verifier follows each host's native exporter
 (`desktop-nixos#108`).
 
+**Implemented 2026-07-25, deployment pending:** compose stdout uses the
+journald driver on Discovery, Kepler, and Orion, so the existing host Alloy
+journal pipeline ships it to Loki. The four never-deployed container-Alloy
+configs and the stale `alloy-discovery` scrape were removed. Kepler's three
+daily restic backups and Orion's remaining weekly repository check now publish
+atomic textfile last-success gauges, with 30-hour/9-day Grafana dead-man rules.
+
 ## Context
 
 The 2026-06-29 fleet-monitoring RFC shipped: 15 provisioned dashboards, the
@@ -79,14 +86,11 @@ for that backlog so the implemented doc can stay a closed record.
    liveness, and restart-storm detection support both metric families. Restart
    detection uses `changes()` on start-time gauges rather than the former
    invalid `increase()` calculation.
-2. **Compose container logs → Loki** — the deploy audit proved only
-   journal + k8s streams exist; container stdout never reaches Loki. The
-   four `machines/*/config/alloy/config.alloy` files in servarr are dead
-   (no alloy container exists; they target never-deployed Mimir) — delete
-   them, then decide the real path: journald log driver for
-   podman/docker (rides the existing journal pipeline, zero new
-   components — likely winner) vs a host-side `loki.source.docker` block
-   in the NixOS Alloy.
+2. **Compose container logs → Loki — implemented 2026-07-25, deployment
+   pending.** Discovery/Kepler/Orion compose services use journald and ride the
+   existing host Alloy journal pipeline. The four dead container-Alloy configs
+   were deleted. Voyager keeps its local JSON logging because it intentionally
+   has no Alloy.
 3. **unpoller** (UniFi/UDM) — needs a **manual read-only UniFi OS
    account** first (not IaC-able; document the step in homelab-iac's
    README). Then: `ghcr.io/unpoller/unpoller` in the discovery monitoring
@@ -110,10 +114,13 @@ for that backlog so the implemented doc can stay a closed record.
    them. Include a GPU-temp caveat: orion AMD temps stay hwmon-excluded
    (SMU-wedge guard) and the drm collector reads a *different* amdgpu
    sysfs path — first suspect if a wedge recurs.
-7. **Backup gauges for compose restic jobs** — kepler/orion ofelia restic
-   jobs emit nothing; extend the textfile dead-man pattern
-   (`<job>_last_success_seconds`) so the backups dashboard's "unmetered"
-   list empties. Check btrfs-snapshot metrics while there.
+7. **Backup gauges for compose restic jobs — implemented 2026-07-25,
+   deployment pending.** Kepler's postgres/config/offsite backup jobs and
+   Orion's remaining weekly repository check atomically publish
+   `<job>_last_success_seconds`. Grafana alerts after 30h for Kepler or 9d for
+   Orion. Orion has no payload backup since Hermes moved to Discovery; the
+   proposal no longer mislabels its prune/check-only stack. Btrfs snapshots
+   remain local-only and unmetered.
 8. **swag / reverse-proxy traffic** — stub_status + nginx-exporter is
    coarse; the richer per-vhost board wants SWAG access logs, which lands
    inside B.2's logs decision. Do B.2 first.
@@ -123,27 +130,29 @@ for that backlog so the implemented doc can stay a closed record.
 
 ## C. Incidents to close out (from the 2026-07-03 deploy)
 
-1. **k3s pods restart every few hours** (exit 255, reason Unknown; 16–32
-   restarts/12d — the microvm nodes themselves appear to reboot).
-   Diagnose via the now-labeled journal streams from the microvms and
-   `kube_node_*`. Not urgent (workloads recover) but it pollutes
-   restart-based alerting.
+1. **k3s pod restarts — diagnosed 2026-07-25.** Current evidence shows all
+   three guests starting together after a Kepler host boot, not independent
+   periodic guest crashes. The actionable signal is embedded-etcd latency:
+   repeated 100–500ms requests and late-heartbeat warnings explicitly naming
+   slow disk/leader overload on the ZFS-backed control plane. Keep observing;
+   do not add a speculative VM restart fix. If alerts recur without a host
+   boot, capture the preceding guest/host journal before changing CPU/storage.
 2. **Discovery found powered off mid-deploy** (2026-07-03) — cause
    unconfirmed. WOL from kepler works (`64:51:06:1a:f8:1a`; runbook in
    memory). If it recurs unexplained: check PSU/BIOS power settings and
    consider a `wol`-on-boot systemd timer on kepler as poor-man's
    auto-recovery. Ties into the deferred cross-host liveness ping below.
-3. **Cross-host liveness ping** (deferred in the original RFC, and the
-   power-off incident proved the SPOF is real): a peer (kepler) watches
-   discovery's heartbeat and pushes a Discord webhook directly on
-   silence — the one alert path that must not live on discovery.
+3. **Cross-host liveness ping — implemented on Kepler 2026-07-25, deployment
+   pending.** Vanguard has the stronger offsite role configured, but its
+   tailnet SSH endpoint was unreachable during verification. Kepler now runs
+   the same small timer as an active fallback: it probes PocketID through
+   Discovery's public ingress every five minutes and, after three failures,
+   posts directly through the independent SOPS-managed Discord webhook.
 
 ## D. Cleanups
 
-- Drop the stale `alloy-discovery` scrape job (localhost:12345 never
-  worked from inside the container) or fix it to scrape the host alloy.
-- Delete the four dead servarr `config/alloy/config.alloy` files (part of
-  B.2).
+- Stale `alloy-discovery` scrape removed 2026-07-25.
+- Four dead servarr `config/alloy/config.alloy` files deleted 2026-07-25.
 - `n8n` scrape target is permanently down — the kepler `ai-usage` stack is
   authored but not deployed. Either deploy the stack or comment the job
   out until it exists.
