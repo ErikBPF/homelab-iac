@@ -1,14 +1,12 @@
 # Stateful stack and release hardening
 
-**Status:** In progress — P0, Kepler K0–K5, and Discovery P1 are complete. P2
-read-only preflight is binding-valid; P3 secondary DNS is the active safety
-interlock before any P2 mutation.
+**Status:** In progress — P0, Kepler K0–K5, and P1–P6 are complete. P7
+per-service ledgers and remaining stateful-stack migrations are active.
 
-**Execution order update (2026-07-15):** Completed Kepler recovery remains
-between shared P0 and Discovery P1. The active order is now P2 read-only
-preflight, P3 implementation/outage proof, then separately approved P2
-mutation. This proposal remains authoritative for architecture and acceptance
-criteria; the merged execution plan is authoritative for rollout order.
+**Execution update (2026-07-25):** The completed rollout through P6 is recorded
+in the execution plan. This proposal remains authoritative for architecture and
+acceptance criteria; the execution plan is authoritative for rollout order and
+live status.
 
 **SecretSpec authority update (2026-07-21):** Discovery SecretSpec scope,
 ordering, and status now live in Servarr's

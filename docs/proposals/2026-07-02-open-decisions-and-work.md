@@ -1,7 +1,7 @@
 # Backlog da frota — decisões e execução por cluster
 
 **Date:** 2026-07-02
-**Status:** Backlog ativo — reavaliado em 2026-07-24
+**Status:** Backlog ativo — reavaliado em 2026-07-25
 **Regra:** cada concern tem um doc-fonte. Este arquivo decide prioridade e aponta
 o próximo gate; não duplica planos detalhados. IDs antigos permanecem para não
 quebrar referências históricas.
@@ -41,7 +41,7 @@ evidência → aprovação → execução.
 | ID | Decisão / trabalho | Dono | Próximo gate |
 |----|--------------------|------|--------------|
 | R1 | **Discovery ESP: autorizar ou não a migração destrutiva** | [`discovery-esp-migration`](2026-07-14-discovery-esp-migration.md) | Completar D1–D4, apresentar manifest de evidência <24h; só então pedir aprovação da janela D5. |
-| R2 | **Stateful P1: autorizar adoção in-place do SWAG** | [`stateful-stack-release-hardening-execution-plan`](2026-07-13-stateful-stack-release-hardening-execution-plan.md) | Inventário/backups/pins verdes + approval manifest exato; P1 continua frozen até aprovação. |
+| R2 | ~~**Stateful P1: autorizar adoção in-place do SWAG**~~ | [`stateful-stack-release-hardening-execution-plan`](2026-07-13-stateful-stack-release-hardening-execution-plan.md) | **Resolvido 2026-07-15:** adoção, reboot e gates de health/certificado/ingress concluídos. |
 | R3 | **Orquestração de upgrade: até onde automatizar** | [`fleet-upgrade-hardening`](2026-07-12-fleet-upgrade-hardening.md) | Escolher build-only, staged activation ou rollout automático por classe de host; preservar stop rules. |
 | B2 | **Primeiro drill trimestral de restore OpenBao** | [`vault-disaster-recovery`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/reference/vault-disaster-recovery.md) | Janela própria; registrar snapshot, restore isolado e resultado. |
 | B3 | **Drill destrutivo do runbook etcd** | [`kepler-k3s-microvm-cluster`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-19-kepler-k3s-microvm-cluster.md) §15 | Janela própria no Kepler; não acoplar a deploy comum. |
@@ -62,7 +62,7 @@ evidência → aprovação → execução.
 | C5 | **Permitir inferência/embeddings cloud com dados privados?** | mesmo doc | Default: não. Exceção exige classificação dos dados e rota degradada explícita. |
 | B9 | **Provisionar Telstar quando A1 liberar** | Telstar RFC | IP → `fleet-json` → deploy → switch → verificação → graduar. |
 | B10 | **Root-cause da instabilidade do Discovery** | discovery resilience | Próximo evento: correlacionar journal persistente, `net-watch` e sysstat. |
-| B12 | **IaC: importar reserva HA `.115` e remover reservas velhas** | [`repo-ssot-srp`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-repo-ssot-srp.md) | Host cabeado; revisar saved plan antes do apply. |
+| B12 | ~~**IaC: importar reserva HA `.115` e remover reservas velhas**~~ | [`repo-ssot-srp`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-repo-ssot-srp.md) | **Resolvido:** reserva `.115` adotada via import; entradas antigas removidas. |
 
 ## Cluster H — arquitetura e hardening dos hosts
 
@@ -113,7 +113,7 @@ evidência → aprovação → execução.
 
 ## Ordem sugerida
 
-1. **R1/R2** — não executar; fechar evidence manifests e trazer aprovação.
+1. **R1** — não executar; fechar evidence manifest e trazer aprovação.
 2. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
 3. **B7/O2** — completar deployment, HPA e Argo health/sync.
 4. **N3/N4** — decidir placement antes de qualquer separação de containers.
@@ -129,3 +129,7 @@ evidência → aprovação → execução.
 - Fleet ESP: Pathfinder, Orion e Kepler concluídos; Laptop retirado do escopo.
 - O0/S0: bootstrap Argo + ESO sobreviveu reboot completo em 2026-07-24.
 - C4: B2 é a perna offsite diversa; checks e restores por stream passaram.
+- R2: adoção SWAG concluída; P7 é o gate ativo do rollout stateful.
+- B12: reserva HA `.115` importada; reservas obsoletas removidas.
+- Notificações CI e security: canais/webhooks por repositório ativados em
+  2026-07-25; billing limita runs privados, não configuração.
