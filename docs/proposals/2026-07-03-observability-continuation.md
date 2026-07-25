@@ -5,6 +5,10 @@
 plus new items surfaced during that deploy. Nothing here is scheduled;
 items are independent and ranked inside each section.
 **Date:** 2026-07-03
+
+**Scheduled evidence gate:** tune alert thresholds from Grafana history only
+after the first complete seven-day observation window closes on 2026-07-31.
+Do not tune from the partial rollout window.
 **Audience:** Maintainers of `desktop-nixos` + `servarr` + `homelab-gitops`
 
 **Shipped 2026-07-15:** embedded-etcd scrape + provisioned dashboard. All three
