@@ -5,7 +5,6 @@
 		"laptop":     "100.74.137.124",
 		"endeavour":  "100.107.225.13",
 		"pathfinder": "100.104.92.5",
-		"galaxy":     "100.66.253.15",
 		"discovery":  "100.76.140.121",
 		"swag":       "192.168.10.210",
 		"kepler":     "100.94.239.46",
@@ -40,7 +39,7 @@
 
 	"acls": [
 		// 1. Admin devices: OpenSSH (port 2222) into everything.
-		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "galaxy"], "dst": ["*:2222"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["*:2222"]},
 
 		// 2. Everyone: DNS to discovery (MagicDNS nameserver / AdGuard) and to
 		//    vanguard's secondary CoreDNS resolver (R1, services.fleetDns) — the
@@ -83,7 +82,7 @@
 		//    printer, IoT) that can't run Tailscale. Admin-only preserves the
 		//    posture — other tailnet devices still get only SWAG (rule 3). SNAT
 		//    on the router means no return route is needed on the UDM.
-		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "galaxy"], "dst": ["192.168.10.0/24:*"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["192.168.10.0/24:*"]},
 
 		// 9. Fleet pulls from orion's nix binary cache (nix-serve :5000) over
 		//    MagicDNS (http://orion:5000, see desktop-nixos common.nix). The LAN
@@ -115,7 +114,7 @@
 		//    set. Port 8443 is a PLACEHOLDER pending the desktop-nixos WP2
 		//    netbird-server module's actual SWAG proxy-conf binding (TODO
 		//    Phase-O) — update this port to match once that lands.
-		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "galaxy"], "dst": ["discovery:8443"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["discovery:8443"]},
 
 		// 13. vanguard's Postgres DR replica (R3b) streams from discovery's
 		//     shared cluster over the tailnet. discovery publishes :5432 on its
@@ -145,7 +144,6 @@
 		{"src": "laptop", "accept": ["kepler:2222"]},    // admin can SSH
 		{"src": "endeavour", "accept": ["kepler:2222", "kepler:2049", "orion:2222", "orion:4321"]}, // replacement workstation
 		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
-		{"src": "galaxy", "accept": ["swag:443"]},       // anyone reaches SWAG
 		{"src": "orion", "deny": ["kepler:8001"]},       // no direct backend access
 		{"src": "discovery", "accept": ["kepler:6443"]}, // hub reaches k3s
 		{"src": "discovery", "accept": ["orion:8080"]},  // hub reaches host services (LLMs)
@@ -166,8 +164,6 @@
 		{"src": "gemini", "deny": ["kepler:2222"]},        // but not admin SSH into the rest of the fleet
 		{"src": "laptop", "accept": ["discovery:8443"]}, // admin reaches the NetBird control plane
 		{"src": "orion", "deny": ["discovery:8443"]},    // non-admin cannot reach the NetBird control plane
-		{"src": "galaxy", "deny": ["kepler:2049"]},      // phone not an NFS client
-		{"src": "galaxy", "accept": ["192.168.10.2:80"]},  // admin phone reaches a LAN-only switch UI
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
 		{"src": "orion", "deny": ["192.168.10.2:80"]},     // non-admin can't reach LAN-only hosts
 	],

@@ -12,7 +12,7 @@ terraform {
 # once real peer IDs exist, same lifecycle as tailscale/acl's named hosts.
 inputs = {
   groups = {
-    "admins"         = {} # laptop/pathfinder/galaxy — mirrors tailscale/acl's admin set
+    "admins"         = {} # laptop/pathfinder — mirrors tailscale/acl's admin set
     "fleet-servers"  = {} # always-on fleet hosts enrolled via setup key
     "fleet-clients"  = {} # interactive user devices enrolled via PocketID SSO
     "netbird-relays" = {} # discovery relay#1 + voyager relay#2 (+ relay#3, §4a)
