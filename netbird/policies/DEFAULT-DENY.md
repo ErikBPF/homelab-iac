@@ -29,7 +29,7 @@ with (and defeats) everything below.
 
 | Group | Purpose | Membership at scaffold time |
 |---|---|---|
-| `admins` | Interactive admin devices | empty — populate with laptop/pathfinder/galaxy peer IDs once enrolled |
+| `admins` | Interactive admin devices | empty — populate with laptop/pathfinder peer IDs once enrolled |
 | `fleet-servers` | Always-on fleet hosts, enrolled via setup key | empty |
 | `fleet-clients` | Interactive user devices, enrolled via PocketID SSO | empty |
 | `netbird-relays` | discovery relay#1 + voyager relay#2 (+ relay#3, RFC §4a) | empty |

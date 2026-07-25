@@ -39,7 +39,7 @@ inputs = {
 
   policies = {
     "admin-ssh" = {
-      description = "Admin devices (laptop/pathfinder/galaxy) reach every NetBird peer over the overlay -- mirrors tailscale/acl policy.hujson rule 1. This is the ONLY accept rule in the baseline; every other peer pair is denied by default."
+      description = "Admin devices (laptop/pathfinder) reach every NetBird peer over the overlay -- mirrors tailscale/acl policy.hujson rule 1. This is the ONLY accept rule in the baseline; every other peer pair is denied by default."
       enabled     = true
       rules = [
         {
