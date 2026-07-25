@@ -45,12 +45,14 @@ notification paths, then cleared after a pause/unpause state reset
 (`servarr#117`). The fleet verifier follows each host's native exporter
 (`desktop-nixos#108`).
 
-**Implemented 2026-07-25, deployment pending:** compose stdout uses the
+**Shipped 2026-07-25:** compose stdout uses the
 journald driver on Discovery, Kepler, and Orion, so the existing host Alloy
 journal pipeline ships it to Loki. The four never-deployed container-Alloy
-configs and the stale `alloy-discovery` scrape were removed. Kepler's three
-daily restic backups and Orion's remaining weekly repository check now publish
-atomic textfile last-success gauges, with 30-hour/9-day Grafana dead-man rules.
+configs and the stale `alloy-discovery` scrape were removed. Kepler's local
+PostgreSQL and config backups now publish atomic textfile last-success gauges;
+the offsite gauge remains absent while Voyager is unreachable, which the
+30-hour Grafana dead-man rule now detects. Orion's dormant repository-check
+metric and alert were removed because Orion has no remaining payload backup.
 
 ## Context
 
@@ -86,8 +88,8 @@ for that backlog so the implemented doc can stay a closed record.
    liveness, and restart-storm detection support both metric families. Restart
    detection uses `changes()` on start-time gauges rather than the former
    invalid `increase()` calculation.
-2. **Compose container logs → Loki — implemented 2026-07-25, deployment
-   pending.** Discovery/Kepler/Orion compose services use journald and ride the
+2. **Compose container logs → Loki — shipped 2026-07-25.**
+   Discovery/Kepler/Orion compose services use journald and ride the
    existing host Alloy journal pipeline. The four dead container-Alloy configs
    were deleted. Voyager keeps its local JSON logging because it intentionally
    has no Alloy.
@@ -114,12 +116,15 @@ for that backlog so the implemented doc can stay a closed record.
    them. Include a GPU-temp caveat: orion AMD temps stay hwmon-excluded
    (SMU-wedge guard) and the drm collector reads a *different* amdgpu
    sysfs path — first suspect if a wedge recurs.
-7. **Backup gauges for compose restic jobs — implemented 2026-07-25,
-   deployment pending.** Kepler's postgres/config/offsite backup jobs and
-   Orion's remaining weekly repository check atomically publish
-   `<job>_last_success_seconds`. Grafana alerts after 30h for Kepler or 9d for
-   Orion. Orion has no payload backup since Hermes moved to Discovery; the
-   proposal no longer mislabels its prune/check-only stack. Btrfs snapshots
+7. **Backup gauges for compose restic jobs — partially shipped 2026-07-25.**
+   Kepler's active sync stack atomically publishes
+   `<job>_last_success_seconds`; a real PostgreSQL dump and 1.37 GiB config
+   snapshot seeded the two local gauges. Repository paths were rotated while
+   preserving repositories encrypted with the retired key. Voyager remained
+   unreachable, so the offsite job did not fabricate a success gauge; the
+   Grafana rule alerts when any of the three gauges is missing or older than
+   30h. Orion's dormant repository-check metric and 9-day alert were removed:
+   it has no payload backup since Hermes moved to Discovery. Btrfs snapshots
    remain local-only and unmetered.
 8. **swag / reverse-proxy traffic** — stub_status + nginx-exporter is
    coarse; the richer per-vhost board wants SWAG access logs, which lands
@@ -142,12 +147,14 @@ for that backlog so the implemented doc can stay a closed record.
    memory). If it recurs unexplained: check PSU/BIOS power settings and
    consider a `wol`-on-boot systemd timer on kepler as poor-man's
    auto-recovery. Ties into the deferred cross-host liveness ping below.
-3. **Cross-host liveness ping — implemented on Kepler 2026-07-25, deployment
-   pending.** Vanguard has the stronger offsite role configured, but its
+3. **Cross-host liveness ping — shipped on Kepler 2026-07-25.** Vanguard has
+   the stronger offsite role configured, but its
    tailnet SSH endpoint was unreachable during verification. Kepler now runs
    the same small timer as an active fallback: it probes PocketID through
    Discovery's public ingress every five minutes and, after three failures,
    posts directly through the independent SOPS-managed Discord webhook.
+   The timer was deployed and Kepler post-switch verification reported no
+   failed units.
 
 ## D. Cleanups
 
