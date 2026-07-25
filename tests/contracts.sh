@@ -23,3 +23,4 @@ done
 "$root/bin/homelab" docs-check
 bash "$root/tests/security-notification-contract.sh"
 bash "$root/tests/deploy-notification-contract.sh"
+bash "$root/tests/ci-notification-contract.sh"

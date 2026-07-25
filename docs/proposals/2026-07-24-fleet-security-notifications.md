@@ -1,7 +1,7 @@
 # Fleet security notifications
 
-**Status:** In progress — private config repo Gitleaks coverage landed locally;
-channel, credentials, and routing remain gated.
+**Status:** Implemented — producer workflows and per-repository credentials are
+ready; private hosted runs remain limited by GitHub billing.
 **Date:** 2026-07-24
 **Owner:** Cross-repo policy in `homelab`; implementation stays with each
 component repository.
@@ -195,6 +195,16 @@ Hook activation requires only repository secrets:
 | Every repository in `repos.json`, plus `renovate-config` | `DISCORD_SECURITY_WEBHOOK` |
 | `kindle-dash` | `DISCORD_SECURITY_WEBHOOK`, `DISCORD_INCIDENTS_WEBHOOK` |
 
+Activation update — 2026-07-25:
+
+- `#security` and its dedicated incoming webhook exist.
+- `DISCORD_SECURITY_WEBHOOK` is installed and verified as a per-repository
+  Actions secret on every repository in `repos.json` and `renovate-config`.
+- A redacted, mention-disabled test message reached `#security`.
+- The plaintext handoff file was deleted after distribution.
+- No host workload currently posts security findings, so the webhook is not
+  copied into OpenBao until a runtime producer exists.
+
 ### Phase 2 — evaluate, then stop
 
 After 30 days, measure:
@@ -224,10 +234,8 @@ and threat model justify its runtime and maintenance cost.
 - No workflow receives a Vault credential.
 - Argus cannot consume `#security` messages in phase 1.
 
-## Open decisions
+## Resolved decisions
 
-1. Approve channel name `#security`.
-2. Choose GitHub secret placement: organization secret scoped to selected
-   repositories, or per-repository secrets.
-3. Decide whether critical messages may mention Erik immediately or rely on
-   Discord channel notification settings.
+1. Channel: `#security`.
+2. GitHub placement: per-repository secrets.
+3. Mentions: disabled; rely on channel notification settings.
