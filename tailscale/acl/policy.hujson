@@ -77,6 +77,10 @@
 		//    harmless.
 		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "orion", "kepler", "archinaut"], "dst": ["discovery:3100,9090"]},
 
+		// Public SSH hosts use the lightweight Vector shipper. Logs-only:
+		// neither host needs Prometheus or broader observability access.
+		{"action": "accept", "src": ["voyager", "vanguard"], "dst": ["discovery:3100"]},
+
 		// 8. Admin devices reach the whole LAN through discovery's subnet route,
 		//    so tailnet devices can hit LAN-only hosts (swOS switches, UDM,
 		//    printer, IoT) that can't run Tailscale. Admin-only preserves the
@@ -148,6 +152,8 @@
 		{"src": "discovery", "accept": ["kepler:6443"]}, // hub reaches k3s
 		{"src": "discovery", "accept": ["orion:8080"]},  // hub reaches host services (LLMs)
 		{"src": "kepler", "accept": ["discovery:3100"]}, // cluster ships logs to Loki
+		{"src": "voyager", "accept": ["discovery:3100"]}, // public host ships SSH journals
+		{"src": "vanguard", "accept": ["discovery:3100"]}, // public host ships SSH journals
 		{"src": "kepler", "accept": ["discovery:8200"]}, // lab ESO reads OpenBao
 		{"src": "orion", "accept": ["discovery:9090"]},  // host Alloy ships metrics
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
