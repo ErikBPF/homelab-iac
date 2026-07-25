@@ -33,12 +33,17 @@ ten minutes. GPU and llama.cpp targets remain dashboard-only because their
 stacks are intentionally stopped. `servarr#113` passed 85 Discovery tests plus
 30 subtests and was deployed to Discovery.
 
-**Shipped 2026-07-25:** compose-host container identity ingestion.
+**Shipped 2026-07-25:** compose-host container observability.
 Discovery's host Alloy points cAdvisor at Docker's embedded containerd socket
-(71 named containers verified). Kepler and Orion run a pinned
+(77 named containers currently verified). Kepler and Orion run a pinned
 `prometheus-podman-exporter` with enhanced labels, scraped by unprivileged host
 Alloy (11 and 5 named containers verified). Their old privileged cAdvisor path
-was removed (`servarr#115`, `#116`; `desktop-nixos#103`, `#105`).
+was removed (`servarr#115`, `#116`; `desktop-nixos#103`, `#105`). The Homelab
+Overview dashboard and both container alerts now consume the mixed metric
+contract; controlled synthetic instances force-fired the warning and critical
+notification paths, then cleared after a pause/unpause state reset
+(`servarr#117`). The fleet verifier follows each host's native exporter
+(`desktop-nixos#108`).
 
 ## Context
 
@@ -67,13 +72,13 @@ for that backlog so the implemented doc can stay a closed record.
 
 ## B. Coverage gaps (need new components or upstream fixes)
 
-1. **Compose container identity — ingestion shipped 2026-07-25.** Discovery
-   keeps embedded cAdvisor for Docker; Kepler/Orion use
+1. **Compose container observability — shipped 2026-07-25.** Discovery keeps
+   embedded cAdvisor for Docker; Kepler/Orion use
    `prometheus-podman-exporter` because cAdvisor cannot inspect rootless Podman
-   storage. Remaining Phase-2 work: migrate compose dashboard queries and the
-   tombstoned `container-critical-down` / `container-restart-storm` rules to a
-   mixed cAdvisor (`container_*`) + Podman (`podman_container_*`) contract,
-   then force-fire both alert paths.
+   storage. Dashboard queries, the machine selector, critical-container
+   liveness, and restart-storm detection support both metric families. Restart
+   detection uses `changes()` on start-time gauges rather than the former
+   invalid `increase()` calculation.
 2. **Compose container logs → Loki** — the deploy audit proved only
    journal + k8s streams exist; container stdout never reaches Loki. The
    four `machines/*/config/alloy/config.alloy` files in servarr are dead
