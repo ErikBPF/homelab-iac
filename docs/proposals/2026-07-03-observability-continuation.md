@@ -58,6 +58,12 @@ the offsite gauge remains absent while Voyager is unreachable, which the
 30-hour Grafana dead-man rule now detects. Orion's dormant repository-check
 metric and alert were removed because Orion has no remaining payload backup.
 
+**Shipped 2026-07-25:** PostgreSQL metrics on Discovery and Kepler. One
+digest-pinned exporter runs beside each shared database using its existing
+runtime credentials. Discovery scrapes its exporter locally and Kepler through
+a `tailscale0`-only firewall opening. Both `up` and `pg_up` were verified at 1
+for both hosts (`servarr#124`, `desktop-nixos#118`).
+
 ## Context
 
 The 2026-06-29 fleet-monitoring RFC shipped: 15 provisioned dashboards, the
@@ -103,10 +109,13 @@ for that backlog so the implemented doc can stay a closed record.
    stack, scrape job, and commit dashboards 11313 (gateway) + 11315
    (clients) as provisioned JSON. Unlocks WAN edge + the ~20 non-fleet
    LAN devices.
-4. **postgres-exporter** on discovery + kepler infra stacks (covers
-   litellm/langfuse/n8n/healthchecks DBs): one
-   `prometheuscommunity/postgres-exporter` sidecar per `infra.yml`,
-   creds from the existing `.env`.
+4. **postgres-exporter — shipped 2026-07-25.** One
+   `prometheuscommunity/postgres-exporter` sidecar per Discovery/Kepler infra
+   stack covers the shared application databases. Existing runtime credentials
+   are passed as separate user/password fields, avoiding URL encoding bugs.
+   Kepler exposes 9187 only on its tailnet address and Nix opens it only on
+   `tailscale0`; Discovery scrapes locally. Both targets report `up=1` and
+   `pg_up=1`.
 5. **LiteLLM spend history** — live `litellm_*` metrics start at enable
    time; retroactive money panels come from postgres
    (`LiteLLM_DailyUserSpend` / `DailyTeamSpend`). Add a read-only PG role
