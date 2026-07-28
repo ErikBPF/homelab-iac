@@ -76,6 +76,21 @@ PY
   [ "$status" -eq 0 ]
 }
 
+@test "imported Actions secrets are not overwritten implicitly" {
+  run python3 - "$REPO_ROOT/github/modules/repo/main.tf" <<'PY'
+import pathlib, re, sys
+
+text = pathlib.Path(sys.argv[1]).read_text()
+resource = re.search(
+    r'resource "github_actions_secret" "this" \{(?:(?!^}).)*^}',
+    text,
+    re.M | re.S,
+).group()
+assert re.search(r"ignore_changes\s*=\s*\[\s*value\s*\]", resource)
+PY
+  [ "$status" -eq 0 ]
+}
+
 @test "completed migration leaves no import blocks" {
   run python3 - "$REPO_ROOT/github/repos/terragrunt.hcl" <<'PY'
 import pathlib, sys
