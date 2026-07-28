@@ -11,7 +11,7 @@ import pathlib, re, sys
 text = pathlib.Path(sys.argv[1]).read_text()
 repos = text.split("  repos = {", 1)[1].split("\n  }\n\n  app_installation_repositories", 1)[0]
 expected = {
-    "agentmemory", "ai-server", "codex-flake", "datafoundation-support-scripts",
+    "agentmemory", "ai-server", "buzz-flake", "codex-flake", "datafoundation-support-scripts",
     "cosmo-notes", "desktop-nixos", "ha-harness", "hermes-flake",
     "hermes-skills", "home-assistant-config",
     "homelab-gitops", "homelab-iac", "kindle-dash", "klipper-biqu",

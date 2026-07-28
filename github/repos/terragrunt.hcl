@@ -28,6 +28,9 @@ inputs = {
       visibility   = "private"
       protect_main = false # GitHub Free does not support private branch protection.
     }
+    buzz-flake = {
+      protect_main = true
+    }
     codex-flake = {
       protect_main                 = true
       required_checks              = ["check", "package-build"]
