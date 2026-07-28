@@ -102,14 +102,18 @@
 		//    (same path rule 7's in-cluster Alloy uses). Blast radius = lab only.
 		{"action": "accept", "src": ["kepler"], "dst": ["discovery:8200"]},
 
-		// 11. Any fleet host -> orion's shared sccache WebDAV cache (:4321, nginx
+		// 11. Kepler sends its config backup to voyager's append-only Restic
+		//     receiver. No other voyager service is exposed to Kepler.
+		{"action": "accept", "src": ["kepler"], "dst": ["voyager:8000"]},
+
+		// 12. Any fleet host -> orion's shared sccache WebDAV cache (:4321, nginx
 		//    dav). Routes dev-loop `cargo build` artifacts to orion; a miss or an
 		//    unreachable orion falls back to a local compile (desktop-nixos
 		//    modules/services/sccache.nix). Broad src so servers can share the
 		//    cache too; actual use is opt-in per host (sccacheClient.enable).
 		{"action": "accept", "src": ["*"], "dst": ["orion:4321"]},
 
-		// 12. NetBird control-plane admin-only (self-hosted overlay RFC §6
+		// 13. NetBird control-plane admin-only (self-hosted overlay RFC §6
 		//    flat-trust fix): nb.<zone>/id.<zone> (management/signal/dashboard/
 		//    PocketID on discovery) must NOT inherit rule 3's "everyone -> swag
 		//    :80,443" grant the way every other *.homelab.pastelariadev.com
@@ -121,19 +125,19 @@
 		//    Phase-O) — update this port to match once that lands.
 		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["discovery:8443"]},
 
-		// 13. vanguard's Postgres DR replica (R3b) streams from discovery's
+		// 14. vanguard's Postgres DR replica (R3b) streams from discovery's
 		//     shared cluster over the tailnet. discovery publishes :5432 on its
 		//     tailnet IP (servarr infra stack), gated to vanguard alone here.
 		{"action": "accept", "src": ["vanguard"], "dst": ["discovery:5432"]},
 
-		// 14. gemini dev sandbox -> discovery's Prometheus :9090 (read path). The
+		// 15. gemini dev sandbox -> discovery's Prometheus :9090 (read path). The
 		//     grafatui TUI (`fleet-metrics`) in the dev container queries fleet
 		//     metrics from discovery. gemini is a tag:server node (own tailnet
 		//     identity); a dedicated grant keeps rule 7's Alloy-push semantics
 		//     clean and avoids handing gemini the bundled Loki :3100 it never uses.
 		{"action": "accept", "src": ["gemini"], "dst": ["discovery:9090"]},
 
-		// 15. gemini dev sandbox -> orion host SSH (:2222). The container's RO
+		// 16. gemini dev sandbox -> orion host SSH (:2222). The container's RO
 		//     store can't build new derivations, so `nix build`/dev loops run on
 		//     the orion host; this also makes `ssh orion` resolve by MagicDNS from
 		//     inside the container. Scoped to orion alone — the sandbox is not an
@@ -156,6 +160,7 @@
 		{"src": "voyager", "accept": ["discovery:3100"]}, // public host ships SSH journals
 		{"src": "vanguard", "accept": ["discovery:3100"]}, // public host ships SSH journals
 		{"src": "kepler", "accept": ["discovery:8200"]}, // lab ESO reads OpenBao
+		{"src": "kepler", "accept": ["voyager:8000"]},   // offsite Restic backup
 		{"src": "orion", "accept": ["discovery:9090"]},  // host Alloy ships metrics
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
 		{"src": "kepler", "accept": ["orion:22000"]},    // syncthing preserved
