@@ -64,7 +64,7 @@ inputs = {
           action        = "accept"
           protocol      = "tcp"
           bidirectional = false
-          sources       = ["admins", "fleet-clients"]
+          sources       = ["admins", "fleet-clients", "fleet-servers"]
           destinations  = ["fleet-servers"]
           ports         = ["3000"]
         }

@@ -5,7 +5,7 @@
   [ "$status" -eq 0 ]
   run grep -F 'description   = "Buzz relay access over NetBird."' netbird/policies/terragrunt.hcl
   [ "$status" -eq 0 ]
-  run grep -F 'sources       = ["admins", "fleet-clients"]' netbird/policies/terragrunt.hcl
+  run grep -F 'sources       = ["admins", "fleet-clients", "fleet-servers"]' netbird/policies/terragrunt.hcl
   [ "$status" -eq 0 ]
   run grep -F 'destinations  = ["fleet-servers"]' netbird/policies/terragrunt.hcl
   [ "$status" -eq 0 ]
