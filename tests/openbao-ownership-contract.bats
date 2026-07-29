@@ -18,7 +18,7 @@
 @test "S08 preserves every live Vault Agent policy and TTL" {
   module=components/openbao/modules/runtime-secret-foundation/main.tf
 
-  grep -Fq 'token_policies = ["discord-read", "home-read", "kindle-release-read"]' "$module"
+  grep -Fq 'token_policies = ["discord-read", "home-read", "kindle-release-read", "github-app-management"]' "$module"
   grep -Fq 'token_ttl      = 3600' "$module"
   grep -Fq 'token_max_ttl  = 14400' "$module"
 }
