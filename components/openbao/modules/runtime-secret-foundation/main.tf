@@ -31,6 +31,15 @@ resource "vault_policy" "home_read" {
   EOT
 }
 
+resource "vault_policy" "github_app_management" {
+  name   = "github-app-management"
+  policy = <<-EOT
+    path "secret/data/home/github-app-management" {
+      capabilities = ["read", "patch"]
+    }
+  EOT
+}
+
 resource "vault_policy" "iac_writer" {
   name = "homelab-iac-ha-harness"
   policy = join("\n", [
@@ -43,7 +52,7 @@ resource "vault_approle_auth_backend_role" "vault_agent" {
   backend        = vault_auth_backend.approle.path
   role_name      = "vault-agent"
   bind_secret_id = true
-  token_policies = ["discord-read", "home-read", "kindle-release-read"]
+  token_policies = ["discord-read", "home-read", "kindle-release-read", "github-app-management"]
   token_ttl      = 3600
   token_max_ttl  = 14400
   token_type     = "default"
