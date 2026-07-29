@@ -73,7 +73,7 @@ locals {
     }
     "48:da:35:6f:69:ae" = {
       name       = "nanokvm"
-      fixed_ip   = "192.168.10.157"
+      fixed_ip   = "192.168.10.4"
       network_id = local.main_net
     }
     "a6:1a:fe:f0:e6:7c" = {
