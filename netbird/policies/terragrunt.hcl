@@ -54,5 +54,21 @@ inputs = {
         }
       ]
     }
+    "buzz-relay" = {
+      description = "Managed clients reach Buzz on fleet servers over the encrypted overlay."
+      enabled     = true
+      rules = [
+        {
+          name          = "managed-clients-buzz"
+          description   = "Buzz relay access over NetBird."
+          action        = "accept"
+          protocol      = "tcp"
+          bidirectional = false
+          sources       = ["admins", "fleet-clients"]
+          destinations  = ["fleet-servers"]
+          ports         = ["3000"]
+        }
+      ]
+    }
   }
 }
