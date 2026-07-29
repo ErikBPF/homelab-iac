@@ -21,3 +21,11 @@ setup() {
   grep -qF '{"src": "laptop", "accept": ["nanokvm:22", "nanokvm:443"]}' "$policy"
   grep -qF '{"src": "orion", "deny": ["nanokvm:22", "nanokvm:443"]}' "$policy"
 }
+
+@test "NanoKVM device key does not expire" {
+  module="$REPO_ROOT/tailscale/modules/acl/main.tf"
+
+  grep -qF 'resource "tailscale_device_key" "nanokvm"' "$module"
+  grep -qF 'device_id           = "nu53rVuxF711CNTRL"' "$module"
+  grep -qF 'key_expiry_disabled = true' "$module"
+}
