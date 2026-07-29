@@ -109,4 +109,9 @@ resource "github_actions_secret" "this" {
   repository  = each.value.repository
   secret_name = each.value.secret_name
   value       = each.value.value
+
+  lifecycle {
+    # Imported secret values are unreadable; rotate explicitly with -replace.
+    ignore_changes = [value]
+  }
 }

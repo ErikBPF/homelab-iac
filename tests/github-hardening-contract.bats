@@ -11,7 +11,7 @@ import pathlib, re, sys
 text = pathlib.Path(sys.argv[1]).read_text()
 repos = text.split("  repos = {", 1)[1].split("\n  }\n\n  app_installation_repositories", 1)[0]
 expected = {
-    "agentmemory", "ai-server", "codex-flake", "datafoundation-support-scripts",
+    "agentmemory", "ai-server", "buzz-flake", "codex-flake", "datafoundation-support-scripts",
     "cosmo-notes", "desktop-nixos", "ha-harness", "hermes-flake",
     "hermes-skills", "home-assistant-config",
     "homelab-gitops", "homelab-iac", "kindle-dash", "klipper-biqu",
@@ -73,6 +73,21 @@ PY
 @test "auto-merge is enabled only where branch protection makes it usable" {
   run grep -E 'allow_auto_merge[[:space:]]*= each.value.protect_main && each.value.allow_auto_merge' \
     "$REPO_ROOT/github/modules/repo/main.tf"
+  [ "$status" -eq 0 ]
+}
+
+@test "imported Actions secrets are not overwritten implicitly" {
+  run python3 - "$REPO_ROOT/github/modules/repo/main.tf" <<'PY'
+import pathlib, re, sys
+
+text = pathlib.Path(sys.argv[1]).read_text()
+resource = re.search(
+    r'resource "github_actions_secret" "this" \{(?:(?!^}).)*^}',
+    text,
+    re.M | re.S,
+).group()
+assert re.search(r"ignore_changes\s*=\s*\[\s*value\s*\]", resource)
+PY
   [ "$status" -eq 0 ]
 }
 
