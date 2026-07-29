@@ -7,6 +7,7 @@
 		"pathfinder": "100.104.92.5",
 		"discovery":  "100.76.140.121",
 		"swag":       "192.168.10.210",
+		"nanokvm":   "192.168.10.157",
 		"kepler":     "100.94.239.46",
 		"orion":      "100.72.85.73",
 		"archinaut":  "100.67.123.113",
@@ -27,6 +28,7 @@
 			"192.168.10.210/32": ["erikbogado@gmail.com"],
 			"192.168.10.1/32":   ["erikbogado@gmail.com"],
 			"192.168.10.2/32":   ["erikbogado@gmail.com"],
+			"192.168.10.157/32": ["erikbogado@gmail.com"],
 		},
 	},
 
@@ -88,6 +90,10 @@
 		//    posture — other tailnet devices still get only SWAG (rule 3). SNAT
 		//    on the router means no return route is needed on the UDM.
 		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["192.168.10.0/24:*"]},
+
+		// NanoKVM is an administrative trust boundary. Keep direct web and SSH
+		// access limited to the same three admin devices.
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["nanokvm:22,443"]},
 
 		// 9. Fleet pulls from orion's nix binary cache (nix-serve :5000) over
 		//    MagicDNS (http://orion:5000, see desktop-nixos common.nix). The LAN
@@ -178,5 +184,7 @@
 		{"src": "orion", "deny": ["discovery:8443"]},    // non-admin cannot reach the NetBird control plane
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
 		{"src": "orion", "deny": ["192.168.10.2:80"]},     // non-admin can't reach LAN-only hosts
+		{"src": "laptop", "accept": ["nanokvm:22", "nanokvm:443"]}, // admin reaches NanoKVM
+		{"src": "orion", "deny": ["nanokvm:22", "nanokvm:443"]},    // non-admin cannot reach NanoKVM
 	],
 }
