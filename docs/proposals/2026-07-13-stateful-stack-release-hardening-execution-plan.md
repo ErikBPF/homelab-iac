@@ -817,6 +817,29 @@ snapshot/archive/copy/compare, canonical switch/recreate, smoke, reboot, retain.
 
 Anonymous/zero-link/zero-byte resources are not proven orphans.
 
+#### P7 checkpoint — Vaultwarden canonical volume complete
+
+The first database/control-plane slice stopped before migration when live
+preflight proved Discovery's scheduled Restic client received HTTP 401 from
+Kepler. Root cause was two-part: Kepler ran `--private-repos` with an empty
+password file, and Discovery/Orion requested repositories outside the
+authenticated user's namespace.
+
+Servarr `2f51e96`, `6a4aed2`, and `ff0ae9a` added the authenticated receiver,
+application-consistent SQLite staging, and private namespace paths. Discovery
+then created Kepler snapshot `293b9e15…`; an isolated restore passed SQLite
+`PRAGMA integrity_check` and retained the RSA key. Servarr `4690388` records
+the value-free per-service ledger.
+
+The approved migration landed in Servarr `a0d9ca9`. Transition snapshot
+`fd734b73` restored with SQLite integrity `ok`; the stopped-volume copy matched
+4 files and 313079 bytes. Vaultwarden and its backup reader now mount
+`discovery-vaultwarden-data`. Post-migration snapshot `d616b8f1` restored with
+SQLite integrity `ok`. Reboot boot ID
+`2b0c0148-820c-4f75-a052-309cd4126987` returned with zero failed units and both
+containers healthy. `infra_vaultwarden_data` remains retained for rollback; no
+source volume or backup was deleted.
+
 ### P8 — Terraform control-plane inventory
 
 Inventory Grafana, Harbor, PocketID, MinIO, Cloudflare, GitHub, NetBird,
@@ -889,7 +912,7 @@ resources.
 | P4 | Complete | Homelab-IaC through `ff5e633`, `369f0d5`, `1b91cab`; signed provider 0.1.8; disposable lifecycle green; config and filtering production plans no-op; primary DNS recovered through approved recipe | P9 retained-evidence cleanup only |
 | P5 | Complete | Servarr `eaa1f4f`; retained ledger/snapshot/archive; canonical mount and reboot probes green | P9 retained-evidence cleanup only |
 | P6 | Complete | Protected releases through `v0.3.4`; App-merged Servarr pins; exact Harbor parity; fixed pull agent; v0.3.3 rollback and auth-degradation drills; resume fixtures; aligned reporting; scheduled trigger 2026-07-21 13:01:49 -03; live digest/volume/health/PNG green | P9 retained-evidence cleanup only |
-| P7 | Active | P0 inventory | Per-service ledgers |
+| P7 | Active | P0 inventory; Vaultwarden canonical migration `a0d9ca9`; transition `fd734b73`; post-migration restore `d616b8f1`; reboot/mount/health green; source retained | Next one-service stateful slice |
 | P8 | Pending | — | P7 |
 | P9 | Pending | Candidate inventory | P8; per-resource approvals |
 
