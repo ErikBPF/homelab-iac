@@ -4,9 +4,10 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 jq -e '
-  length == 13
+  length > 0
   and all(.[]; .name and .responsibility and .path)
-  and ([.[].name] | unique | length) == 13
+  and ([.[].name] | unique | length) == length
+  and ([.[].path] | unique | length) == length
 ' "$root/repos.json" >/dev/null
 
 while IFS= read -r path; do
@@ -24,3 +25,4 @@ done
 bash "$root/tests/security-notification-contract.sh"
 bash "$root/tests/deploy-notification-contract.sh"
 bash "$root/tests/ci-notification-contract.sh"
+bash "$root/tests/flake-package-updater-contract.sh"

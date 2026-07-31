@@ -20,6 +20,11 @@
     "responsibility": "Lab Kubernetes workloads"
   },
   {
+    "name": "renovate-config",
+    "path": "references/repos/renovate-config",
+    "responsibility": "Fleet dependency automation runner and shared Renovate preset"
+  },
+  {
     "name": "hermes-flake",
     "path": "references/repos/hermes-flake",
     "responsibility": "Hermes package and deployment modules"
