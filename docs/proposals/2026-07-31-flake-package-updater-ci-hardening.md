@@ -1,7 +1,8 @@
 # Fleet flake package-updater CI hardening
 
-**Status:** Partially deployed; App canary blocked by private Actions billing
+**Status:** Implemented; central App workflow active
 **Date:** 2026-07-31
+**Completed:** 2026-08-01
 **Owners:** `renovate-config` for orchestration; each flake repository for its
 package updater and CI gate
 
@@ -204,6 +205,24 @@ payments failed or the spending limit must be increased. The repository has no
 self-hosted runner. The central workflow was manually disabled to prevent
 hourly zero-step failures, and component schedulers remain active.
 
-Activation remains unclaimed. Restore private Actions billing or approve a
-runner/repository-visibility change, re-enable the central workflow, and rerun
-the OpenCode canary before retiring component schedulers.
+Billing was restored on 2026-08-01 and the workflow was re-enabled. The second
+live dispatch,
+[`renovate-config` run 30716823598](https://github.com/ErikBPF/renovate-config/actions/runs/30716823598),
+completed all three matrix jobs successfully. Codex and Hermes were clean
+no-ops. OpenCode created App-authored
+[`opencode-flake` PR #25](https://github.com/ErikBPF/opencode-flake/pull/25),
+started its normal required checks without approval, enabled auto-merge, and
+merged after `check`, `package-build`, and `Security` passed. Its main-branch
+[`check` run 30717219920](https://github.com/ErikBPF/opencode-flake/actions/runs/30717219920)
+then completed package validation, FlakeHub publish, and wildcard verification.
+
+Legacy scheduler retirement PRs
+[`codex-flake` #20](https://github.com/ErikBPF/codex-flake/pull/20),
+[`opencode-flake` #26](https://github.com/ErikBPF/opencode-flake/pull/26), and
+[`hermes-flake` #35](https://github.com/ErikBPF/hermes-flake/pull/35) passed their
+required checks and auto-merged. The central App workflow is now the sole
+package-update scheduler and all acceptance gates are complete.
+
+The App token action warns that `app-id` is deprecated in favor of `client-id`.
+That migration needs the App client ID added as a secret before the action
+removes compatibility; it is not a rollout blocker.

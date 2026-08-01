@@ -1,7 +1,7 @@
 # Proposal index
 
-Last synchronized: 2026-07-31.
+Last synchronized: 2026-08-01.
 
 | Proposal | Current status | Remaining value | Delivery risk | Next gate | File coverage |
 |---|---|---:|---:|---|---|
-| [Fleet flake package-updater CI hardening](proposals/2026-07-31-flake-package-updater-ci-hardening.md) | Partially deployed; central App canary blocked by private Actions billing | Medium | Medium | Restore private Actions billing or approve a runner/visibility change, re-enable the central workflow, then rerun the OpenCode canary. Retire component schedulers only after it passes. | `repos.json`, central runner workflow, three component updaters and CI gates |
+| [Fleet flake package-updater CI hardening](proposals/2026-07-31-flake-package-updater-ci-hardening.md) | Implemented; central App workflow active | Low | Low | Migrate the App token action from deprecated `app-id` to `client-id` before compatibility is removed. | `repos.json`, central runner workflow, three component updaters and CI gates |
