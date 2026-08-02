@@ -1,12 +1,10 @@
 # Source-Backed Host Improvement Review
 
-**Status:** In progress — P0 executed 2026-07-01: 4.1 done (pathfinder + orion
-80/443 closed; orion 8080 kept for llama.cpp, 8081 kept pending live check),
-4.2 done (live audit → [`docs/reference/service-exposure.md`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/reference/service-exposure.md)
-+ the existing `just verify-firewall` recipe), 4.3 **deferred by decision** —
-server sudo tightening waits until after the deploy-recipe sudo path is proven
-stable (deploy recipes depend on passwordless wheel). P1 "adopt a deploy layer"
-has since been satisfied by the deploy-rs adoption (`modules/deploy-rs.nix`).
+**Status:** Graduated 2026-07-30 — P0 exposure audit/cleanup and P1 deploy-rs
+adoption delivered. The remaining sudo, NFS, sandboxing, state-inventory, and
+acceptance-test work is split into H1–H5 in
+[`2026-07-02-open-decisions-and-work.md`](2026-07-02-open-decisions-and-work.md);
+this broad review is no longer an executable program.
 **Audience:** Maintainers of `desktop-nixos`
 **Post-read action:** Pick the next security, performance, and usability improvements per host, with external references for the recommendations.
 

@@ -3,6 +3,11 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+if grep -Eq 'length == [0-9]+' "$root/bin/homelab" "$root/tests/contracts.sh"; then
+  echo "repository validation must not hardcode the inventory size" >&2
+  exit 1
+fi
+
 jq -e '
   length > 0
   and all(.[]; .name and .responsibility and .path)
@@ -25,4 +30,6 @@ done
 bash "$root/tests/security-notification-contract.sh"
 bash "$root/tests/deploy-notification-contract.sh"
 bash "$root/tests/ci-notification-contract.sh"
+bash "$root/tests/cleytin-alert-contract.sh"
+bash "$root/tests/runtime-security-inventory-contract.sh"
 bash "$root/tests/flake-package-updater-contract.sh"

@@ -1,9 +1,9 @@
 # Fleet ESP enlargement: risk-triggered migration to 2G
 
-**Status:** Pathfinder, Orion, and Kepler migrated to 2G ESPs on 2026-07-14.
-Pathfinder is accepted without a dedicated soak. Laptop migration is cancelled
-because that machine will be replaced. Discovery is the only remaining
-existing-host migration and retains independent rehearsal and approval gates.
+**Status:** Implemented — Pathfinder, Orion, and Kepler migrated on 2026-07-14;
+Discovery completed its independently gated migration on 2026-07-27 and passed
+post-install acceptance on 2026-07-28. Laptop migration is cancelled because
+that machine will be replaced.
 
 ## Policy
 
@@ -188,16 +188,13 @@ it on 2026-07-14.
 
 ## Next steps
 
-1. Retain Pathfinder, Orion, and Kepler snapshots according to normal backup
-   policy; no migration-specific soak gates further fleet work.
+1. Retain migration snapshots according to normal backup policy; no
+   migration-specific soak gates further fleet work.
 2. Do not migrate the current laptop. Its replacement receives the 2 GiB ESP
    layout during first installation.
-3. Execute Discovery preparation through the independent
-   [Discovery ESP migration plan](2026-07-14-discovery-esp-migration.md): prove
-   the root RAID destructive graph, vault exclusion, cold Docker recovery,
-   encrypted restores, and OpenBao/Harbor/Compose recovery order.
-4. Discovery destruction remains blocked pending its evidence manifest and a
-   separate explicit approval.
+3. Preserve Discovery's detailed rehearsal, restore, and acceptance evidence in
+   the completed
+   [Discovery ESP migration record](2026-07-14-discovery-esp-migration.md).
 
 ## Later-host approval
 

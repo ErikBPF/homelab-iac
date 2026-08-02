@@ -1,10 +1,14 @@
 # Repository Structure Improvement Proposal
 
-**Status:** In progress — **Phase 0 done (2026-06-27):** dendritic contract at
-`docs/reference/dendritic-contract.md` + `just structure-check` (report-only;
-0 hard violations on the current tree, 4 large-file advisories). Phases 1–6 open.
+**Status:** Graduated 2026-07-30 — Phase 0 delivered the dendritic contract and
+`just structure-check`; phases 1–6 are retired as a standing refactor program.
+Split or move code only when concrete work exposes a boundary.
 **Audience:** Maintainers of `desktop-nixos`
 **Post-read action:** Choose which structural cleanup phases to implement, in order, without changing host behavior accidentally.
+
+The remaining historical phases below are design reference, not backlog.
+Concrete host/security tails live in
+[`2026-07-02-open-decisions-and-work.md`](2026-07-02-open-decisions-and-work.md).
 
 ## 1. Executive summary
 

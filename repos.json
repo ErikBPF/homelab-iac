@@ -60,6 +60,11 @@
     "responsibility": "Codex package and Home Manager module"
   },
   {
+    "name": "buzz-flake",
+    "path": "references/repos/buzz-flake",
+    "responsibility": "Buzz package and Home Manager module"
+  },
+  {
     "name": "ha-harness",
     "path": "references/repos/ha-harness",
     "responsibility": "Private Home Assistant tool-calling model and safety harness"

@@ -1,13 +1,13 @@
 # Discovery ESP migration: rehearsed recovery of the fleet control plane
 
-**Status:** Plan — live inventory captured 2026-07-14; destructive migration is
-blocked until every rehearsal and approval gate below passes.
+**Status:** Implemented 2026-07-27 — Discovery was reinstalled with a 2 GiB ESP,
+restored, rebooted, and passed the post-install acceptance gate.
 
 **Audience:** The maintainer executing Discovery's reinstall during a controlled
 maintenance window.
 
-**Post-read action:** Complete D0–D4, review the generated evidence manifest,
-then explicitly approve or reject the destructive D5 window.
+**Post-read action:** Retain this record and its recovery evidence; track
+unrelated service-health follow-ups separately.
 
 ## 1. Outcome and boundary
 
@@ -39,6 +39,73 @@ must reach a stable checkpoint before D4.
   during evaluation, but Nix disabled that substituter and completed the dry
   build; Orion's SSH builder remained functional. Cache health must be restored
   before D4 so the maintenance window does not depend on fallback behavior.
+
+### Preparation progress — 2026-07-26
+
+- D0's repository freeze is recorded: `desktop-nixos`
+  `feat/discovery-esp-recovery` at
+  `56e041af273922a1b616a0d46c5083781315de13`, and Servarr `main` at
+  `41a0c82c06fca22cbfee024198dacd147e6f8c12`. Both revisions are clean and
+  match their published remote branches. Any later state-affecting change
+  invalidates this freeze.
+- D1 re-proved the same generated destructive graph hash
+  `ff21f4815320662346c943b2b603ed2da587d8f08a7099f8a1f4676f76723f8c`,
+  with only the two reviewed Kingston SSDs and no vault identity. Current
+  volatile enumeration is primary `/dev/sdb`, mirror `/dev/sda`, vault
+  `/dev/sdc`; recovery gates use stable partition IDs and do not pin this
+  ordering.
+- D2 completed the cold Docker mirror, an exact stopped delta, and the isolated
+  Orion Docker-root daemon inspection. Production Docker recovered afterward.
+- D3 restore evidence now covers OpenBao, full-cluster PostgreSQL, Redis cold
+  start, PocketID, NetBird management, SWAG config/certificates, Harbor,
+  HAOS, mutable home, and AdGuard. Notable retained evidence includes Restic
+  home snapshot `6943b508`, the exact HAOS clone plus networkless boot, and
+  Orion scratch trees under `/projects/recovery/discovery-esp/`.
+- The AdGuard final stopped delta reached zero drift and production DNS
+  recovered after 14 seconds. A disposable copy on Orion then passed fleet
+  rewrite, external recursion, filtering, and DNSSEC over UDP and TCP, with
+  only `127.0.0.1:15353` and `127.0.0.1:18090` published.
+- Kepler's fallback CoreDNS was active but had raced DHCP and omitted
+  `192.168.10.230`; restarting it after DHCP restored direct UDP/TCP service.
+  The published source fix now gives Kepler an explicit bind address; its
+  activation remains pending the deliberate Kepler boot-deployment path.
+- SWAG representative Host-header routing is already covered by the passed P3
+  outage drill. A Harbor-offline pull from Kepler reached the public registry
+  only after about 135 seconds and did not finish before a 240-second bound.
+  This is retained as a Kepler registry-resilience follow-up, not a Discovery
+  restore blocker: freeze k3s rollouts during D5 and verify the normal k3s pull
+  path after Harbor recovers.
+- D4's read-only approval manifest is immutable at
+  `.gsd/evidence/discovery-esp/manifest.json`, SHA-256
+  `458c47ddb4925a9953d4d23f24b4a1aa6d8233c23d3fb8978bbb3d577162d70e`.
+  It is approval-ready but records `d5_authorized: false`; no destructive
+  action is authorized by its creation.
+- The D4 OpenBao refresh completed all declared tiers (local vault, Kepler,
+  Voyager, and B2) and the isolated restore drill. The shared raft snapshot
+  SHA-256 is
+  `8407ae773697c8511a6d2f2a24f0152dd547a91e7115148c8ecebea4f989ba29`;
+  tier snapshot IDs are local `315ed0ea`, Kepler `af3a6c1b`, Voyager
+  `b2188405`, and B2 `8a752f1a`.
+  The existing verified home snapshot `6943b508` remains the current D4 copy;
+  a redundant refresh was cancelled after its live tar stream stopped
+  advancing at 52.319 GiB.
+- A separate encrypted host-identity snapshot `868abf42` now covers and
+  restore-verifies Tailscale, the SSH host key, and the sops age key. The
+  Tailscale state SHA-256 is
+  `c6a64318c4b5685b513056d22be3d91c25ae810d6d793c7a9fe400a22ff97c93`.
+
+### Completion evidence — 2026-07-27/28
+
+- `desktop-nixos` merged `b62cb87947fe6647343845280b8b6fb408342436`
+  (`Recover Discovery from ESP reinstall (#128)`).
+- The live read-only `just verify-discovery-esp` gate passed on 2026-07-28
+  after the restored host had run for about 35 hours.
+- The gate measured a 2,143,272,960-byte vfat ESP; confirmed Btrfs data and
+  metadata RAID1, the unchanged vault UUID, and Docker at `/var/lib/docker`;
+  and passed OpenBao, DNS, Grafana, HAOS, critical-unit, and failed-unit checks.
+- Docker reported `cyberchef` and `listenarr` unhealthy. Those application
+  health follow-ups do not invalidate the completed storage migration and stay
+  outside this proposal.
 
 ## 2. Corrected live-state model
 
@@ -191,8 +258,9 @@ identity, or writable backup repositories.
 - Rebuild Harbor from declared configuration against copied/restored state.
 - Authenticate, pull a known image, push a disposable image, and verify registry
   garbage-collection metadata remains coherent.
-- Prove Kepler k3s can fall back to public registries while Harbor is offline;
-  do not make the test depend on Discovery DNS.
+- Harbor-offline Kepler fallback is a separate cross-host resilience check, not
+  a gate for restoring Discovery. Freeze k3s rollouts while Harbor is down and
+  verify the normal k3s pull path after Harbor recovers.
 
 ### 7.6 SWAG and Cloudflare
 

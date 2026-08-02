@@ -1,16 +1,40 @@
-# Hermes Argus as N0 — first-line incident/deploy responder
+# Hermes Cleytin as N0 — first-line alert responder
 
-**Status:** Staged (terminal disabled, alert/deploy payloads improved; deploy
-gated on manual Discord secret).
+**Status:** Implemented — Cleytin (`argus`) and Hackerman (`daedalus`) are
+deployed; Cleytin is in the Homelab guild and passed live threaded N0 triage
+(verified 2026-08-01).
 **Date:** 2026-07-21. **Seed:** Erik — "secondary agent as our N0: see incidents
 and deploys in Discord, act on them; integrate with llm-wiki + obsidian +
 agentmemory."
 
+## Current acceptance evidence
+
+- `just hermes-agents-health` sees all three containers running, verifies the
+  authenticated `grafana-alerts` route, and proves both secondary agents can
+  authenticate to LiteLLM with their authorized declared default.
+- Hackerman reports `docs_search` and `context7` enabled.
+- Cleytin has non-empty runtime Discord and `WEBHOOK_GRAFANA_ALERTS_SECRET`
+  credentials; no value is printed by the health check.
+- Deployed Cleytin uses `DISCORD_ALLOW_BOTS=mentions`, has no free-response
+  channels, watches only `#incidents`, `#deploys`, and `#security`, keeps
+  `terminal=false`, and carries the Cleytin SOUL; Hackerman carries the
+  Hackerman SOUL.
+- Discord `/users/@me` authenticates as Cleytin, `/users/@me/guilds` includes
+  Homelab, and Message Content intent is enabled.
+- Synthetic incident `1533216615112638505` produced one inbound Cleytin turn
+  in a Discord thread. It completed on `glm-5` with one context-tool turn and
+  a one-line acknowledgement; Hermes also emitted its normal context/status
+  and thread-title messages.
+- The same command fails closed when the Cleytin Discord token is absent,
+  instead of reporting a misleading green container-only state.
+
 ## Context
 
 Discovery runs three hermes agents (`hermes-agents.nix` / `hermes-oci.nix`):
-Romozina (personal, Telegram + Discord DM), Daedalus (dev, docs-search MCP),
-Argus (homelab ops). The three-way split shipped without an RFC (trail:
+Romozina (personal, Telegram + Discord DM), Hackerman (dev, docs-search MCP),
+and Cleytin (homelab ops). Stable runtime IDs remain `daedalus` and `argus` to
+avoid needless service, secret-path, and state migration. The three-way split
+shipped without an RFC (trail:
 hermes-flake PR #21, commit `470d472`, seed paragraph in
 `servarr/docs/behaviors/hermes-docs-search/behavior.md`); this doc is the
 retroactive record for the N0 extension.
@@ -23,27 +47,28 @@ repeated kindle-release JSON, and deploy pipeline payloads. Nobody triages.
 
 ## Decisions
 
-**D1 — N0 = Argus, not a fourth agent.** Argus' SOUL already owns
-"incidents, deploys"; a dedicated N0 instance would duplicate that mandate
+**D1 — N0 = Cleytin (`argus`), not a fourth agent.** Cleytin's SOUL already owns
+the alert channels; a dedicated N0 instance would duplicate that mandate
 (violates one-owner-per-concern). *Rejected:* new `hermes-agent-oci-n0`
 module — more containers, same job.
 
-**D2 — Channel-scoped Discord auth, deliberately NO user allowlist.** Upstream
-adapter (`v2026.7.7.2`): when `DISCORD_ALLOWED_USERS`/roles are set, the
-channel-scope bypass is disabled and webhook/bot authors (Grafana, Scrutiny,
-cron posters) are denied — N0 would go blind to the very alerts it watches.
-`DISCORD_ALLOWED_CHANNELS` = #incidents (`1521191614846865568`) + #deploys
-(`1521191597566332938`); `discord.free_response_channels` = same two
-(mention-free response); `bots_require_inline_mention` stays default-off so
-bot-authored posts wake the agent. Consequence: DMs to Argus are denied —
-talk to it in-channel.
+**D2 — Channel-scoped Discord auth, deliberately NO user allowlist.** On pinned
+Hermes `v2026.7.20`, `DISCORD_ALLOW_BOTS=mentions` accepts bot-authored alerts
+only when they explicitly mention Cleytin. `DISCORD_ALLOWED_CHANNELS` remains
+limited to #incidents (`1521191614846865568`), #deploys
+(`1521191597566332938`), and #security (`1530261608419299428`), and
+`discord.free_response_channels` is absent so normal messages also require a
+mention. Alert publishers emit the fixed Cleytin ID and allow only that user
+mention; successful deploy chatter stays silent. Consequence: DMs are denied —
+talk to Cleytin in-channel.
 
-**D3 — Discord listen is the v1 trigger; Grafana webhook staged as
-`deliver_only`.** The `grafana-alerts` webhook route (HMAC, port 8644 over
-homelab-net) stores structured payloads without triggering the agent, so
-alerts don't double-fire while Discord listening drives responses. Flip
-`deliver_only=false` later to make the webhook primary and Discord the human
-mirror. *Rejected:* immediate dual-trigger (duplicate model calls per alert).
+**D3 — Discord listen is the v1 trigger; Grafana webhook is authenticated but
+dormant.** The supported `grafana-alerts` route uses `secret =
+${WEBHOOK_GRAFANA_ALERTS_SECRET}` on port 8644 over `homelab-net`, and its
+health endpoint is ready. The Grafana receiver remains commented, so Discord
+mentions are the only trigger. When the receiver is enabled, remove the
+Cleytin mention from the Discord mirror in the same change. *Rejected:*
+immediate dual-trigger (duplicate model calls per alert).
 
 **D4 — HMAC scheme: Grafana body-only hex into `X-Webhook-Signature`**
 (hermes generic-V1). Grafana's timestamped mode signs `ts:body` (colon);
@@ -63,16 +88,17 @@ entry point (`just …`); execution stays human. This is enforced by disabling
 terminal tools, not only by SOUL text. Guarded actions are a separate future
 RFC, gated on triage quality.
 
-## What landed (this repo unless noted)
+## What landed (`desktop-nixos` unless noted)
 
-- `modules/hosts/discovery/hermes-agents.nix` — Argus: `DISCORD_ALLOWED_CHANNELS`,
-  `discord.free_response_channels`, `grafana-alerts` webhook route
-  (`deliver_only=true`); `lib.recursiveUpdate` for the settings merge (shallow
-  `//` would drop `platforms.telegram.enabled=false`).
-- `modules/hosts/discovery/argus-SOUL.md` — N0 triage protocol: dedupe →
+- `modules/hosts/discovery/hermes-agents.nix` — Cleytin: stable runtime ID
+  `argus`, `DISCORD_ALLOWED_CHANNELS`, `DISCORD_ALLOW_BOTS=mentions`, no
+  free-response channels, and the authenticated `grafana-alerts` webhook
+  route; `lib.recursiveUpdate` for the settings merge (shallow `//` would drop
+  `platforms.telegram.enabled=false`).
+- `modules/hosts/discovery/argus-SOUL.md` — Cleytin N0 triage protocol: dedupe →
   assess supplied evidence → thread verdict → escalation rules → silence on
   no-signal; alert text is explicitly untrusted.
-- `modules/hosts/discovery/hermes-agents.nix` — Argus `terminal=false`;
+- `modules/hosts/discovery/hermes-agents.nix` — Cleytin `terminal=false`;
   prompt-only read-only rules are not treated as a security boundary.
 - `modules/hosts/discovery/homelab-SOUL.md` — de-persona'd to shared doctrine
   (sole consumer: Argus context mount); RO-wiki capture path → agentmemory.
@@ -88,26 +114,36 @@ RFC, gated on triage quality.
   — argus webhook receiver staged **commented** (an unset `$__env` var fails
   all alerting provisioning; uncomment only after the OpenBao key exists).
 
-Verified: `just lint` / `just fmt-check` green; `just dry discovery` green
-(delta = `docker-hermes-argus` unit); servarr grafana contract test passed.
+Verified: target Python contracts, Alejandra, and diff checks are green; live
+deployment and `just hermes-agents-health` passed; the final synthetic Discord
+alert completed in a thread. The health command retries webhook readiness for
+up to 20 seconds to cover the normal container startup race.
 
 ## Deploy gates (manual, in order)
 
-1. Discord application "Argus" (message-content intent), invite to Homelab
-   guild → token into sops `hermes_agents/argus_env` `DISCORD_BOT_TOKEN`.
-2. OpenBao: write `argus_webhook_hmac` under `secret/shared/discord` (value =
-   `WEBHOOK_GRAFANA_ALERTS_SECRET` from the sops key) → Vault render-refresh
-   recipe.
-3. `just switch-discovery` → uncomment the servarr receiver → commit/push
-   servarr → `just pull-servarr discovery` → `just kick-stack discovery
-   monitoring`.
-4. Verify: test post in #incidents gets a threaded triage; agent log shows
-   `[webhook] … routes: grafana-alerts`; adversarial alert text cannot invoke
-   terminal tools.
+1. **Done:** Discord application renamed to Cleytin, token stored in sops
+   `hermes_agents/argus_env`, and application joined to the Homelab guild.
+2. **Done:** OpenBao HMAC written, Vault-rendered, and present in the running
+   Argus container.
+3. **Done:** reseeded and refreshed the Hermes Vault render, deployed/restarted
+   the agents, and passed `just hermes-agents-health` for the token, HMAC,
+   route, containers, and Hackerman MCPs.
+4. **Done:** Cleytin-mentioned synthetic post in #incidents received threaded
+   triage; `terminal=false` remains the structural boundary against alert-text
+   command execution.
+
+The commented Grafana receiver is not an N0 completion gate; Discord remains
+the single v1 trigger.
 
 ## Deferred
 
-- Webhook flip (`deliver_only=false`, Discord as mirror) once triage is trusted.
+- Scrutiny's direct Shoutrrr Discord transport forces alert details into an
+  embed, where user mentions do not notify; Uptime Kuma notifications are
+  UI-managed. Treat both as explicit exceptions until they move to a
+  code-managed Grafana/native Discord payload. Do not add a relay solely for
+  mention formatting.
+- Enable the Grafana webhook receiver and make Discord a non-mentioning mirror
+  only when structured triggering is preferred.
 - Narrow read-only investigation tools; add only when alert payloads prove
   insufficient.
 - Same staged webhook receiver on the `discord-deploys` contact point.

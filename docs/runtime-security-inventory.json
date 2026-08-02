@@ -1,0 +1,148 @@
+{
+  "schemaVersion": 1,
+  "addressSets": {
+    "home-lan": {
+      "cidrs": [
+        "192.168.10.0/24"
+      ]
+    },
+    "known-admin-hosts": {
+      "cidrs": [
+        "192.168.10.200/32",
+        "192.168.10.205/32",
+        "192.168.10.215/32",
+        "100.74.137.124/32",
+        "100.102.248.13/32",
+        "100.107.225.13/32",
+        "fd7a:115c:a1e0::2b3b:897c/128",
+        "fd7a:115c:a1e0::d53b:e10e/128",
+        "fd7a:115c:a1e0::ec3b:f80e/128"
+      ]
+    },
+    "ssh-login-whitelist": {
+      "members": [
+        "endeavour",
+        "gemini",
+        "discovery"
+      ],
+      "cidrs": [
+        "192.168.10.200/32",
+        "192.168.10.205/32",
+        "100.107.225.13/32",
+        "fd7a:115c:a1e0::d53b:e10e/128",
+        "100.91.131.59/32",
+        "fd7a:115c:a1e0::8a3b:833d/128",
+        "192.168.10.210/32",
+        "100.76.140.121/32",
+        "fd7a:115c:a1e0::6e3b:8c79/128"
+      ]
+    },
+    "netbird-overlay": {
+      "cidrs": [
+        "10.100.0.0/16"
+      ]
+    },
+    "tailscale-overlay": {
+      "cidrs": [
+        "100.64.0.0/10"
+      ]
+    }
+  },
+  "hosts": {
+    "archinaut": {
+      "trustZone": "home",
+      "sshExposure": "lan-overlay",
+      "criticality": "standard",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "ready",
+      "expectedSshSourceSets": [
+        "ssh-login-whitelist"
+      ]
+    },
+    "discovery": {
+      "trustZone": "home",
+      "sshExposure": "lan-overlay",
+      "criticality": "critical",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "ready",
+      "expectedSshSourceSets": [
+        "ssh-login-whitelist"
+      ]
+    },
+    "endeavour": {
+      "trustZone": "roaming",
+      "sshExposure": "lan-overlay",
+      "criticality": "standard",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "ready",
+      "expectedSshSourceSets": [
+        "ssh-login-whitelist"
+      ]
+    },
+    "homeassistant": {
+      "trustZone": "appliance",
+      "sshExposure": "none",
+      "criticality": "critical",
+      "monitoringOwner": "home-assistant-config",
+      "sshAlarmReadiness": "not-applicable"
+    },
+    "kepler": {
+      "trustZone": "home",
+      "sshExposure": "lan-overlay",
+      "criticality": "critical",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "ready",
+      "expectedSshSourceSets": [
+        "ssh-login-whitelist"
+      ]
+    },
+    "orion": {
+      "trustZone": "home",
+      "sshExposure": "lan-overlay",
+      "criticality": "standard",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "ready",
+      "expectedSshSourceSets": [
+        "ssh-login-whitelist"
+      ]
+    },
+    "pathfinder": {
+      "trustZone": "home",
+      "sshExposure": "lan-overlay",
+      "criticality": "standard",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "ready",
+      "expectedSshSourceSets": [
+        "ssh-login-whitelist"
+      ]
+    },
+    "telstar": {
+      "trustZone": "public",
+      "sshExposure": "public",
+      "criticality": "standard",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "blocked",
+      "blocker": "Host is not provisioned and its inherited OCI security list permits TCP/2222 from 0.0.0.0/0."
+    },
+    "vanguard": {
+      "trustZone": "public",
+      "sshExposure": "public",
+      "criticality": "standard",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "ready",
+      "expectedSshSourceSets": [
+        "ssh-login-whitelist"
+      ]
+    },
+    "voyager": {
+      "trustZone": "public",
+      "sshExposure": "public",
+      "criticality": "standard",
+      "monitoringOwner": "desktop-nixos",
+      "sshAlarmReadiness": "ready",
+      "expectedSshSourceSets": [
+        "ssh-login-whitelist"
+      ]
+    }
+  }
+}

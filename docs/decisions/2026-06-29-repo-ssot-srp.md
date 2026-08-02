@@ -6,10 +6,9 @@ tag, mirrored to Harbor's public `library`; servarr consumes the pinned digest.
 Core decisions locked 2026-06-29 (see *Locked decisions*); per-phase detail in
 *Execution status* below.
 
-**Ecosystem amendment (2026-07-17):** The living inventory now contains twelve
-sister repos. `opencode-flake`, `codex-flake`, and local-only `ha-agent` were
-added after this decision; `cosmo-notes` now owns private Pala Note/Cosmo
-firmware and its transport runbook. The one-owner rule extends unchanged:
+**Ecosystem amendment (2026-08-02):** The living inventory now contains fifteen
+sister repos. Package flakes, shared skills, `ha-harness`, `buzz-flake`, and
+`cosmo-notes` were added after this decision. The one-owner rule extends unchanged:
 device firmware belongs to its device repo, infrastructure edge resources to
 `homelab-iac`, host-side workloads to `servarr`, and host substrate to
 `desktop-nixos`. The dated inventory and audit below remain the 2026-06-29

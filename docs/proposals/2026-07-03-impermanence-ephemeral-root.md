@@ -1,6 +1,8 @@
 # Impermanence — ephemeral root on btrfs
 
-**Status:** Proposal (skeleton, `TODO(erik)`)
+**Status:** Retired 2026-07-30 — no concrete host drift, complete persistence
+inventory, or safe canary justified the failure surface. Reopen only from H4
+after evidence identifies a recurring mutable-state problem.
 
 > RFC judgment is human-written; this is scaffolding + decision gates only.
 

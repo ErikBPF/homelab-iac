@@ -1,8 +1,62 @@
-# Proposal index
+# Proposal index and risk/value matrix
 
 Last synchronized: 2026-08-01.
 
+This is the portfolio view for every local record under [`proposals/`](proposals/).
+The proposal status headers remain authoritative for execution detail. This
+index exposes stale headers, competing scopes, and the next portfolio action.
+
+Any proposal creation, edit, rename, graduation, or deletion must update this
+index in the same change. Recheck the affected status, remaining value,
+delivery risk, next gate, and file coverage.
+
+## Scale
+
+- **Value:** remaining benefit, not value already delivered.
+- **Risk:** risk of executing the remaining work, not risk of editing the doc.
+- **High:** fleet security, state, identity, networking, or repeated operations.
+- **Medium:** bounded operational or workflow benefit/change.
+- **Low:** speculative work, cleanup, or document closure.
+
+## Open and attention-required records
+
+“Attention-required” includes blocked work, trigger-based backlog, and stale
+open headers that should be graduated or retired.
+
 | Proposal | Current status | Remaining value | Delivery risk | Next gate | File coverage |
 |---|---|---:|---:|---|---|
-| [Fleet flake package-updater CI hardening](proposals/2026-07-31-flake-package-updater-ci-hardening.md) | Implemented; central App workflow active | Low | Low | Migrate the App token action from deprecated `app-id` to `client-id` before compatibility is removed. | `repos.json`, central runner workflow, three component updaters and CI gates |
-| [Fleet security notifications](proposals/2026-07-24-fleet-security-notifications.md) | Implemented; failure alerts mention only the fixed Cleytin user | Medium | Low | Review alert usefulness and duplicates after the 30-day observation window. | Fleet GitHub workflows, `tests/security-notification-contract.sh`, repository Actions secrets |
+| [Home network and router security segmentation](proposals/2026-08-01-network-router-security-segmentation.md) | Proposed after live sweep; P0 containment not started | High | High | Capture an authenticated UniFi inventory, identify `192.168.1.2`, then close host-trust gaps before VLAN canaries. | `homelab-iac` UniFi/Tailscale, `desktop-nixos` host firewalls, `servarr` exposed workloads |
+| [Stateful stack and release hardening](proposals/2026-07-13-stateful-stack-release-hardening.md) · [execution plan](proposals/2026-07-13-stateful-stack-release-hardening-execution-plan.md) | In progress; P7 active | High | High | Continue one service or coupled database group per verified backup/restore slice. | `servarr/machines/discovery`, `desktop-nixos` compose orchestration |
+| [Observability continuation](proposals/2026-07-03-observability-continuation.md) · [execution plan](proposals/2026-07-03-observability-continuation-execution-plan.md) | Mostly implemented; B1 and alert-history gates passed | Medium | Low | Correlate one fresh scheduled Ofelia success before logs rotate, then close the proposal. | `servarr` Grafana/Prometheus, `desktop-nixos` telemetry, proposal execution plan |
+| [Runtime security monitoring](proposals/2026-07-25-runtime-security-monitoring.md) | Observe-only rollout in progress | High | Medium | Finish baseline/force-fire gates, then assign non-overlapping alert ownership with Wazuh. | `runtime-security-inventory.json`, `desktop-nixos` journals, `servarr` Loki/Grafana rules |
+| [Fleet Wazuh SIEM integration](proposals/2026-07-26-fleet-wazuh-siem-integration.md) | In progress on Kepler; UniFi transport and firewall paths configured | High | High | Capture fresh CEF proof; then verify retention, backup, restore, and one canary agent. | `servarr` security stack, `desktop-nixos` Kepler firewall/diagnostics, UniFi CyberSecure/syslog |
+| [Fleet flake package-updater CI hardening](proposals/2026-07-31-flake-package-updater-ci-hardening.md) | Implemented; central App workflow active | Low | Low | Migrate the App token action from deprecated `app-id` to `client-id`. | `renovate-config`, `hermes-flake`, `opencode-flake`, `codex-flake` |
+| [Fleet upgrade hardening](proposals/2026-07-12-fleet-upgrade-hardening.md) | Partially implemented | High | High | Decide R3 automation boundary before adding sequential activation and post-switch verification. | `desktop-nixos` upgrade recipes, fleet metadata, deploy-rs |
+| [NetBird overlay](proposals/2026-07-10-netbird-selfhosted-overlay.md) | Partially live; as-built text needs reconciliation | High | High | Reconcile live state, then complete Voyager relay and scoped fleet enrollment. | `desktop-nixos` client/control plane, `homelab-iac` policies, `servarr` relay/runtime |
+| [Gemini persistent code stack](proposals/2026-07-23-gemini-persistent-code-stack.md) | Proposed | High | Medium | Run the Herdr compatibility probe; keep one remote primary and no pane-history persistence. | `desktop-nixos` Gemini/Herdr modules and user configuration |
+| [Fleet container placement and SRP](proposals/2026-07-11-fleet-container-placement-srp.md) | Proposed; live placement needs re-audit | Medium | High | Approve placement and PocketID decisions before moving workloads. | `servarr` compose stacks, `desktop-nixos` orchestration, `homelab-gitops` workloads |
+| [Home Assistant and AI](proposals/2026-07-02-home-assistant-ai-consolidation.md) | Decision gates open; manifest-v2 harness merged, deployment still gated | Medium | High | Select at most two extensions and an approved runtime/capacity path before shadow deployment. | `ha-harness`, `home-assistant-config`, `homelab-iac` LiteLLM routes |
+| [Hermes deferred improvements](proposals/2026-06-29-hermes-deferred-improvements.md) | Trigger-based backlog | Medium | High | Require sandboxing before wider reach; take quality work only after measurement. | `hermes-flake`, `hermes-skills`, `servarr` Hermes runtime |
+| [Telstar Oracle ARM host](proposals/2026-07-01-telstar-oracle-arm-host.md) | Ready; blocked on A1 capacity | Medium | High | Wait under one acquisition owner; PAYG or public ingress needs a separate decision. | `desktop-nixos` Telstar host, `homelab-iac` Oracle resources |
+| [Deferred repository hygiene](proposals/2026-07-17-deferred-repository-hygiene.md) | Active re-audit ledger | Medium | Medium | Finish this branch/worktree audit, preserve valid slices, and remove only proven stale refs. | `repos.json`, all local worktrees, GitHub branches/PRs |
+| [Fleet backlog and decision gates](proposals/2026-07-02-open-decisions-and-work.md) | Active coordination tracker | Medium | Medium | Keep it as next-gate authority; do not duplicate child plans. | All proposal records and cross-repository gates |
+
+## Closed and historical local records
+
+The thematic archive remains [`completed-proposals.md`](completed-proposals.md).
+These entries ensure every local proposal file is indexed.
+
+| Proposal | Current status | Remaining value | Delivery risk | Next gate | File coverage |
+|---|---|---:|---:|---|---|
+| [Hermes agentmemory integration](proposals/2026-06-25-hermes-agentmemory-integration.md) | Deferred; superseded by native wiki | Low | Low | Reopen only for a measured recall failure. | Historical Hermes/agentmemory integration record |
+| [Hermes deferred plans](proposals/2026-06-25-hermes-deferred-plans.md) | Superseded by consolidated Hermes backlog | Low | Low | Retain as historical link target. | Historical Hermes plan |
+| [Fleet ESP enlargement](proposals/2026-07-12-fleet-esp-enlargement.md) | Implemented | Low | Low | Reopen only on measured ESP pressure. | `desktop-nixos` host disk layouts |
+| [Discovery ESP migration](proposals/2026-07-14-discovery-esp-migration.md) | Implemented with restore/reboot evidence | Low | Low | Retain recovery evidence. | `desktop-nixos` Discovery install/restore paths |
+| [Fleet CI Discord notifications](proposals/2026-07-24-fleet-ci-discord-notifications.md) | Implemented and active | Low | Low | Review usefulness after observation window. | Fleet GitHub CI workflows and Discord secrets |
+| [Fleet security notifications](proposals/2026-07-24-fleet-security-notifications.md) | Implemented; Cleytin-only mention contract active | Medium | Low | Review usefulness and duplicates after 30 days. | Fleet security workflows and `tests/security-notification-contract.sh` |
+| [Cleytin N0 responder](proposals/2026-07-21-hermes-argus-n0-responder.md) | Implemented; authenticated threaded triage proven | Low | Low | Keep Scrutiny/Uptime Kuma transport exceptions explicit. | `hermes-flake`, `servarr`, Discord webhook routes |
+| [Repository structure improvements](proposals/2026-06-24-repo-structure-improvements.md) | Graduated; Phase 0 delivered | Low | Low | Reopen only for measured structural friction. | Coordination layout and component ownership docs |
+| [Source-backed host improvements](proposals/2026-06-24-source-backed-host-improvements.md) | Graduated; useful slices moved to backlog | Low | Low | Follow H1–H5 in the fleet backlog. | `desktop-nixos` host-source records |
+| [Impermanence / ephemeral root](proposals/2026-07-03-impermanence-ephemeral-root.md) | Evaluated and retired | Low | Low | Reopen only for an evidence-backed host problem and safe canary. | Historical NixOS root-state evaluation |
+| [OpenCode LiteLLM routing](proposals/2026-07-12-opencode-litellm-routing.md) | Implemented and graduated | Low | Low | Complete live DeepSeek default verification separately. | `homelab-iac` model routes and OpenCode consumers |
+| [Free-tier cloud resources](proposals/2026-07-02-free-tier-cloud-resources.md) | Evaluated and graduated | Low | Low | Existing B2/Vanguard controls remain sufficient. | B2 backup and Vanguard monitoring records |

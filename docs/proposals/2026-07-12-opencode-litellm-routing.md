@@ -1,10 +1,17 @@
 # OpenCode routing through LiteLLM
 
-**Status:** Proposed
+**Status:** Implemented and graduated 2026-07-30 — declarative routing,
+consumer key, aliases, and agent defaults are shipped. DeepSeek V4 Flash is
+staged as the default as of 2026-08-01; live verification remains. The
+component as-built record is
+[`desktop-nixos/docs/implemented/2026-07-12-opencode-litellm-routing.md`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-07-12-opencode-litellm-routing.md).
 
 ## Decision
 
-New sessions start with `litellm/glm-5`. GLM plans, architects, orchestrates, and reviews. Architect owns code review. General and Explore use `litellm/mimo` for implementation, debugging, and exploration. This division is guidance, not mechanical tool denial.
+New sessions start with `litellm/deepseek-v4-flash`. DeepSeek orchestrates;
+GLM plans, architects, and reviews. General and Explore use `litellm/mimo` for
+implementation, debugging, and exploration. This division is guidance, not
+mechanical tool denial.
 
 Existing sessions remain intact and switch models explicitly when resumed. Direct OpenCode Go remains an emergency fallback; OpenAI OAuth remains a manual subscription path.
 
@@ -21,7 +28,7 @@ No response or semantic cache for coding agents. Use upstream prompt-prefix cach
 ## Acceptance
 
 - Resolved OpenCode config parses.
-- New primary responses record `litellm/glm-5`.
+- New primary responses record `litellm/deepseek-v4-flash`.
 - Architect review records `litellm/glm-5`.
 - General/Explore responses record `litellm/mimo`.
 - LiteLLM traces attribute calls to the OpenCode consumer.

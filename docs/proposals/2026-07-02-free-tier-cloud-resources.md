@@ -1,13 +1,24 @@
 # Free-tier cloud resources — usage plan for reliability & privacy
 
-**Status:** Partially implemented — CT monitoring, B2 backups, Modal proof, and
-Trivy pilots completed 2026-07-24; remaining forks stay `TODO(erik)`
+**Status:** Evaluated and graduated 2026-07-30 — CT monitoring, B2 backups,
+Modal proof, Trivy pilots, and Vanguard outside-in monitoring are live. The
+remaining catalog is retired until a named project creates demand.
 **Date:** 2026-07-02
 **Owner:** erik
 **Scope:** Map every verified free-tier cloud resource onto fleet needs, biased
 toward **reliability** (more failure domains for the things that already exist)
 and **privacy** (nothing readable leaves the house). Quotas were rechecked
-against official docs 2026-07-23; lowest-confidence items are flagged inline.
+against official docs 2026-07-30; lowest-confidence items are flagged inline.
+
+## Closure decision
+
+| Candidate | Remaining value | Delivery risk | Decision |
+|---|---:|---:|---|
+| Grafana Cloud / UptimeRobot | Low | Medium | Skip. Vanguard already probes the home from OCI and alerts through independent Discord egress. |
+| OCI Object Storage / Vault | Low | Medium | Skip. B2 supplies the more valuable provider/account-diverse backup leg; same-account OCI storage does not. |
+| More free compute | Medium | High | Keep Telstar blocked on free A1 capacity; no PAYG or new provider account. |
+| Hosted AI/vector/database services | Low | High | Skip for fleet/private data. Local inference and storage remain the default. |
+| Cloudflare edge services | Project-dependent | Low | Admit only per public project. Vectorize now requires Workers Paid and is not a free-tier candidate. |
 
 ## Executive recommendation
 
@@ -18,10 +29,10 @@ independent, disposable improvements and ship them in value order:
    declarative service runs real launch attempts against the IaC-owned
    Terragrunt unit. Capacity reports are useful telemetry, but do not reserve a
    free-tier slot.
-2. **Add offsite failure detection:** Grafana Cloud receives only an allowlist
-   of non-content metrics and runs outside-in probes. Skip OCI APM initially.
-3. **Add backup diversity:** OCI Object Storage adds a service-diverse leg;
-   B2 or R2 adds the more valuable provider/account-diverse leg.
+2. **Keep offsite failure detection on Vanguard:** its OCI-hosted dead-man
+   already probes PocketID and alerts through independent Discord egress.
+3. **Keep B2 as the diverse backup leg:** do not add same-account OCI storage
+   without a new recovery requirement.
 4. **Use Cloudflare edge services per public project:** no speculative shared
    platform before a project needs it.
 5. **Defer third-party AI and database services:** weak fleet benefit and the
@@ -84,7 +95,7 @@ satellite must be IPv6-only, stateless, remotely built, and disposable.
 
 | Service | Perpetual free allocation | Fit | Decision |
 |---|---|---|---|
-| OCI Object Storage | 20 GB, S3-compatible, retention rules | WORM crown-jewel leg | **use** |
+| OCI Object Storage | 20 GB combined Object/Archive Storage | WORM crown-jewel leg | **skip**; B2 already covers the independent recovery need |
 | Backblaze B2 | 10 GB; 1 GB download/day; no card to start | provider/account-diverse restic leg | **preferred** over R2 |
 | Cloudflare R2 | 10 GB; 1M Class A + 10M Class B ops/mo; free egress | backup or public assets | **alternative** to B2 |
 | GCP Cloud Storage | 5 GB in selected US regions; 100 GB egress/mo | satellite-local objects | **hold** with GCP node |
@@ -118,7 +129,7 @@ No hosted database stores fleet state, secrets, hermes memory, or HA data.
 | Service | Perpetual free allocation | Fit | Decision |
 |---|---|---|---|
 | Local Qdrant/llama.cpp | bounded by Kepler storage/compute | private hermes/wiki vectors | **default** |
-| Cloudflare Vectorize | 5M stored + 30M queried dimensions/mo | pairs with Workers AI | **hold** behind privacy fork |
+| Cloudflare Vectorize | Workers Paid required as of 2026-07-30 | pairs with Workers AI | **skip**; not a free-tier resource |
 | Zilliz | 5 GB, 2.5M vCUs/mo, up to 5 collections | about 1M 768-d vectors | best large hosted free tier |
 | Qdrant Cloud | 0.5 vCPU, 1 GB RAM, 4 GB disk | familiar API; about 1M 768-d vectors | **reject** for durable use: deleted after 4 idle weeks |
 | Pinecone Starter | 2 GB, 2M writes + 1M reads/mo; 5 indexes | public-project semantic search | **hold** |
@@ -143,16 +154,16 @@ remain local even when raw text is not stored off-prem.
 
 | Service | Perpetual free allocation | Fit | Decision |
 |---|---|---|---|
-| Grafana Cloud | 10k series, 100k API + 10k browser synthetics, 3 users | filtered metrics mirror + outside-in probes | **preferred** |
-| UptimeRobot | 50 monitors, 5-minute checks, basic status pages | broad outside-in coverage, no card | best simple alternative |
+| Vanguard dead-man | Existing OCI micro + independent Discord webhook | outside-in PocketID/home-ingress probe | **keep; requirement met** |
+| Grafana Cloud | 10k series, 100k API + 10k browser synthetics | filtered metrics mirror + outside-in probes | **skip** while Vanguard covers the outage blind spot |
+| UptimeRobot | 50 monitors, 5-minute checks, basic status pages | broad outside-in coverage, no card | **skip**; duplicates Vanguard |
 | Better Stack | 10 monitors/heartbeats, 1 status page; 3 GB logs/traces | stronger alert workflow, smaller monitor count | alternative if status/on-call UX wins |
 | Healthchecks.io | 20 jobs, 100 log entries/job | backup/cron dead-man checks | **skip** if Grafana alerts cover them |
 | Honeycomb | 20M events + 100M metric points/mo, 2 triggers | application traces | **hold** for a public distributed app |
 | OCI APM | 10 synthetic runs/hour | same-account external vantage | **skip** if Grafana selected |
 
-One monitoring account is enough initially. Grafana wins because it fixes both
-inside-out metrics and outside-in detection; UptimeRobot wins only if simplicity
-matters more than the Prometheus mirror.
+No new monitoring account is needed. Local Prometheus/Grafana owns detailed
+telemetry; Vanguard owns whole-home outside-in failure detection.
 
 ### Security and supply-chain tooling
 
@@ -336,26 +347,23 @@ until compartment quotas and budget alarms are separately reviewed.
   CF account; R2 keeps everything in two accounts. Either satisfies the
   requirement — pick one, don't run both.
 
-### 2e. Workers AI + Vectorize (hermes P6 enabler)
+### 2e. Workers AI + Vectorize (rejected)
 
-- **Usage:** bge-m3 embeddings (~9.3M tok/day) + Vectorize (30M queried +
-  5M stored dims/mo) = complete free semantic-search backend for the hermes
-  wiki/P6 "unified approach".
+- **Current boundary:** Vectorize requires Workers Paid as of 2026-07-30, so
+  the earlier free-backend premise no longer holds.
 - **Privacy:** wiki content would be embedded **off-prem** — hermes memory is
-  personal data. `TODO(erik)`: acceptable, or keep embeddings local (kepler
-  runs embedding models already — bge-m3 via llama.cpp is cheap) and use
-  Vectorize only for *storage* of vectors (vectors leak less than text, but
-  are invertible in principle)? Conservative default: **embed and store
-  locally; revisit only if kepler capacity hurts.**
+  personal data, and vectors can leak source meaning. Decision: **embed and
+  store locally**; any off-prem exception requires a new data-classification
+  RFC.
 - **Rejected:** Browser Rendering for kindle-dash (10 min/day ≈ 30–60
   screenshots — too thin; self-hosted pipeline stays).
 
-## 3. Grafana Cloud free — the offsite monitoring mirror
+## 3. Grafana Cloud free — evaluated, not adopted
 
 - **Quota:** 10k active series, 50 GB logs, 14-day retention, alerting + IRM,
   100k synthetic API checks/mo, 3 users. Native Prometheus `remote_write` +
   Loki push. No card.
-- **Usage (the SPOF fix):** discovery Prometheus `remote_write` of a
+- **Original candidate:** discovery Prometheus `remote_write` of a
   **filtered ~20-series allowlist** (host `up`, backup dead-man gauges,
   `oci_a1_capacity_available`, OpenBao seal probe) → Grafana Cloud alert
   rules fire even when discovery is dead. Synthetics probe the public vhosts
@@ -366,10 +374,9 @@ until compartment quotas and budget alarms are separately reviewed.
 - **Reliability caveat:** over-quota behavior unstated on the pricing page
   (historically caps, never bills — MEDIUM confidence). The allowlist keeps
   us 3 orders of magnitude under quota.
-- **Complement:** Better Stack free (10 uptime monitors + heartbeats + 1
-  status page) as an orthogonal outside-in probe — `TODO(erik)`: worth the
-   extra account? (Principle 3 says at most one new account per phase; Grafana
-   Cloud is the higher-value one.)
+- **Decision:** do not add the account. Vanguard R2 already closes the
+  whole-home/ISP silence gap; a remote metrics mirror would duplicate local
+  observability for low remaining value.
 - **Simpler alternative:** UptimeRobot has 50 monitors at 5-minute intervals
   with basic status pages and no card. Choose it *instead of* Grafana when only
   outside-in checks matter; it does not solve the filtered-metrics mirror.
@@ -553,11 +560,11 @@ Local Trivy 0.72.0 baselines found zero high/critical IaC or image findings.
 
 | Phase | Items | Decisions needed |
 |---|---|---|
-| **0 — now** | Discovery Telstar capture service; CT monitoring on; OCI Vault escrow copy; Vultr application | none |
-| **1 — DR legs** | OCI bucket (WORM) + 2 restic jobs + dead-man metrics; diverse leg R2-or-B2 | 2d fork |
-| **2 — monitoring mirror** | Grafana Cloud account, filtered remote_write allowlist, cloud alert rules, synthetics; retire/skip OCI APM | 1c/§3 forks |
+| **0 — foundation** | Closed: Telstar capture + CT monitoring delivered; OCI Vault/Vultr skipped | none |
+| **1 — DR legs** | Closed: provider-diverse B2 jobs + dead-man metrics delivered; OCI bucket skipped | none |
+| **2 — monitoring mirror** | Closed: Vanguard outside-in probe retained; no new account | none |
 | **3 — telstar edge** | Pages/Workers/Turnstile/DB per project; blocked on A1 capacity (or PAYG) | 1e PAYG fork |
-| **4 — AI routing/training** | AI Gateway + overflow routes; Kaggle or Lightning wake-word run; Modal batch-eval proof | §5 privacy/billing forks |
+| **4 — AI routing/training** | Closed: Modal batch-eval proof delivered; private training/inference stays local | none |
 
 Each phase lands as its own PR with verify gates (restore a file from each new
 restic leg; force-fire each new alert; kill -9 test against the probe timer).
@@ -565,17 +572,16 @@ restic leg; force-fire each new alert; kill -9 test against the probe timer).
 ## 8. Decision forks
 
 1. ~~**R2 vs B2**~~ — **B2 selected and deployed 2026-07-24.**
-2. **PAYG upgrade** on Oracle (reliable A1 + reclamation immunity vs card).
-3. Second micro role (uptime-kuma vs headroom).
-4. OCI APM vs Grafana Cloud synthetics (or both).
-5. Better Stack second account: yes/no.
-6. hermes embeddings: local-only (default) vs Workers AI off-prem.
-7. Gemini free (trains on data): exclude entirely?
-8. Groq whisper as degraded-mode voice STT: allowed?
-9. OpenRouter $10 unlock: spend it?
-10. Kaggle for wake-word training with own-voice data: acceptable?
-11. International GCP `e2-micro`: needed shell-level node, or do managed
-    synthetics already cover the requirement?
+2. ~~**PAYG upgrade**~~ — **no; wait for free A1 capacity.**
+3. ~~Second micro role~~ — **Vanguard outside-in dead-man is live.**
+4. ~~OCI APM vs Grafana Cloud synthetics~~ — **neither; Vanguard covers C3.**
+5. ~~Better Stack second account~~ — **no; duplicate monitoring.**
+6. ~~hermes embeddings~~ — **local-only; hosted private vectors rejected.**
+7. ~~Gemini free for private data~~ — **excluded.**
+8. ~~Groq Whisper degraded mode~~ — **excluded for private voice data.**
+9. ~~OpenRouter $10 unlock~~ — **no unrequested spend.**
+10. ~~Kaggle for own-voice training~~ — **excluded; keep private data local.**
+11. ~~International GCP `e2-micro`~~ — **no named need; do not create account.**
 12. ~~Training runner proof~~ — **Modal batch evaluation completed; production
     training remains local pending a sanitized export boundary.**
 13. ~~Private-repo scanning pilot~~ — **Trivy landed in the initial repositories;
@@ -583,8 +589,8 @@ restic leg; force-fire each new alert; kill -9 test against the probe timer).
 
 ## 9. Sources
 
-Quotas were first checked 2026-07-01/02 and the category catalog was rechecked
-2026-07-24. Primary references:
+Quotas were first checked 2026-07-01/02 and the selected catalog was rechecked
+2026-07-30. Primary references:
 
 - [OCI Always Free resources](https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm)
   — current A1 allowance is 2 OCPUs / 12 GB, 200 GB combined block storage;
@@ -610,8 +616,9 @@ Quotas were first checked 2026-07-01/02 and the category catalog was rechecked
   [Workers AI pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/)
   — edge, storage, database, and inference quotas.
 - [Cloudflare Vectorize pricing](https://developers.cloudflare.com/vectorize/platform/pricing/)
-  and [Tailscale pricing](https://tailscale.com/pricing) — vector and private
-  connectivity quotas.
+  — Vectorize currently requires Workers Paid;
+  [Tailscale pricing](https://tailscale.com/pricing) covers private-connectivity
+  quotas.
 - [Backblaze B2 free allowance](https://help.backblaze.com/hc/en-us/articles/360015521773-Saving-Files-to-B2-from-Computer-Backup)
   — 10 GB storage and 1 GB/day download.
 - [DigitalOcean Functions](https://www.digitalocean.com/pricing/functions) and
