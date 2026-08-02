@@ -24,8 +24,8 @@ inputs = {
       subnet        = "192.168.10.1/24"
       vlan_id       = 2
       dhcp_enabled  = true
-      dhcp_start    = "192.168.10.60"
-      dhcp_stop     = "192.168.10.230"
+      dhcp_start    = "192.168.10.20"
+      dhcp_stop     = "192.168.10.199"
       dhcp_dns      = ["192.168.10.210", "192.168.10.230"]
       multicast_dns = true
     }

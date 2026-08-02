@@ -34,36 +34,12 @@ locals {
     if h.mac != null && h.ip != null
   }
 
-  # Non-fleet devices (not in the fleet SSOT). Stale entries removed 2026-06-29
-  # (ARP-confirmed down): homeassistant 52:54:00:80:4a:0e → .205 and
-  # Discovery bc:24:11:57:ac:19 → .40.
+  # Network infrastructure only. Ordinary hosts live in the .200-.254 reserved
+  # zone via fleet_res; unpinned clients use the .20-.199 dynamic pool.
   static_res = {
-    "4a:83:5c:f1:34:95" = {
-      name       = "Homeassistant"
-      fixed_ip   = "192.168.1.205"
-      network_id = "5e3cdb8a933186073f310966"
-    }
-    "52:12:8b:03:7c:9d" = {
-      name       = "Sun"
-      fixed_ip   = "192.168.10.10"
-      network_id = local.main_net
-    }
-    "98:83:89:e2:39:c2" = {
-      name     = "nixos-andre-wifi"
-      fixed_ip = "192.168.10.108"
-    }
     "c4:ad:34:2e:74:5d" = {
       name       = "Mikrotik servidor"
       fixed_ip   = "192.168.10.2"
-      network_id = local.main_net
-    }
-    "a0:48:1c:75:11:c0" = {
-      name     = "Falcon Heavy"
-      fixed_ip = "192.168.10.20"
-    }
-    "ca:20:15:19:9f:42" = {
-      name       = "truenas"
-      fixed_ip   = "192.168.10.25"
       network_id = local.main_net
     }
     "2c:c8:1b:c8:47:76" = {
@@ -76,44 +52,14 @@ locals {
       fixed_ip   = "192.168.10.4"
       network_id = local.main_net
     }
-    "a6:1a:fe:f0:e6:7c" = {
-      name       = "Hubble"
-      fixed_ip   = "192.168.10.30"
+    "34:29:8f:75:b6:3c" = {
+      name       = "endeavour-wired"
+      fixed_ip   = "192.168.10.200"
       network_id = local.main_net
     }
-    "92:73:cb:e8:62:00" = {
-      name       = "Soyuz"
-      fixed_ip   = "192.168.10.45"
-      network_id = local.main_net
-    }
-    "8a:5b:a8:51:fc:30" = {
-      name       = "Starlink0"
-      fixed_ip   = "192.168.10.50"
-      network_id = local.main_net
-    }
-    "de:14:55:f5:39:54" = {
-      name       = "Starlink1"
-      fixed_ip   = "192.168.10.51"
-      network_id = local.main_net
-    }
-    "a2:76:c0:eb:bb:22" = {
-      name       = "Starlink2"
-      fixed_ip   = "192.168.10.52"
-      network_id = local.main_net
-    }
-    "56:a3:f1:6e:8f:83" = {
-      name       = "Starlink3"
-      fixed_ip   = "192.168.10.53"
-      network_id = "5e3cdb8a933186073f310966"
-    }
-    "b0:4a:39:41:b5:41" = {
-      name       = "roborock-vacuum-a15"
-      fixed_ip   = "192.168.10.72"
-      network_id = local.main_net
-    }
-    "0e:48:d5:b7:b8:77" = {
-      name       = "LC-39"
-      fixed_ip   = "192.168.10.80"
+    "40:d1:33:47:03:47" = {
+      name       = "endeavour-wifi"
+      fixed_ip   = "192.168.10.205"
       network_id = local.main_net
     }
   }
