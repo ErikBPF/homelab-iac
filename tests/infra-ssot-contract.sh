@@ -317,11 +317,11 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 11 and
-    (unique | length) == 11 and
+    length == 12 and
+    (unique | length) == 12 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 11 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 12 unique sorted aliases"
 
   jq -e '
     . as $aliases |
@@ -356,6 +356,7 @@ check_s05() {
   jq -e --slurpfile catalog "$catalog" '
     .models as $models |
     [
+      {alias: "deepseek-v4-flash", source_id: "deepseek-v4-flash"},
       {alias: "glm-5", source_id: "glm-5.2"},
       {alias: "kimi-k2-code", source_id: "kimi-k2.7-code"},
       {alias: "minimax-m2", source_id: "minimax-m2.7"},
@@ -412,7 +413,8 @@ check_s05() {
     || fail "S05 RED: manual exceptions must be exact, reasoned, and review-dated"
 
   jq -e --slurpfile aliases "$aliases" '
-    (keys == ["hermes"]) and
+    (keys == ["hermes", "opencode"]) and
+    (all(.[]; index("deepseek-v4-flash") != null)) and
     ([to_entries[].value[]] |
       all(.[]; . as $alias | $aliases[0] | index($alias) != null))
   ' "$allowlists" >/dev/null \

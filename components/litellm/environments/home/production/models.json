@@ -1,5 +1,30 @@
 {
   "models": {
+    "deepseek-v4-flash": {
+      "custom_llm_provider": "openai",
+      "base_model": "deepseek-v4-flash",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.14,
+      "output_cost_per_million_tokens": 0.28,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "context_limit": 1000000,
+      "output_limit": 384000,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_reasoning": true,
+      "supports_tools": true,
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    },
     "glm-5": {
       "custom_llm_provider": "openai",
       "base_model": "glm-5.2",
