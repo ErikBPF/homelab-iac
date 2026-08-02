@@ -1,7 +1,7 @@
 # Fleet Wazuh SIEM integration
 
-**Status:** In progress; Kepler persistence, expanded UniFi CEF decoding, and
-receiver-silence monitoring deployed
+**Status:** In progress; fresh UniFi CEF-to-index delivery and indexer disk
+watermarks are deployed on Kepler; snapshot/restore proof remains open
 **Date:** 2026-07-26
 **Owners:** `servarr` (Wazuh runtime and rules), `desktop-nixos` (host agents
 and host security signals), `homelab-gitops` (Kubernetes security signals),
@@ -27,15 +27,15 @@ The target answers these questions:
 
 ## Current foundation
 
-The following exists on the active feature branches and live Kepler deployment:
+The following exists on the default branches and live Kepler deployment:
 
 - Wazuh 4.14.6 single-node indexer, manager, and dashboard with digest-pinned
   images, TLS, secret-backed authentication, health checks, persistent volumes,
   and a LAN-bound dashboard.
 - NixOS firewall ingress on Kepler for agent events (`1514/tcp`), enrollment
   (`1515/tcp`), and rootless UniFi syslog (`5514/udp`).
-- UniFi CEF destination `192.168.10.230:5514`; decoder coverage includes OS,
-  Network, and Protect products. Category enablement remains a UniFi UI step.
+- UniFi CEF destination `192.168.10.230:5514`; Network and Protect categories
+  are enabled and decoder coverage includes OS, Network, and Protect products.
 - Rootless Podman forwarding accepted through its `10.89.0.0/24` internal
   network while the host firewall remains the external LAN boundary.
 - JSON retention for all received Wazuh events; alert-only indexing remains the
@@ -46,16 +46,36 @@ The following exists on the active feature branches and live Kepler deployment:
   - security keywords: rule `100101`, level 7;
   - CEF severity 4–10: rule `100102`, level 7.
 - Live verification of the UniFi test event from `ISS`, model `UDMPRO`,
-  UniFi OS `5.1.19`, reporting device IP `192.168.50.57`.
+  UniFi OS `5.1.19`, reporting device IP `192.168.50.57`; current Network CEF
+  reports the gateway as `192.168.1.1`, so the older address remains inventory
+  evidence to reconcile rather than an allowlist input.
 - A Prometheus textfile gauge records the latest received UniFi CEF timestamp;
   Grafana warns after 26 hours of silence and treats missing data as failure.
 - The Kepler compose host configuration includes the `security` stack so Wazuh
   returns after host reboot.
-- Live `wazuh-logtest` validation on 2026-07-29 decoded a synthetic Protect
-  event as `unifi-cef`, extracted every configured field, and fired baseline
-  rule `100100`.
-- The receiver-silence alert is firing: retained Protect events are older than
-  26 hours. UniFi category enablement and a fresh-event proof remain open.
+- Live decoder fixes in `servarr` PRs #163, #164, and #165 account for Wazuh's
+  syslog pre-decoder and split parent/header/extension extraction correctly.
+- A fresh archived Network threat event on 2026-08-02 decoded product,
+  signature, event, severity, action, source/destination, and device fields and
+  fired warning rule `100101` in `wazuh-logtest`.
+- Fresh Protect motion and smart-detection events traversed UDP, the Wazuh raw
+  archive, rule `100100`, Filebeat, and the `wazuh-alerts-*` index. The receiver
+  gauge advanced and the Grafana silence alert recovered.
+- OpenSearch disk allocation protection is enabled with explicit 80% low, 85%
+  high, and 90% flood-stage watermarks (`servarr` PR #166). The live cluster is
+  green with zero unassigned shards.
+
+Measured retention evidence on 2026-08-02:
+
+- retained data from 2026-07-26 through 2026-08-02 contains Network and Protect
+  CEF; 2026-07-31 and 2026-08-01 each produced about 52 MB of raw JSON, and
+  2026-08-01 contained 1,279 CEF events;
+- daily archive compression reduced a 51.9 MB raw file to 2.4 MB;
+- the indexer uses 4.7 MB on a 1.1 TB pool currently at 9% usage;
+- no OpenSearch snapshot repository or index-state-management policy exists.
+  Restic sees the live index data under `/config`, but that is not accepted as
+  a consistent OpenSearch backup. Snapshot creation and isolated restore proof
+  remain the next server gate.
 
 Existing complementary telemetry:
 
