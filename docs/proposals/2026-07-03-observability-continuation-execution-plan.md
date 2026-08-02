@@ -1,10 +1,8 @@
 # Observability continuation — execution plan
 
-**Status:** In progress. B0 completed 2026-07-28. The 2026-08-01 B1 retry
-proved scheduled gauge advances and fresh snapshots in all intended
-repositories; direct successful-job log correlation remains open because the
-historical Ofelia logs had rotated. A0 completed for the exact seven-day
-window, and A1 closed with no threshold tuning required.
+**Status:** Completed 2026-08-02. B0 and B1 proved all three scheduled backup
+paths, including direct Ofelia log correlation. A0 completed for the exact
+seven-day window, and A1 closed with no threshold tuning required.
 
 ## 1. Purpose and authority
 
@@ -201,6 +199,20 @@ existing backup-job contract, run the Kepler tests, deploy, then repeat B1.
   proven. The stricter direct log-correlation requirement remains open for one
   future scheduled cycle.
 
+### B1 direct log correlation — 2026-08-02
+
+- Central Loki retained successful Ofelia completion lines for
+  `postgres-backup` at `02:15:02Z`, `config-backup` at `02:30:01Z`, and
+  `offsite-push` at `05:00:14Z` after Kepler's local log buffer rotated.
+- Gauges advanced to postgres `1785636902`, configs `1785637801`, and offsite
+  `1785646814`; Prometheus returned exactly three series.
+- Matching snapshots were local postgres `d7b48636`, local configs `13e1f842`,
+  and Voyager offsite configs `11182083`. Their creation times aligned with
+  the job starts, and the gauge epochs aligned with successful completion.
+- The postgres dump was fresh at `02:00:00Z` and 57,649 bytes. The provisioned
+  stale-rule expression evaluated to `0`.
+- B1 passed without a code change.
+
 ## 5. A0 — capture the alert-history evidence
 
 Run on 2026-08-01 or later. Use exactly the complete UTC window
@@ -320,6 +332,8 @@ No CPU or storage change is planned.
 
 ## 9. Completion
 
+**Completed 2026-08-02.**
+
 Close the continuation when:
 
 - B0 and B1 prove all three Kepler backup paths;
@@ -331,3 +345,6 @@ Close the continuation when:
 Then move the proposal and this plan to the implemented record together and
 update the proposal indexes. Deferred gates may be reopened as new proposals
 only when their trigger exists.
+
+All completion conditions passed. The untriggered gates remain documented in
+section 7, and no unexplained embedded-etcd incident is active.

@@ -1,10 +1,8 @@
 # Observability continuation — alerting depth, coverage gaps, cleanups
 
-**Status:** Mostly implemented — alerting depth, container identity/logging,
-PostgreSQL exporters, AI-serving dashboard, backup gauges, the independent
-Discovery dead-man, and the fixed-window alert review shipped. Remaining work
-is limited to the explicit gates under **Active remainder**.
+**Status:** Implemented and closed
 **Date:** 2026-07-03
+**Completed:** 2026-08-02
 **Audience:** Maintainers of `desktop-nixos` + `servarr` + `homelab-gitops`
 
 **Scheduled evidence gate:** tune alert thresholds from Grafana history only
@@ -49,7 +47,8 @@ attempt on 2026-07-29 failed: scheduled gauges advanced, but the offsite job
 wrote into the local repository and the postgres dump job lacked its output
 directory. Servarr `#140` corrected the Ofelia job ownership and passed manual
 repository proof. The 2026-08-01 scheduled retry proved all three intended
-repositories; only direct correlation with retained successful-job logs remains.
+repositories. Central Loki retained the next cycle's successful Ofelia logs,
+closing the final direct-correlation gate on 2026-08-02.
 
 **Shipped 2026-07-25:** Kepler runs the independent Discovery dead-man probe.
 Its module and host contract are tested in `desktop-nixos`.
@@ -72,30 +71,36 @@ silence alert recovered after a real scheduled event exported the correct
 epoch. Fail2ban now reads the full journal on Vanguard and Voyager; Voyager
 immediately counted five real failures and banned one source.
 
-## Active remainder
+**Shipped 2026-08-02:** the next scheduled Kepler cycle correlated all three
+successful Ofelia completion lines with their exact gauges and Restic
+snapshots. Prometheus returned exactly three series and the provisioned stale
+rule expression evaluated to `0`. Both mandatory slices are complete.
 
-1. Capture one future scheduled backup cycle's successful Ofelia logs and
-   correlate them with the already-proven B1 gauges and snapshots.
-2. Decide whether UniFi Poller adds value beyond UniFi CEF/Wazuh before
+## Deferred trigger gates
+
+1. Decide whether UniFi Poller adds value beyond UniFi CEF/Wazuh before
    creating a read-only UniFi account.
-3. Add LiteLLM historical-spend reporting only if the current metrics cannot
+2. Add LiteLLM historical-spend reporting only if the current metrics cannot
    answer a concrete cost question.
-4. Add SWAG per-vhost traffic visibility only with a named investigation or
+3. Add SWAG per-vhost traffic visibility only with a named investigation or
    alert use case.
-5. Keep Kubernetes apiserver/scheduler/controller-manager scraping deferred
+4. Keep Kubernetes apiserver/scheduler/controller-manager scraping deferred
    until a dashboard or rule requires it.
-6. Meter local btrfs snapshots only if their failure needs central paging.
-7. Continue observing embedded-etcd latency; collect pre-incident journals
+5. Meter local btrfs snapshots only if their failure needs central paging.
+6. Continue observing embedded-etcd latency; collect pre-incident journals
    before changing CPU or storage.
+
+These items create no implementation work until their named trigger exists;
+reopen them as narrow proposals only when triggered.
 
 ## Context
 
 The 2026-06-29 fleet-monitoring RFC shipped: 15 provisioned dashboards, the
 scrape wave (adguard, cloudflared, litellm, GPU ×2 vendors, tailscale,
 kubelet volume stats, Argo CD health), tuned host alerting, and four
-pipeline fixes. Follow-up alerting and coverage work mostly shipped in July.
-This RFC now owns only the explicit remainder above so the implemented
-foundation documents can stay closed records.
+pipeline fixes. Follow-up alerting and coverage work shipped in July and the
+final operational evidence gate passed in August. Optional coverage remains
+trigger-based so this record can stay closed.
 
 ## A. Alerting depth (highest value — no new infra)
 
@@ -224,8 +229,8 @@ targets via `/api/ds/query`) before `pull-servarr discovery`.
   healthcheck required by the monitoring systemd gate.
 - Live verification after deployment: Argo CD `demo` Synced/Healthy, Loki
   healthy, monitoring systemd unit active, and Grafana `active=0`.
-- Remaining backup gate: match the next scheduled gauge advances to successful
-  Ofelia logs and fresh snapshots in the intended repositories.
+- The remaining backup gate closed on 2026-08-02 with direct Ofelia log,
+  gauge, and snapshot correlation.
 
 ## Implementation record — B1 scheduled repository proof
 
@@ -239,6 +244,20 @@ targets via `/api/ds/query`) before `pull-servarr discovery`.
 - Old successful Ofelia execution logs were no longer retained. Gauge files
   are written only after successful Restic commands, but the plan's stricter
   direct log-correlation clause remains open for the next scheduled cycle.
+
+## Implementation record — B1 direct log correlation
+
+- Central Loki retained the 2026-08-02 Ofelia completion lines after Kepler's
+  local container log buffer rotated: `postgres-backup` finished successfully
+  at `02:15:02Z`, `config-backup` at `02:30:01Z`, and `offsite-push` at
+  `05:00:14Z`.
+- Their gauges were respectively `1785636902`, `1785637801`, and `1785646814`.
+  Prometheus returned exactly three series with those values.
+- Matching snapshots were local postgres `d7b48636` at `02:15:00Z`, local
+  configs `13e1f842` at `02:30:00Z`, and offsite configs `11182083` at
+  `05:00:00Z`. The postgres dump was fresh at `02:00:00Z` and 57,649 bytes.
+- The provisioned stale-rule PromQL evaluated to `0`. B1 and the proposal are
+  complete; no code or threshold change was required.
 
 ## Implementation record — A0 alert review and remediation
 
