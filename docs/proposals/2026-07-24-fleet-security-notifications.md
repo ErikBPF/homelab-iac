@@ -51,10 +51,10 @@ findings and resolution updates.
 Only an exploited vulnerability, exposed credential, public-surface policy
 breach, or credible data-loss path is duplicated into `#incidents`.
 
-Argus does not watch `#security` in phase 1. Scanner text and dependency
-metadata are untrusted inputs. Adding the channel to Argus requires a later
-gate proving trusted message normalization while its terminal remains
-disabled.
+Cleytin (`argus`) watches `#security` through an explicit allowed-channel ID.
+Producers mention Cleytin using a fixed trusted user ID; scanner text and
+dependency metadata remain untrusted, redacted inputs, and its terminal
+remains disabled.
 
 ### D2 — GitHub/scanner remains authoritative
 
@@ -76,8 +76,9 @@ Each message contains:
 - link to the private authoritative finding;
 - lifecycle state: `OPEN`, `RESOLVED`, or `DISMISSED`.
 
-Webhook payloads disable user/role mentions by default. Only the trusted
-formatter may mention Erik for a critical finding.
+Webhook payloads allow only the fixed Cleytin user mention. The trusted
+formatter never derives mention syntax or IDs from scanner output; role and
+everyone mentions remain disabled.
 
 ### D3 — Severity routing
 
@@ -161,7 +162,7 @@ Implementation update — 2026-07-24:
 - `kindle-dash` is prepared to post a redacted provenance/signature failure to
   both `DISCORD_SECURITY_WEBHOOK` and `DISCORD_INCIDENTS_WEBHOOK`. Missing
   secrets produce a workflow notice, not a failed notification step.
-- Every prepared payload disables Discord mentions and withholds scanner,
+- Every prepared payload mentions only Cleytin and withholds scanner,
   signature, and secret-match output.
 - `homelab-iac` Trivy is blocking for critical/high findings and has the same
   dormant, redacted security hook. A local scan found zero critical/high
@@ -181,7 +182,8 @@ Implementation update — 2026-07-24:
   rotate any candidate proven real; allowlist only a narrowly identified
   fixture or non-secret identifier.
 - A fleet contract prevents any repository in `repos.json` from losing its
-  webhook reference or mention-disabled payload.
+  webhook reference, fixed Cleytin mention, or restricted allowed-mentions
+  payload.
 - `ha-harness` and `cosmo-notes` are manual-only while GitHub blocks private
   hosted-runner jobs for account billing. Their full histories and current
   trees pass local redacted Gitleaks scans; each README carries the routine
@@ -200,7 +202,8 @@ Activation update — 2026-07-25:
 - `#security` and its dedicated incoming webhook exist.
 - `DISCORD_SECURITY_WEBHOOK` is installed and verified as a per-repository
   Actions secret on every repository in `repos.json` and `renovate-config`.
-- A redacted, mention-disabled test message reached `#security`.
+- A redacted, mention-disabled test message reached `#security`; publishers
+  now use the fixed Cleytin mention contract.
 - The plaintext handoff file was deleted after distribution.
 - No host workload currently posts security findings, so the webhook is not
   copied into OpenBao until a runtime producer exists.
@@ -232,10 +235,11 @@ and threat model justify its runtime and maintenance cost.
 - Medium/low and pull-request-only findings remain in GitHub.
 - Renovate completes without “Cannot access vulnerability alerts”.
 - No workflow receives a Vault credential.
-- Argus cannot consume `#security` messages in phase 1.
+- Cleytin is in the Homelab guild and its explicit allowed-channel scope
+  includes `#security`; ordinary messages still require a mention.
 
 ## Resolved decisions
 
 1. Channel: `#security`.
 2. GitHub placement: per-repository secrets.
-3. Mentions: disabled; rely on channel notification settings.
+3. Mentions: fixed Cleytin user ID only; no roles, everyone, or untrusted IDs.
