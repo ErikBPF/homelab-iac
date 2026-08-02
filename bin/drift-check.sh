@@ -6,6 +6,7 @@
 # the creds loaded (devenv loads .env; or sops-decrypt .env.sops first).
 # Optional: set DISCORD_WEBHOOK_URL to a Discord webhook to get alerted on drift.
 set -uo pipefail
+CLEYTIN_USER_ID=1532710143517659356
 
 cd "$(dirname "$0")/.." || exit 1
 export TG_TF_PATH="${TG_TF_PATH:-tofu}"
@@ -40,7 +41,7 @@ case "$code" in
     printf '%s\n' "$summary"
     if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
       curl -fsS -m 10 -H "Content-Type: application/json" \
-        --data "$(jq -nc --arg c "🟠 **homelab-iac drift** — Tailscale/UniFi/Cloudflare/AdGuard config drifted from code. Run a plan." '{content:$c}')" \
+        --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg c "🟠 **homelab-iac drift** — Tailscale/UniFi/Cloudflare/AdGuard config drifted from code. Run a plan." '{content:("<@"+$user+">\n"+$c),allowed_mentions:{users:[$user]}}')" \
         "$DISCORD_WEBHOOK_URL" >/dev/null || true
     fi
     exit 2
@@ -52,7 +53,7 @@ case "$code" in
     # creds, registry down) otherwise looks identical to "no drift".
     if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
       curl -fsS -m 10 -H "Content-Type: application/json" \
-        --data "$(jq -nc --arg c "🔴 **homelab-iac drift-check ERROR** (exit $code) — provider unreachable / expired creds / registry down. Investigate." '{content:$c}')" \
+        --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg c "🔴 **homelab-iac drift-check ERROR** (exit $code) — provider unreachable / expired creds / registry down. Investigate." '{content:("<@"+$user+">\n"+$c),allowed_mentions:{users:[$user]}}')" \
         "$DISCORD_WEBHOOK_URL" >/dev/null || true
     fi
     exit 1
