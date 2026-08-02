@@ -1,7 +1,7 @@
 # Fleet Wazuh SIEM integration
 
-**Status:** In progress; fresh UniFi CEF-to-index delivery and indexer disk
-watermarks are deployed on Kepler; snapshot/restore proof remains open
+**Status:** In progress; fresh UniFi CEF-to-index delivery, disk watermarks,
+encrypted snapshots, and isolated local/offsite restores are proven on Kepler
 **Date:** 2026-07-26
 **Owners:** `servarr` (Wazuh runtime and rules), `desktop-nixos` (host agents
 and host security signals), `homelab-gitops` (Kubernetes security signals),
@@ -64,6 +64,14 @@ The following exists on the default branches and live Kepler deployment:
 - OpenSearch disk allocation protection is enabled with explicit 80% low, 85%
   high, and 90% flood-stage watermarks (`servarr` PR #166). The live cluster is
   green with zero unassigned shards.
+- Seven rotating filesystem snapshot slots capture `wazuh-alerts-*` before the
+  encrypted local and offsite Restic config backups (`servarr` PRs #167 and
+  #169). Wazuh configuration, certificates, decoders, and rules are included;
+  the inconsistent live index data directory is explicitly excluded.
+- The repeatable drill in `servarr` PR #170 restores either Restic source into a
+  disposable Wazuh indexer with `--network none`, registers the restored
+  repository read-only, restores every alert index, validates document counts,
+  publishes a Prometheus success timestamp, and removes all scratch state.
 
 Measured retention evidence on 2026-08-02:
 
@@ -72,10 +80,13 @@ Measured retention evidence on 2026-08-02:
   2026-08-01 contained 1,279 CEF events;
 - daily archive compression reduced a 51.9 MB raw file to 2.4 MB;
 - the indexer uses 4.7 MB on a 1.1 TB pool currently at 9% usage;
-- no OpenSearch snapshot repository or index-state-management policy exists.
-  Restic sees the live index data under `/config`, but that is not accepted as
-  a consistent OpenSearch backup. Snapshot creation and isolated restore proof
-  remain the next server gate.
+- the first alert snapshot was 147 KB and completed all 18 shards without
+  failure;
+- local and offsite Restic restores each recreated six green alert indices and
+  514 documents on 2026-08-02; Prometheus scraped both restore-success series;
+- no index-state-management policy or explicit raw-archive expiry exists yet.
+  Define measured alert/raw retention and its deletion evidence before agent
+  enrollment increases volume.
 
 Existing complementary telemetry:
 
