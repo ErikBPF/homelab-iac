@@ -1,6 +1,6 @@
 # Proposal index and risk/value matrix
 
-Last synchronized: 2026-08-01.
+Last synchronized: 2026-08-02.
 
 This is the portfolio view for every local record under [`proposals/`](proposals/).
 The proposal status headers remain authoritative for execution detail. This
@@ -30,7 +30,6 @@ open headers that should be graduated or retired.
 | [Observability continuation](proposals/2026-07-03-observability-continuation.md) · [execution plan](proposals/2026-07-03-observability-continuation-execution-plan.md) | Mostly implemented; B1 and alert-history gates passed | Medium | Low | Correlate one fresh scheduled Ofelia success before logs rotate, then close the proposal. | `servarr` Grafana/Prometheus, `desktop-nixos` telemetry, proposal execution plan |
 | [Runtime security monitoring](proposals/2026-07-25-runtime-security-monitoring.md) | Observe-only rollout in progress | High | Medium | Finish baseline/force-fire gates, then assign non-overlapping alert ownership with Wazuh. | `runtime-security-inventory.json`, `desktop-nixos` journals, `servarr` Loki/Grafana rules |
 | [Fleet Wazuh SIEM integration](proposals/2026-07-26-fleet-wazuh-siem-integration.md) | In progress on Kepler; UniFi transport and firewall paths configured | High | High | Capture fresh CEF proof; then verify retention, backup, restore, and one canary agent. | `servarr` security stack, `desktop-nixos` Kepler firewall/diagnostics, UniFi CyberSecure/syslog |
-| [Fleet flake package-updater CI hardening](proposals/2026-07-31-flake-package-updater-ci-hardening.md) | Implemented; central App workflow active | Low | Low | Migrate the App token action from deprecated `app-id` to `client-id`. | `renovate-config`, `hermes-flake`, `opencode-flake`, `codex-flake` |
 | [Fleet upgrade hardening](proposals/2026-07-12-fleet-upgrade-hardening.md) | Partially implemented | High | High | Decide R3 automation boundary before adding sequential activation and post-switch verification. | `desktop-nixos` upgrade recipes, fleet metadata, deploy-rs |
 | [NetBird overlay](proposals/2026-07-10-netbird-selfhosted-overlay.md) | Partially live; as-built text needs reconciliation | High | High | Reconcile live state, then complete Voyager relay and scoped fleet enrollment. | `desktop-nixos` client/control plane, `homelab-iac` policies, `servarr` relay/runtime |
 | [Gemini persistent code stack](proposals/2026-07-23-gemini-persistent-code-stack.md) | Proposed | High | Medium | Run the Herdr compatibility probe; keep one remote primary and no pane-history persistence. | `desktop-nixos` Gemini/Herdr modules and user configuration |
@@ -54,6 +53,7 @@ These entries ensure every local proposal file is indexed.
 | [Discovery ESP migration](proposals/2026-07-14-discovery-esp-migration.md) | Implemented with restore/reboot evidence | Low | Low | Retain recovery evidence. | `desktop-nixos` Discovery install/restore paths |
 | [Fleet CI Discord notifications](proposals/2026-07-24-fleet-ci-discord-notifications.md) | Implemented and active | Low | Low | Review usefulness after observation window. | Fleet GitHub CI workflows and Discord secrets |
 | [Fleet security notifications](proposals/2026-07-24-fleet-security-notifications.md) | Implemented; Cleytin-only mention contract active | Medium | Low | Review usefulness and duplicates after 30 days. | Fleet security workflows and `tests/security-notification-contract.sh` |
+| [Fleet flake package-updater CI hardening](proposals/2026-07-31-flake-package-updater-ci-hardening.md) | Implemented and closed | Low | Low | Reopen only if App-authenticated package updates stop reaching normal PR CI. | `renovate-config`, `hermes-flake`, `opencode-flake`, `codex-flake` |
 | [Cleytin N0 responder](proposals/2026-07-21-hermes-argus-n0-responder.md) | Implemented; authenticated threaded triage proven | Low | Low | Keep Scrutiny/Uptime Kuma transport exceptions explicit. | `hermes-flake`, `servarr`, Discord webhook routes |
 | [Repository structure improvements](proposals/2026-06-24-repo-structure-improvements.md) | Graduated; Phase 0 delivered | Low | Low | Reopen only for measured structural friction. | Coordination layout and component ownership docs |
 | [Source-backed host improvements](proposals/2026-06-24-source-backed-host-improvements.md) | Graduated; useful slices moved to backlog | Low | Low | Follow H1–H5 in the fleet backlog. | `desktop-nixos` host-source records |

@@ -1,8 +1,8 @@
 # Fleet flake package-updater CI hardening
 
-**Status:** Implemented; central App workflow active
+**Status:** Implemented and closed
 **Date:** 2026-07-31
-**Completed:** 2026-08-01
+**Completed:** 2026-08-02
 **Owners:** `renovate-config` for orchestration; each flake repository for its
 package updater and CI gate
 
@@ -223,6 +223,12 @@ Legacy scheduler retirement PRs
 required checks and auto-merged. The central App workflow is now the sole
 package-update scheduler and all acceptance gates are complete.
 
-The App token action warns that `app-id` is deprecated in favor of `client-id`.
-That migration needs the App client ID added as a secret before the action
-removes compatibility; it is not a rollout blocker.
+Follow-up [`renovate-config` PR #6](https://github.com/ErikBPF/renovate-config/pull/6)
+migrated both token callers from the legacy `app-id` input to the recommended
+`client-id` input backed by the non-secret `RENOVATE_APP_CLIENT_ID` repository
+variable. A contract rejects either workflow regressing to `app-id`.
+
+Post-merge dispatch
+[`renovate-config` run 30760865262](https://github.com/ErikBPF/renovate-config/actions/runs/30760865262)
+minted App tokens and completed all three package-update matrix jobs. No update
+PR was needed. This completes the final follow-up and closes the proposal.
