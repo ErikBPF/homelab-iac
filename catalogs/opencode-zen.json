@@ -185,6 +185,26 @@
         "pdf",
         "text"
       ],
+      "input_price_per_million": 5,
+      "is_free": false,
+      "lifecycle": "discovered",
+      "output_limit": 128000,
+      "output_modalities": [
+        "text"
+      ],
+      "output_price_per_million": 25,
+      "privacy_tier": "unknown",
+      "source_id": "claude-opus-5",
+      "supports_reasoning": true,
+      "supports_tools": true
+    },
+    {
+      "context_limit": 1000000,
+      "input_modalities": [
+        "image",
+        "pdf",
+        "text"
+      ],
       "input_price_per_million": 3,
       "is_free": false,
       "lifecycle": "discovered",
@@ -397,6 +417,50 @@
       "output_price_per_million": 9,
       "privacy_tier": "unknown",
       "source_id": "gemini-3.5-flash",
+      "supports_reasoning": true,
+      "supports_tools": true
+    },
+    {
+      "context_limit": 1048576,
+      "input_modalities": [
+        "audio",
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "input_price_per_million": 0.3,
+      "is_free": false,
+      "lifecycle": "discovered",
+      "output_limit": 65536,
+      "output_modalities": [
+        "text"
+      ],
+      "output_price_per_million": 2.5,
+      "privacy_tier": "unknown",
+      "source_id": "gemini-3.5-flash-lite",
+      "supports_reasoning": true,
+      "supports_tools": true
+    },
+    {
+      "context_limit": 1048576,
+      "input_modalities": [
+        "audio",
+        "image",
+        "pdf",
+        "text",
+        "video"
+      ],
+      "input_price_per_million": 1.5,
+      "is_free": false,
+      "lifecycle": "discovered",
+      "output_limit": 65536,
+      "output_modalities": [
+        "text"
+      ],
+      "output_price_per_million": 7.5,
+      "privacy_tier": "unknown",
+      "source_id": "gemini-3.6-flash",
       "supports_reasoning": true,
       "supports_tools": true
     },
@@ -979,7 +1043,7 @@
       ],
       "input_price_per_million": 0,
       "is_free": true,
-      "lifecycle": "discovered",
+      "lifecycle": "deprecated",
       "output_limit": 64000,
       "output_modalities": [
         "text"
@@ -1125,6 +1189,24 @@
       "supports_tools": true
     },
     {
+      "context_limit": 256000,
+      "input_modalities": [
+        "text"
+      ],
+      "input_price_per_million": 0,
+      "is_free": true,
+      "lifecycle": "discovered",
+      "output_limit": 32000,
+      "output_modalities": [
+        "text"
+      ],
+      "output_price_per_million": 0,
+      "privacy_tier": "unknown",
+      "source_id": "laguna-s-2.1-free",
+      "supports_reasoning": true,
+      "supports_tools": true
+    },
+    {
       "context_limit": 262100,
       "input_modalities": [
         "text"
@@ -1140,6 +1222,24 @@
       "privacy_tier": "unknown",
       "source_id": "ling-2.6-flash-free",
       "supports_reasoning": false,
+      "supports_tools": true
+    },
+    {
+      "context_limit": 262144,
+      "input_modalities": [
+        "text"
+      ],
+      "input_price_per_million": 0,
+      "is_free": true,
+      "lifecycle": "discovered",
+      "output_limit": 32768,
+      "output_modalities": [
+        "text"
+      ],
+      "output_price_per_million": 0,
+      "privacy_tier": "unknown",
+      "source_id": "ling-3.0-flash-free",
+      "supports_reasoning": true,
       "supports_tools": true
     },
     {
