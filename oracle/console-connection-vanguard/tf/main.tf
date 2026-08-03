@@ -8,6 +8,12 @@ variable "ssh_public_key" { type = string }
 resource "oci_core_instance_console_connection" "c" {
   instance_id = var.instance_id
   public_key  = var.ssh_public_key
+
+  # OCI returns only the key fingerprint. After import the provider cannot
+  # repopulate public_key, so comparing it would replace a healthy connection.
+  lifecycle {
+    ignore_changes = [public_key]
+  }
 }
 
 # The ready-to-run SSH command (ProxyCommand form) for the serial console.
