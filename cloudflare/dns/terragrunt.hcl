@@ -7,15 +7,9 @@ terraform {
 }
 
 # NetBird relay public IP (self-hosted overlay RFC §4/§8) — voyager's Oracle
-# RESERVED public IP (oracle/modules/instance, reserve_public_ip). Written but
-# NOT applied (Phase O, human op): placeholder until `terragrunt apply` in
-# oracle/compute yields the real `reserved_public_ip` output. TEST-NET-3
-# (RFC 5737) below is deliberately non-routable so this can't resolve to
-# anything real until a human pastes the actual IP.
+# RESERVED public IP from oracle/compute's `reserved_public_ip` output.
 locals {
-  # TODO(Phase-O, human op): replace with oracle/compute's `reserved_public_ip`
-  # output once `reserve_public_ip = true` has been applied there.
-  voyager_relay_ip = "203.0.113.10"
+  voyager_relay_ip = "163.176.78.19"
   # vanguard's current EPHEMERAL Oracle public IP (R3a relay2). Static TF record
   # — no ddclient/CF-token on the host; bump this on a vanguard reprovision,
   # same cadence as the console tools' OCID pins (just prints it via ip_vanguard).
