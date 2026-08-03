@@ -36,12 +36,13 @@ case "$code" in
     ;;
   2)
     summary=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
-      | grep -aE 'Plan:|will be (updated|created|destroyed)|# ' | head -40)
+      | grep -am 40 -E 'Plan:|will be (updated|created|destroyed)|# ')
+    summary="${summary:0:1500}"
     echo "homelab-iac: DRIFT DETECTED"
     printf '%s\n' "$summary"
     if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
       curl -fsS -m 10 -H "Content-Type: application/json" \
-        --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg c "🟠 **homelab-iac drift** — Tailscale/UniFi/Cloudflare/AdGuard config drifted from code. Run a plan." '{content:("<@"+$user+">\n"+$c),allowed_mentions:{users:[$user]}}')" \
+        --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg summary "$summary" --arg c "🟠 **homelab-iac drift** — Tailscale/UniFi/Cloudflare/AdGuard config drifted from code. Run a plan." '{content:("<@"+$user+">\n"+$c+"\n\n"+$summary),allowed_mentions:{users:[$user]}}')" \
         "$DISCORD_WEBHOOK_URL" >/dev/null || true
     fi
     exit 2

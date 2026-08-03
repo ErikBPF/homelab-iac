@@ -11,3 +11,17 @@
 
   [ "$status" -eq 0 ]
 }
+
+@test "drift alert includes bounded plan evidence for Cleytin" {
+  run grep -F -- "grep -am 40 -E 'Plan:|will be (updated|created|destroyed)|# '" bin/drift-check.sh
+  [ "$status" -eq 0 ]
+
+  run grep -F -- 'summary="${summary:0:1500}"' bin/drift-check.sh
+  [ "$status" -eq 0 ]
+
+  run grep -F -- '--arg summary "$summary"' bin/drift-check.sh
+  [ "$status" -eq 0 ]
+
+  run grep -F -- '"\n\n"+$summary' bin/drift-check.sh
+  [ "$status" -eq 0 ]
+}
