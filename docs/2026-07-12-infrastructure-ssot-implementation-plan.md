@@ -44,8 +44,8 @@ Official `BerriAI/litellm` v0.2.2 must pass a canary against LiteLLM 1.91.2. It 
   > Stable aliases and reviewed free/manual routes are provider-owned; legacy aliases are removed and allowlists reminted.
 - [ ] **S06: Terraform-manage LiteLLM control plane** `risk:high` `depends:[S02]` `HITL`
   > Teams, embedded budgets, credentials, policies, and reminted keys are declarative; a scoped Terraform admin key remains bootstrap sops.
-- [ ] **S07: Finish OpenCode routing** `risk:medium` `depends:[S05,S06]`
-  > New sessions start on LiteLLM GLM; Architect reviews with GLM; General/Explore implement, debug, and explore with MiMo.
+- [x] **S07: Finish OpenCode routing** `risk:medium` `depends:[S05,S06]`
+  > New sessions start on LiteLLM DeepSeek V4 Flash; Architect reviews with GLM; General/Explore implement, debug, and explore with MiMo. Live completions were verified from OpenCode and Hermes on 2026-08-02.
 - [x] **S08: Vault runtime-secret canary** `risk:high` `depends:[S01]` `HITL`
   > One workload consumes a provider-minted value through a write-only OpenBao handoff and Terraform-owned mount/policy/auth wiring, with no copied value in the OpenBao state.
 - [ ] **S09: Discovery runtime-secret cutover** `risk:high` `depends:[S08]` `HITL`
