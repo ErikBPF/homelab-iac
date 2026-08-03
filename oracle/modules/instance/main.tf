@@ -85,8 +85,8 @@ resource "oci_core_security_list" "voyager" {
   # SSH 22: the Ubuntu entrypoint + nixos-anywhere path. Closed entirely once
   # this host becomes a NetBird public relay (relay_public_surface = true,
   # NetBird RFC §6b-H2/Q8-b) — a standing public IP is a scan-accreting target
-  # and 22 isn't needed post-cutover; 2222 (below) stays as the hardened
-  # break-glass path.
+  # and 22 isn't needed post-cutover. Fleet SSH on 2222 is tailnet-only and
+  # therefore has no OCI ingress rule.
   dynamic "ingress_security_rules" {
     for_each = var.relay_public_surface ? [] : [1]
     content {
@@ -96,19 +96,6 @@ resource "oci_core_security_list" "voyager" {
         min = 22
         max = 22
       }
-    }
-  }
-
-  # 2222: fleet SSH after the NixOS cutover. Kept world-open even under
-  # relay_public_surface (Q8-b: DR-entry independence over scan-surface) —
-  # sshd is key-only, non-root, fail2ban/crowdsec-hardened (host-side, out of
-  # this module's scope).
-  ingress_security_rules {
-    protocol = "6"
-    source   = var.ssh_ingress_cidr
-    tcp_options {
-      min = 2222
-      max = 2222
     }
   }
 

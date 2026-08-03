@@ -50,7 +50,7 @@ inputs = {
 
   # NetBird public relay (self-hosted overlay RFC §4/§4a/§6b-H2). vanguard is
   # this shared VCN's public relay (R3a), so its security list now carries the
-  # relay posture: 22 closed, 443/tcp+udp world-open, 2222 kept hardened. Applied
+  # relay posture: SSH closed, 443/tcp+udp world-open. Applied
   # from a wired LAN host. Env override (OCI_RELAY_PUBLIC_SURFACE=false) still
   # closes it. Voyager owns the tenancy's reserved public IP; vanguard uses an
   # ephemeral IP pinned in DNS by a static TF record (cloudflare/dns relay2).

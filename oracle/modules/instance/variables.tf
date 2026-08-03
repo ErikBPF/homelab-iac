@@ -115,7 +115,7 @@ variable "existing_security_list_id" {
 variable "ssh_ingress_cidr" {
   type        = string
   default     = "0.0.0.0/0"
-  description = "Source allowed to reach SSH (22 + 2222). sshd is key-only; tighten to your egress IP if desired."
+  description = "Source allowed to reach bootstrap SSH on port 22. NixOS fleet SSH on 2222 is tailnet-only."
 }
 
 # --- NetBird public relay (RFC §4/§4a/§6b-H2) — additive, default off -------
@@ -128,7 +128,7 @@ variable "reserve_public_ip" {
 variable "relay_public_surface" {
   type        = bool
   default     = false
-  description = "Swap the security list's public surface to the NetBird relay posture: close 22, open ONLY 443/tcp+udp, keep 2222 hardened (Q8-b). Default false leaves the original 22+2222+ICMP posture untouched (telstar and any future unit are unaffected unless they opt in)."
+  description = "Swap the security list's public surface to the NetBird relay posture: close bootstrap SSH on 22 and open only 443/tcp+udp. Fleet SSH on 2222 is always tailnet-only."
 }
 
 # --- Always-Free guard rails ----------------------------------------------

@@ -4,7 +4,7 @@
 	"hosts": {
 		"laptop":     "100.74.137.124",
 		"endeavour":  "100.107.225.13",
-		"pathfinder": "100.104.92.5",
+		"pathfinder": "100.102.248.13",
 		"discovery":  "100.76.140.121",
 		"swag":       "192.168.10.210",
 		"nanokvm":   "100.125.209.99",
@@ -180,6 +180,8 @@
 		{"src": "gemini", "deny": ["discovery:3100"]},     // dev sandbox has no Loki grant
 		{"src": "gemini", "accept": ["orion:2222"]},       // build-on-host SSH from the sandbox
 		{"src": "gemini", "deny": ["kepler:2222"]},        // but not admin SSH into the rest of the fleet
+		{"src": "endeavour", "accept": ["voyager:2222", "vanguard:2222"]}, // admin reaches public hosts through Tailscale
+		{"src": "orion", "deny": ["voyager:2222", "vanguard:2222"]},       // ordinary servers cannot administer them
 		{"src": "laptop", "accept": ["discovery:8443"]}, // admin reaches the NetBird control plane
 		{"src": "orion", "deny": ["discovery:8443"]},    // non-admin cannot reach the NetBird control plane
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
