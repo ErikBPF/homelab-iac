@@ -14,7 +14,35 @@ inputs = {
   config = {
     blocked_services = null
     blocked_services_pause_schedule = {
+      fri = {
+        end   = null
+        start = null
+      }
+      mon = {
+        end   = null
+        start = null
+      }
+      sat = {
+        end   = null
+        start = null
+      }
+      sun = {
+        end   = null
+        start = null
+      }
+      thu = {
+        end   = null
+        start = null
+      }
       time_zone = "UTC"
+      tue = {
+        end   = null
+        start = null
+      }
+      wed = {
+        end   = null
+        start = null
+      }
     }
     dns = {
       allowed_clients            = null
