@@ -28,6 +28,9 @@ service, or central notification service.
 
 - Fleet OpenSSH uses port 2222, public-key authentication, no root login,
   `MaxAuthTries = 3`, and no TCP/agent forwarding.
+- Active OCI guests accept TCP/2222 only on `tailscale0`; their cloud security
+  list does not publish SSH to the Internet. Public TCP/UDP 443 remains for the
+  NetBird relay.
 - Fail2ban bans after three retries, starts with a one-hour ban, and increments
   repeat bans.
 - Host journals already flow through Alloy to Loki with a static `host` label.
@@ -53,12 +56,35 @@ service, or central notification service.
   `pathfinder` against live peer state.
 - Removed retired `galaxy` from the Tailscale policy. Known overlay admins are
   now `laptop`, `endeavour`, and `pathfinder`.
-- Revision decision: keep Oracle TCP/2222 publicly reachable. Successful SSH
-  login on active public hosts uses `alert-all`; it is never suppressed by the
-  source address because legitimate direct deployment sources are dynamic.
+- Revision decision (superseded on 2026-08-03): keep Oracle TCP/2222 publicly
+  reachable. Successful SSH login on active public hosts uses `alert-all`; it
+  is never suppressed by the source address because legitimate direct
+  deployment sources are dynamic.
 - Home hosts use the concrete `known-admin-hosts` set. Endeavour also uses
   `alert-all` because its local-network trust boundary changes while roaming.
 - Telstar stays blocked until provisioned; no inactive host is declared ready.
+
+### 2026-08-03 — public-host SSH containment
+
+- Four independent IPv4 egress checks returned `177.137.224.188`, matching the
+  source in the Voyager and Vanguard successful-login alerts. This establishes
+  that the alerts came from the current home WAN address; it does not establish
+  a permanent address or justify an allowlist entry.
+- `desktop-nixos#163` scopes OCI-guest TCP/2222 to `tailscale0`, targets live
+  deployments at stable tailnet addresses, and retains public-IP SSH only in
+  explicit bootstrap recipes. `homelab-iac#57` removes public OCI TCP/2222,
+  corrects Pathfinder's tailnet address, and tests allowed and denied admin
+  paths. Both changes merged.
+- The corrected Tailscale ACL applied as one in-place update with no resource
+  creation or deletion. Existing OpenSSH remains authoritative; no second SSH
+  daemon or broad ACL migration was added.
+- Voyager was deployed and verified as the canary before Vanguard. On both
+  hosts, tailnet TCP/2222 is reachable, public TCP/2222 and TCP/22 are closed or
+  filtered, public TCP/443 remains reachable, SSH and Tailscale are active, and
+  no systemd unit is failed.
+- OCI applied the public TCP/2222 removal as `0 added, 1 changed, 0 destroyed`.
+  Final OCI and Tailscale plans both report no changes. The successful-login
+  alerts recovered without whitelisting the dynamic WAN address.
 
 ### 2026-07-25 — Phase 1 telemetry-integrity slice staged
 

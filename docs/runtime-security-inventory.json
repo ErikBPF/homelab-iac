@@ -118,15 +118,15 @@
     },
     "telstar": {
       "trustZone": "public",
-      "sshExposure": "public",
+      "sshExposure": "none",
       "criticality": "standard",
       "monitoringOwner": "desktop-nixos",
       "sshAlarmReadiness": "blocked",
-      "blocker": "Host is not provisioned and its inherited OCI security list permits TCP/2222 from 0.0.0.0/0."
+      "blocker": "Host is not provisioned and has no allocated tailnet identity. Its NixOS OCI profile permits fleet SSH only on tailscale0."
     },
     "vanguard": {
       "trustZone": "public",
-      "sshExposure": "public",
+      "sshExposure": "overlay",
       "criticality": "standard",
       "monitoringOwner": "desktop-nixos",
       "sshAlarmReadiness": "ready",
@@ -136,7 +136,7 @@
     },
     "voyager": {
       "trustZone": "public",
-      "sshExposure": "public",
+      "sshExposure": "overlay",
       "criticality": "standard",
       "monitoringOwner": "desktop-nixos",
       "sshAlarmReadiness": "ready",

@@ -19,7 +19,7 @@ jq -e '
     | contains(["192.168.10.200/32", "192.168.10.205/32"]))
   and all(.hosts[];
     (.trustZone | IN("home", "public", "roaming", "appliance"))
-    and (.sshExposure | IN("none", "lan-overlay", "public"))
+    and (.sshExposure | IN("none", "overlay", "lan-overlay", "public"))
     and (.criticality | IN("critical", "standard"))
     and (.monitoringOwner | type == "string" and length > 0)
     and (.sshAlarmReadiness | IN("ready", "blocked", "not-applicable"))
@@ -44,6 +44,7 @@ jq -e '
     if (.key == "vanguard" or .key == "voyager")
     then (
       .value.sshAlarmReadiness == "ready"
+      and .value.sshExposure == "overlay"
       and .value.expectedSshSourceSets == ["ssh-login-whitelist"]
     )
     else true

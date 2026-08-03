@@ -294,6 +294,26 @@ targets via `/api/ds/query`) before `pull-servarr discovery`.
 - Final Grafana check: `active=0` after the expected deployment-login warning
   and laptop filesystem prediction recovered.
 
+## Implementation record — A0 tailnet-only SSH follow-up
+
+- On 2026-08-03, successful-login warnings on Voyager and Vanguard named
+  `177.137.224.188`. Four independent egress checks matched that address to the
+  current home WAN. The evidence proves current ownership, not address
+  stability, so the dynamic public address was not whitelisted.
+- `desktop-nixos#163` and `homelab-iac#57` moved steady-state OCI-host SSH to
+  stable Tailscale addresses, scoped the host firewall to `tailscale0`, removed
+  public OCI TCP/2222, corrected Pathfinder's ACL address, and retained public
+  SSH only in explicit bootstrap recipes.
+- Voyager and Vanguard were deployed and verified over their tailnet
+  addresses. Both public TCP/2222 endpoints are closed or filtered, both
+  tailnet TCP/2222 endpoints remain reachable, and public TCP/443 remains open
+  for the NetBird relay. Final OCI and Tailscale plans report no changes.
+- The two SSH warnings recovered without a threshold or allowlist change. The
+  only other active alert was Orion's cache warmer, which had failed on a
+  transient GitHub `504` while fetching `klipper_tmc_autotune`. Its documented
+  retry completed successfully; Orion has no failed units and Grafana reports
+  `active=0`.
+
 ## Links
 
 - [Execution plan](2026-07-03-observability-continuation-execution-plan.md)
