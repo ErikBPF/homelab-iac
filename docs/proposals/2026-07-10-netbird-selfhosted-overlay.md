@@ -1,16 +1,18 @@
 # Self-hosted NetBird overlay — resilient control plane on discovery + voyager
 
-**Status:** Partially implemented — control plane (discovery) + public relay#2
-(vanguard) **LIVE** 2026-07-11; laptop CLI enrollment is proven. Remaining:
-voyager relay#1 and broader fleet enrollment. Dashboard passkey login is
-deferred on the upstream callback incompatibility. All gates ruled 2026-07-10;
-build/as-built is tracked in the implementation plan and implemented records.
+**Status:** Partially implemented — the Discovery control plane and public relay
+pair on Voyager and Vanguard are live and source-managed as of 2026-08-02;
+laptop CLI enrollment is proven. Remaining: broader fleet enrollment. Dashboard
+passkey login is deferred on the upstream callback incompatibility. All gates
+were ruled 2026-07-10; build/as-built is tracked in the implementation plan and
+implemented records.
 
 > Scaffold for human judgment. Facts, ports, and NixOS/Terraform surfaces are
 > researched and cited. Three scoping decisions locked in §1; **all 11 detailed
 > gates ruled (§11)** on 2026-07-10. Design survived three adversarial passes
 > (party + red/blue-team + infra/HA); every design-changing finding is folded in.
-> Still a **proposal** — implementation not started, nothing deployed.
+> Live implementation record plus the reviewed decision scaffold for the
+> remaining fleet rollout.
 
 ## 1. Locked decisions
 

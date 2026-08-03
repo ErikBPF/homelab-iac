@@ -2,8 +2,8 @@
 
 **Status:** Implemented and graduated 2026-07-30 — declarative routing,
 consumer key, aliases, and agent defaults are shipped. DeepSeek V4 Flash is
-staged as the default as of 2026-08-01; live verification remains. The
-component as-built record is
+live on Endeavour and Discovery as of 2026-08-02; Pathfinder activation is
+pending while the host is offline. The component as-built record is
 [`desktop-nixos/docs/implemented/2026-07-12-opencode-litellm-routing.md`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-07-12-opencode-litellm-routing.md).
 
 ## Decision
