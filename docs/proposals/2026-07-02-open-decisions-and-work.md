@@ -52,7 +52,7 @@ evidência → aprovação → execução.
 | ID | Decisão / trabalho | Dono | Próximo gate |
 |----|--------------------|------|--------------|
 | A2 | **Manter `k8s-apiserver` no stack networking do Discovery?** | [`discovery-resilience-fixes`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-discovery-resilience-fixes.md) | Padronizar `--project-name` ou remover stack; não aceitar drift recorrente. |
-| A3 | **Resolver self-dependency DNS do Discovery** | mesmo doc | **Estado 2026-08-03:** `homelab-iac#55/#56` adotaram a política live sem apply; `adguard/config` e `adguard/filtering` agora fecham com `No changes`. O P3 já provou o resolver secundário durante outage do AdGuard. Resta eliminar a dependência do próprio host: o Nix do Discovery ainda fixa `.210` como nameserver e depende de `FallbackDNS`. Declarar `.230` ou equivalente não-self para o host e provar cold boot/deploy/pulls com o AdGuard local indisponível. |
+| A3 | ~~**Resolver self-dependency DNS do Discovery**~~ | mesmo doc | **Resolvido 2026-08-03:** `desktop-nixos#164` declarou Kepler `.230` antes do AdGuard local `.210`; `#166` impediu o Tailscale do Kepler de desviar respostas LAN. Discovery e Kepler bootaram os closures `jbbbqk5p…` e `4g4i9hlr…`; UDP/TCP, resolução pública/fleet e `git ls-remote` passaram. No cold boot real, `resolved` subiu 13:08:47, o fetch GitHub terminou 13:09:12 e o AdGuard local só iniciou 13:09:19. |
 | N1 | **NetBird: escopo final do rollout e convivência com Tailscale** | [`netbird-selfhosted-overlay`](2026-07-10-netbird-selfhosted-overlay.md) | Definir hosts a migrar, período dual-overlay e critério de retirada; completar hardening/IaC restante. |
 | N2 | **Telstar: PAYG para furar capacity pool ou continuar esperando** | [`telstar-oracle-arm-host`](2026-07-01-telstar-oracle-arm-host.md) | Default: esperar serviço de captura. PAYG exige decisão explícita de gasto. |
 | N3 | **Adotar regra de placement proposta** | [`fleet-container-placement-srp`](2026-07-11-fleet-container-placement-srp.md) | Aprovar regra por propósito/runtime antes de mover qualquer workload. |
@@ -61,7 +61,7 @@ evidência → aprovação → execução.
 | C4 | ~~**Object storage offsite: OCI, R2 ou B2**~~ | mesmo doc | **Resolvido 2026-07-24:** B2 implantado para OpenBao e estado OpenTofu; `restic check --read-data` + restores via stream passaram. |
 | C5 | ~~**Permitir inferência/embeddings cloud com dados privados?**~~ | mesmo doc | **Resolvido:** não. Dados privados, memória e embeddings ficam locais; exceção futura exige novo RFC. |
 | B9 | **Provisionar Telstar quando A1 liberar** | Telstar RFC | IP → `fleet-json` → deploy → switch → verificação → graduar. |
-| B10 | **Root-cause da instabilidade do Discovery** | discovery resilience | Próximo evento: correlacionar journal persistente, `net-watch` e sysstat. |
+| B10 | ~~**Root-cause da instabilidade do Discovery**~~ | discovery resilience | **Resolvido 2026-07-06:** `e1000e` travava o TX ring; TSO/GSO foram desativados em `eno1`, sem recorrência registrada. |
 | B12 | ~~**IaC: importar reserva HA `.115` e remover reservas velhas**~~ | [`repo-ssot-srp`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-repo-ssot-srp.md) | **Resolvido:** reserva `.115` adotada via import; entradas antigas removidas. |
 
 ## Cluster H — arquitetura e hardening dos hosts
@@ -108,16 +108,15 @@ evidência → aprovação → execução.
 | A10 / S1 | **Segundo guardião da unseal key + root break-glass** | [`openbao-root-recovery`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-30-openbao-root-recovery.md) | Definir custódia fora do host antes do próximo incidente. |
 | B11 / S2 | **Cauda servarr→Vault** | [`vault-secrets-platform`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-vault-secrets-platform.md) | Reavaliar somente chaves ainda em sops por intenção; registrar exceções. |
 | S3 | **Provider admission para Terraform stateful** | [`stateful-stack-release-hardening`](2026-07-13-stateful-stack-release-hardening.md) | Nenhum provider ganha ownership sem export/import/plan/recovery proof. |
-| S4 | ~~**Reconciliar unidades declaradas sem remote state**~~ | `homelab-iac` | **Resolvido 2026-08-02 como sweep de import:** PocketID, Tailscale DNS, UniFi dns/network/wlan, Cloudflare tunnel/ratelimit e OCI Vanguard compute/console/history foram adotados e fecharam com plan vazio; a correção `homelab-iac#54` eliminou o replace espúrio da conexão OCI. Cloudflare Access adotou o app/policies live sem destroy, mas ainda propõe o stack Cosmo intencionalmente novo. `swag-token` é a única unidade ainda sem state: o provider Cloudflare v4.52.7 não oferece importer para `cloudflare_api_token`. LiteLLM production continua parcial. Nenhum apply de infraestrutura foi executado; a política/state do AdGuard fechou sem diff em 2026-08-03, e A3 retém apenas a self-dependency do resolver do host. |
+| S4 | ~~**Reconciliar unidades declaradas sem remote state**~~ | `homelab-iac` | **Resolvido 2026-08-02 como sweep de import:** PocketID, Tailscale DNS, UniFi dns/network/wlan, Cloudflare tunnel/ratelimit e OCI Vanguard compute/console/history foram adotados e fecharam com plan vazio; a correção `homelab-iac#54` eliminou o replace espúrio da conexão OCI. Cloudflare Access adotou o app/policies live sem destroy, mas ainda propõe o stack Cosmo intencionalmente novo. `swag-token` é a única unidade ainda sem state: o provider Cloudflare v4.52.7 não oferece importer para `cloudflare_api_token`. LiteLLM production continua parcial. Nenhum apply de infraestrutura foi executado; a política/state do AdGuard fechou sem diff em 2026-08-03. |
 
 ---
 
 ## Ordem sugerida
 
-1. **A3** — declarar o resolver não-self do host Discovery e provar cold boot/deploy sem o AdGuard local.
-2. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
-3. **N3/N4** — decidir placement antes de qualquer separação de containers.
-4. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
+1. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
+2. **N3/N4** — decidir placement antes de qualquer separação de containers.
+3. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
 
 ## Já fechado — não retrabalhar
 
@@ -137,5 +136,7 @@ evidência → aprovação → execução.
 - C5: inferência, memória e embeddings privados permanecem locais.
 - R2: adoção SWAG concluída; P7 é o gate ativo do rollout stateful.
 - B12: reserva HA `.115` importada; reservas obsoletas removidas.
+- A3: Discovery usa Kepler como resolver primário; cold boot e pulls passaram
+  antes do AdGuard local iniciar.
 - Notificações CI e security: canais/webhooks por repositório ativados em
   2026-07-25; billing limita runs privados, não configuração.
