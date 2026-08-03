@@ -1,7 +1,7 @@
 # Backlog da frota — decisões e execução por cluster
 
 **Date:** 2026-07-02
-**Status:** Backlog ativo — reavaliado em 2026-07-30
+**Status:** Backlog ativo — reavaliado em 2026-08-02
 **Regra:** cada concern tem um doc-fonte. Este arquivo decide prioridade e aponta
 o próximo gate; não duplica planos detalhados. IDs antigos permanecem para não
 quebrar referências históricas.
@@ -52,7 +52,7 @@ evidência → aprovação → execução.
 | ID | Decisão / trabalho | Dono | Próximo gate |
 |----|--------------------|------|--------------|
 | A2 | **Manter `k8s-apiserver` no stack networking do Discovery?** | [`discovery-resilience-fixes`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-discovery-resilience-fixes.md) | Padronizar `--project-name` ou remover stack; não aceitar drift recorrente. |
-| A3 | **Resolver self-dependency DNS do Discovery** | mesmo doc | **Recorrência 2026-07-29:** os cinco rewrites declarados sumiram do AdGuard; MinIO state e NetBird OIDC falharam por NXDOMAIN até restauração manual. Definir bootstrap/resolver do host independente do AdGuard local e provar reboot/deploy sem ciclo DNS→IaC→DNS. |
+| A3 | **Resolver self-dependency DNS do Discovery** | mesmo doc | **Estado 2026-08-02:** os cinco rewrites, o singleton de regras e os dois filtros existentes foram adotados no state. Planos pós-import não destroem, mas ainda propõem `config: 0 add/1 change/0 destroy` e `filtering: 3 add/1 change/0 destroy`. Decidir a política DNS/filtros antes de apply; depois provar reboot/deploy com resolver bootstrap independente do AdGuard local. |
 | N1 | **NetBird: escopo final do rollout e convivência com Tailscale** | [`netbird-selfhosted-overlay`](2026-07-10-netbird-selfhosted-overlay.md) | Definir hosts a migrar, período dual-overlay e critério de retirada; completar hardening/IaC restante. |
 | N2 | **Telstar: PAYG para furar capacity pool ou continuar esperando** | [`telstar-oracle-arm-host`](2026-07-01-telstar-oracle-arm-host.md) | Default: esperar serviço de captura. PAYG exige decisão explícita de gasto. |
 | N3 | **Adotar regra de placement proposta** | [`fleet-container-placement-srp`](2026-07-11-fleet-container-placement-srp.md) | Aprovar regra por propósito/runtime antes de mover qualquer workload. |
@@ -108,15 +108,17 @@ evidência → aprovação → execução.
 | A10 / S1 | **Segundo guardião da unseal key + root break-glass** | [`openbao-root-recovery`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-30-openbao-root-recovery.md) | Definir custódia fora do host antes do próximo incidente. |
 | B11 / S2 | **Cauda servarr→Vault** | [`vault-secrets-platform`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-vault-secrets-platform.md) | Reavaliar somente chaves ainda em sops por intenção; registrar exceções. |
 | S3 | **Provider admission para Terraform stateful** | [`stateful-stack-release-hardening`](2026-07-13-stateful-stack-release-hardening.md) | Nenhum provider ganha ownership sem export/import/plan/recovery proof. |
+| S4 | **Reconciliar unidades declaradas sem remote state** | `homelab-iac` | Restam 12 unidades sem state após a adoção AdGuard: Cloudflare access/ratelimit/swag-token/tunnel (4), OCI Vanguard (3), PocketID (1), Tailscale DNS (1) e UniFi dns/network/wlan (3); LiteLLM production está apenas parcialmente adotado. Importar somente objetos live confirmados, uma unidade por vez, e exigir `0 destroy` no plan pós-import. Não executar o plan agregado. |
 
 ---
 
 ## Ordem sugerida
 
-1. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
-2. **A3** — eliminar o ciclo de bootstrap DNS exposto novamente em 2026-07-29.
-3. **N3/N4** — decidir placement antes de qualquer separação de containers.
-4. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
+1. **S4** — adotar state existente uma unidade por vez, sem apply agregado.
+2. **A3** — decidir a política AdGuard e eliminar o ciclo de bootstrap DNS.
+3. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
+4. **N3/N4** — decidir placement antes de qualquer separação de containers.
+5. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
 
 ## Já fechado — não retrabalhar
 
