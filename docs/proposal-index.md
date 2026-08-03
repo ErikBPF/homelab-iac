@@ -1,6 +1,6 @@
 # Proposal index and risk/value matrix
 
-Last synchronized: 2026-08-02.
+Last synchronized: 2026-08-03.
 
 This is the portfolio view for every local record under [`proposals/`](proposals/).
 The proposal status headers remain authoritative for execution detail. This
@@ -36,7 +36,7 @@ open headers that should be graduated or retired.
 | [Home Assistant and AI](proposals/2026-07-02-home-assistant-ai-consolidation.md) | Decision gates open; manifest-v2 harness merged, deployment still gated | Medium | High | Select at most two extensions and an approved runtime/capacity path before shadow deployment. | `ha-harness`, `home-assistant-config`, `homelab-iac` LiteLLM routes |
 | [Hermes deferred improvements](proposals/2026-06-29-hermes-deferred-improvements.md) | Trigger-based backlog | Medium | High | Require sandboxing before wider reach; take quality work only after measurement. | `hermes-flake`, `hermes-skills`, `servarr` Hermes runtime |
 | [Telstar Oracle ARM host](proposals/2026-07-01-telstar-oracle-arm-host.md) | Ready; blocked on A1 capacity | Medium | High | Wait under one acquisition owner; PAYG or public ingress needs a separate decision. | `desktop-nixos` Telstar host, `homelab-iac` Oracle resources |
-| [Fleet backlog and decision gates](proposals/2026-07-02-open-decisions-and-work.md) | Active; S4 import sweep closed, A3 and explicit rollout intent remain | High | High | Decide AdGuard policy; authorize Cosmo/LiteLLM creates separately; keep the live SWAG token as a documented exception until its provider supports safe import or a deliberate rotation. | All proposal records and cross-repository gates |
+| [Fleet backlog and decision gates](proposals/2026-07-02-open-decisions-and-work.md) | Active; S4 and AdGuard policy drift closed, A3 host resolver proof and explicit rollout intent remain | High | High | Finish Discovery's non-self host resolver/cold-boot proof; authorize Cosmo/LiteLLM creates separately; keep the live SWAG token as a documented exception until its provider supports safe import or a deliberate rotation. | All proposal records and cross-repository gates |
 
 ## Closed and historical local records
 
