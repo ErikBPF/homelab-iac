@@ -28,5 +28,9 @@ UNIFI_STATE_PASSPHRASE=fixture-only terragrunt render --json \
   --working-dir "$root/adguard/config" --log-level error >"$render"
 jq -e --slurpfile contract "$contract" '
   (.inputs.config | keys | sort) == ($contract[0].provider_fields | sort) and
+  (.inputs.config.blocked_services_pause_schedule |
+    .time_zone == "UTC" and
+    ((del(.time_zone) | keys | sort) == ["fri", "mon", "sat", "sun", "thu", "tue", "wed"]) and
+    (del(.time_zone) | all(.[]; . == {end: null, start: null}))) and
   ([.inputs.config | .. | objects | keys[]] | any(. == "password" or . == "private_key" or . == "certificate_chain" or . == "users" or . == "static_leases") | not)
 ' "$render" >/dev/null

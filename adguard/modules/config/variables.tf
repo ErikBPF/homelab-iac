@@ -1,8 +1,38 @@
 variable "config" {
   description = "Provider-supported, non-secret AdGuard Home configuration."
   type = object({
-    blocked_services                = optional(set(string))
-    blocked_services_pause_schedule = optional(object({ time_zone = string }))
+    blocked_services = optional(set(string))
+    blocked_services_pause_schedule = optional(object({
+      fri = optional(object({
+        end   = optional(string)
+        start = optional(string)
+      }))
+      mon = optional(object({
+        end   = optional(string)
+        start = optional(string)
+      }))
+      sat = optional(object({
+        end   = optional(string)
+        start = optional(string)
+      }))
+      sun = optional(object({
+        end   = optional(string)
+        start = optional(string)
+      }))
+      thu = optional(object({
+        end   = optional(string)
+        start = optional(string)
+      }))
+      time_zone = string
+      tue = optional(object({
+        end   = optional(string)
+        start = optional(string)
+      }))
+      wed = optional(object({
+        end   = optional(string)
+        start = optional(string)
+      }))
+    }))
     dns = object({
       allowed_clients            = optional(set(string))
       blocked_hosts              = set(string)
