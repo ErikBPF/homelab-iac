@@ -108,17 +108,16 @@ evidência → aprovação → execução.
 | A10 / S1 | **Segundo guardião da unseal key + root break-glass** | [`openbao-root-recovery`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-30-openbao-root-recovery.md) | Definir custódia fora do host antes do próximo incidente. |
 | B11 / S2 | **Cauda servarr→Vault** | [`vault-secrets-platform`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-vault-secrets-platform.md) | Reavaliar somente chaves ainda em sops por intenção; registrar exceções. |
 | S3 | **Provider admission para Terraform stateful** | [`stateful-stack-release-hardening`](2026-07-13-stateful-stack-release-hardening.md) | Nenhum provider ganha ownership sem export/import/plan/recovery proof. |
-| S4 | **Reconciliar unidades declaradas sem remote state** | `homelab-iac` | Restam 12 unidades sem state após a adoção AdGuard: Cloudflare access/ratelimit/swag-token/tunnel (4), OCI Vanguard (3), PocketID (1), Tailscale DNS (1) e UniFi dns/network/wlan (3); LiteLLM production está apenas parcialmente adotado. Importar somente objetos live confirmados, uma unidade por vez, e exigir `0 destroy` no plan pós-import. Não executar o plan agregado. |
+| S4 | ~~**Reconciliar unidades declaradas sem remote state**~~ | `homelab-iac` | **Resolvido 2026-08-02 como sweep de import:** PocketID, Tailscale DNS, UniFi dns/network/wlan, Cloudflare tunnel/ratelimit e OCI Vanguard compute/console/history foram adotados e fecharam com plan vazio; a correção `homelab-iac#54` eliminou o replace espúrio da conexão OCI. Cloudflare Access adotou o app/policies live sem destroy, mas ainda propõe o stack Cosmo intencionalmente novo. `swag-token` é a única unidade ainda sem state: o provider Cloudflare v4.52.7 não oferece importer para `cloudflare_api_token`. LiteLLM production continua parcial. Nenhum apply de infraestrutura foi executado; AdGuard permanece sob A3. |
 
 ---
 
 ## Ordem sugerida
 
-1. **S4** — adotar state existente uma unidade por vez, sem apply agregado.
-2. **A3** — decidir a política AdGuard e eliminar o ciclo de bootstrap DNS.
-3. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
-4. **N3/N4** — decidir placement antes de qualquer separação de containers.
-5. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
+1. **A3** — decidir a política AdGuard e eliminar o ciclo de bootstrap DNS.
+2. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
+3. **N3/N4** — decidir placement antes de qualquer separação de containers.
+4. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
 
 ## Já fechado — não retrabalhar
 
