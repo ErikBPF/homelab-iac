@@ -20,6 +20,11 @@ inputs = {
     "100.90.247.79",
     "1.1.1.1", "8.8.8.8"
   ]
+  # Resolve the private Kubernetes zone through AdGuard's tailnet listener;
+  # answers still target SWAG/API ingress at 192.168.10.210.
+  split_nameservers = {
+    "k8s.pastelariadev.com" = ["100.76.140.121"]
+  }
   magic_dns    = true
   search_paths = []
 }

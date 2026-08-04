@@ -15,3 +15,9 @@ variable "search_paths" {
   type        = list(string)
   default     = []
 }
+
+variable "split_nameservers" {
+  description = "Domain-specific DNS nameservers for the tailnet."
+  type        = map(set(string))
+  default     = {}
+}

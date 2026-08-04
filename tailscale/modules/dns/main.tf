@@ -9,3 +9,10 @@ resource "tailscale_dns_preferences" "this" {
 resource "tailscale_dns_search_paths" "this" {
   search_paths = var.search_paths
 }
+
+resource "tailscale_dns_split_nameservers" "this" {
+  for_each = var.split_nameservers
+
+  domain      = each.key
+  nameservers = each.value
+}
