@@ -118,17 +118,16 @@ variable "ssh_ingress_cidr" {
   description = "Source allowed to reach bootstrap SSH on port 22. NixOS fleet SSH on 2222 is tailnet-only."
 }
 
-# --- NetBird public relay (RFC §4/§4a/§6b-H2) — additive, default off -------
+variable "bootstrap_ssh_enabled" {
+  type        = bool
+  default     = true
+  description = "Open public TCP/22 for the temporary Ubuntu/nixos-anywhere bootstrap. Disable after NixOS cutover."
+}
+
 variable "reserve_public_ip" {
   type        = bool
   default     = false
-  description = "Convert the instance's ephemeral public IP into a reserved (static) public IP. Oracle Always-Free includes exactly 1 reserved IP per tenancy — only one host's unit should set this true. Written for voyager (NetBird relay); telstar and any future unit stay on the default (false, ephemeral IP, unaffected)."
-}
-
-variable "relay_public_surface" {
-  type        = bool
-  default     = false
-  description = "Swap the security list's public surface to the NetBird relay posture: close bootstrap SSH on 22 and open only 443/tcp+udp. Fleet SSH on 2222 is always tailnet-only."
+  description = "Convert the instance's ephemeral public IP into a reserved address. Oracle Always-Free includes one per tenancy."
 }
 
 # --- Always-Free guard rails ----------------------------------------------
