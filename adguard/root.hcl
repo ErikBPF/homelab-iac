@@ -17,6 +17,7 @@ generate "provider" {
       host     = "adguard.homelab.pastelariadev.com"
       username = "erik"
       scheme   = "https"
+      timeout  = 60
       # password from ADGUARD_PASSWORD env
     }
   EOT

@@ -31,6 +31,8 @@ check_s01() {
     "S01 RED: canary component still owns copied backend behavior"
   assert_file_excludes "$canary_root" 'generate[[:space:]]+"encryption"' \
     "S01 RED: canary component still owns copied encryption behavior"
+  assert_file_contains "$canary_root" 'timeout[[:space:]]*=[[:space:]]*60' \
+    "S01 RED: AdGuard provider timeout is too short for large filter downloads"
 
   assert_file_contains "$shared" '^[[:space:]]*remote_state[[:space:]]*\{' \
     "S01 RED: shared root does not own backend behavior"
