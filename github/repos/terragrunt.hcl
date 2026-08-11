@@ -150,9 +150,6 @@ inputs = {
     terraform-provider-litellm = {
       protect_main = true
     }
-    terraform-provider-netbird = {
-      protect_main = true
-    }
     vault = {
       visibility   = "private"
       protect_main = false

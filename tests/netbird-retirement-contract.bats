@@ -8,7 +8,9 @@
 }
 
 @test "NetBird public edge is removed without reopening bootstrap SSH" {
-  ! grep -R -i 'netbird' README.md bin cloudflare oracle tailscale/acl/policy.hujson
+  run rg -i 'netbird' README.md bin cloudflare github oracle tailscale/acl/policy.hujson \
+    -g '!**/.terragrunt-cache/**'
+  [ "$status" -eq 1 ]
   ! grep -F '"relay.pastelariadev.com"' cloudflare/dns/terragrunt.hcl
   ! grep -F '"relay2.pastelariadev.com"' cloudflare/dns/terragrunt.hcl
   grep -F 'bootstrap_ssh_enabled = false' oracle/compute/terragrunt.hcl

@@ -23,6 +23,10 @@ inputs = {
       value   = "fe892a2a-213b-484c-948f-5b666be1fdd9.cfargotunnel.com"
       proxied = true
     }
-
+    "truckradar.pastelariadev.com" = {
+      type    = "CNAME"
+      value   = "1dc5dcfd-f67e-49cd-848a-ba1855b49121.cfargotunnel.com"
+      proxied = true
+    }
   }
 }
