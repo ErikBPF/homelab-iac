@@ -37,11 +37,6 @@
         "fd7a:115c:a1e0::6e3b:8c79/128"
       ]
     },
-    "netbird-overlay": {
-      "cidrs": [
-        "10.100.0.0/16"
-      ]
-    },
     "tailscale-overlay": {
       "cidrs": [
         "100.64.0.0/10"

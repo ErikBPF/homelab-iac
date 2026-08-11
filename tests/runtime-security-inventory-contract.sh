@@ -8,6 +8,7 @@ fleet="$root/references/repos/desktop-nixos/fleet.json"
 jq -e '
   .schemaVersion == 1
   and (.addressSets | type == "object")
+  and (.addressSets | has("netbird-overlay") | not)
   and (.hosts | type == "object")
   and all(.addressSets[];
     (.cidrs | type == "array" and length > 0)

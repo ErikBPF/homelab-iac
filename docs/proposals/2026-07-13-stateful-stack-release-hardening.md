@@ -198,8 +198,8 @@ allowed only when all of these exist:
 - provider-specific tests;
 - documented manual recovery path.
 
-Later phases inventory Grafana, Harbor, PocketID, MinIO, Cloudflare, GitHub,
-NetBird, Tailscale, and UniFi. Provider-backed control-plane objects may move to
+Later phases inventory Grafana, Harbor, MinIO, Cloudflare, GitHub, Tailscale,
+and UniFi. Provider-backed control-plane objects may move to
 Terraform; containers and mutable filesystem state do not.
 
 ### 4.7 Terraform apply remains human-gated
@@ -417,8 +417,8 @@ rename event.
 
 ### P8 — Terraform capability expansion
 
-- Inventory stable/importable providers for Grafana, Harbor, PocketID, MinIO,
-  Cloudflare, GitHub, NetBird, Tailscale, and UniFi.
+- Inventory stable/importable providers for Grafana, Harbor, MinIO, Cloudflare,
+  GitHub, Tailscale, and UniFi.
 - Apply the provider admission policy.
 - Move only control-plane objects with zero-diff imports and recovery exports.
 - Keep Terraform apply wired-LAN and human-gated.

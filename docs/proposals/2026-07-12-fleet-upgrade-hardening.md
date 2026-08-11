@@ -12,7 +12,6 @@ closures; leaf inputs apply only to their consumer hosts.
 
 ## Already implemented
 
-- NetBird management renders raw sops values and refuses empty secrets.
 - Node exporter and Alloy expose failed-systemd-unit metrics; Grafana owns the
   Discord-routed alert.
 - Future disko installs use a 2G ESP.

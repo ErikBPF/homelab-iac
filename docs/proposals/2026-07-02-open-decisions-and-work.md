@@ -23,8 +23,7 @@ quebrar referências históricas.
 | `tokensave-dataplatform-eval` | **Graduado: avaliado e removido** | Self-benchmark forte, mas sem A/B independente; 81 tools + índices stale falharam o contrato. |
 | `impermanence-ephemeral-root` | **Retirado 2026-07-30** | Sem problema concreto, inventário de persistência ou host-canário. Reabrir após H4, não antes. |
 | `observability-continuation` | **Manter** | Dono do cluster O1–O5. |
-| `netbird-selfhosted-overlay` | **Manter** | Parcialmente live; rollout e hardening restantes. |
-| `fleet-container-placement-srp` | **Manter para N3/N4** | Regra proposta; separações ainda precisam decisão explícita. |
+| `fleet-container-placement-srp` | **Manter para N3** | Regra proposta; o slice PocketID foi aposentado com NetBird e não deve ser implementado. |
 | `fleet-esp-enlargement` | **Graduar** | Migrações concluídas; Discovery passou o gate pós-instalação em 2026-07-28. |
 | `fleet-upgrade-hardening` | **Manter** | Contrato parcialmente entregue; orquestração e projeção ESP abertas. |
 | `opencode-litellm-routing` | **Graduado 2026-07-30** | Roteamento, aliases, chave virtual e agents estão declarados; as-built vive no repo componente. |
@@ -53,11 +52,9 @@ evidência → aprovação → execução.
 |----|--------------------|------|--------------|
 | A2 | **Manter `k8s-apiserver` no stack networking do Discovery?** | [`discovery-resilience-fixes`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-discovery-resilience-fixes.md) | Padronizar `--project-name` ou remover stack; não aceitar drift recorrente. |
 | A3 | ~~**Resolver self-dependency DNS do Discovery**~~ | mesmo doc | **Resolvido 2026-08-03:** `desktop-nixos#164` declarou Kepler `.230` antes do AdGuard local `.210`; `#166` impediu o Tailscale do Kepler de desviar respostas LAN. Discovery e Kepler bootaram os closures `jbbbqk5p…` e `4g4i9hlr…`; UDP/TCP, resolução pública/fleet e `git ls-remote` passaram. No cold boot real, `resolved` subiu 13:08:47, o fetch GitHub terminou 13:09:12 e o AdGuard local só iniciou 13:09:19. |
-| N1 | **NetBird: escopo final do rollout e convivência com Tailscale** | [`netbird-selfhosted-overlay`](2026-07-10-netbird-selfhosted-overlay.md) | Definir hosts a migrar, período dual-overlay e critério de retirada; completar hardening/IaC restante. |
 | N2 | **Telstar: PAYG para furar capacity pool ou continuar esperando** | [`telstar-oracle-arm-host`](2026-07-01-telstar-oracle-arm-host.md) | Default: esperar serviço de captura. PAYG exige decisão explícita de gasto. |
 | N3 | **Adotar regra de placement proposta** | [`fleet-container-placement-srp`](2026-07-11-fleet-container-placement-srp.md) | Aprovar regra por propósito/runtime antes de mover qualquer workload. |
-| N4 | **Separar PocketID e quais outros serviços** | mesmo doc | Decidir PocketID primeiro; secondary separations somente por benefício isolado. |
-| C3 | ~~**Adicionar monitoramento externo**~~ | [`free-tier-cloud-resources`](2026-07-02-free-tier-cloud-resources.md) | **Resolvido:** Vanguard executa probe outside-in do PocketID e usa egress Discord independente. Grafana Cloud/UptimeRobot duplicariam o controle. |
+| C3 | ~~**Adicionar monitoramento externo**~~ | [`free-tier-cloud-resources`](2026-07-02-free-tier-cloud-resources.md) | **Resolvido:** Vanguard executa probe outside-in do ingress público e usa egress Discord independente. Grafana Cloud/UptimeRobot duplicariam o controle. |
 | C4 | ~~**Object storage offsite: OCI, R2 ou B2**~~ | mesmo doc | **Resolvido 2026-07-24:** B2 implantado para OpenBao e estado OpenTofu; `restic check --read-data` + restores via stream passaram. |
 | C5 | ~~**Permitir inferência/embeddings cloud com dados privados?**~~ | mesmo doc | **Resolvido:** não. Dados privados, memória e embeddings ficam locais; exceção futura exige novo RFC. |
 | B9 | **Provisionar Telstar quando A1 liberar** | Telstar RFC | IP → `fleet-json` → deploy → switch → verificação → graduar. |
@@ -115,7 +112,7 @@ evidência → aprovação → execução.
 ## Ordem sugerida
 
 1. **H1** — sudo agora desbloqueado por deploy-rs, mas exige command audit.
-2. **N3/N4** — decidir placement antes de qualquer separação de containers.
+2. **N3** — decidir placement antes de qualquer separação de containers.
 3. Restante por trigger explícito; ausência de trigger não é trabalho pendente.
 
 ## Já fechado — não retrabalhar

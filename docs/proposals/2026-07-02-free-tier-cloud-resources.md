@@ -30,7 +30,7 @@ independent, disposable improvements and ship them in value order:
    Terragrunt unit. Capacity reports are useful telemetry, but do not reserve a
    free-tier slot.
 2. **Keep offsite failure detection on Vanguard:** its OCI-hosted dead-man
-   already probes PocketID and alerts through independent Discord egress.
+   probes the public home ingress and alerts through independent Discord egress.
 3. **Keep B2 as the diverse backup leg:** do not add same-account OCI storage
    without a new recovery requirement.
 4. **Use Cloudflare edge services per public project:** no speculative shared
@@ -154,7 +154,7 @@ remain local even when raw text is not stored off-prem.
 
 | Service | Perpetual free allocation | Fit | Decision |
 |---|---|---|---|
-| Vanguard dead-man | Existing OCI micro + independent Discord webhook | outside-in PocketID/home-ingress probe | **keep; requirement met** |
+| Vanguard dead-man | Existing OCI micro + independent Discord webhook | outside-in home-ingress probe | **keep; requirement met** |
 | Grafana Cloud | 10k series, 100k API + 10k browser synthetics | filtered metrics mirror + outside-in probes | **skip** while Vanguard covers the outage blind spot |
 | UptimeRobot | 50 monitors, 5-minute checks, basic status pages | broad outside-in coverage, no card | **skip**; duplicates Vanguard |
 | Better Stack | 10 monitors/heartbeats, 1 status page; 3 GB logs/traces | stronger alert workflow, smaller monitor count | alternative if status/on-call UX wins |

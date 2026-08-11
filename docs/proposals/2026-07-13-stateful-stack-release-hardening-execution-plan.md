@@ -842,8 +842,8 @@ source volume or backup was deleted.
 
 ### P8 — Terraform control-plane inventory
 
-Inventory Grafana, Harbor, PocketID, MinIO, Cloudflare, GitHub, NetBird,
-Tailscale, and UniFi. Prefer official/stable `>=1.0`; otherwise require exact
+Inventory Grafana, Harbor, MinIO, Cloudflare, GitHub, Tailscale, and UniFi.
+Prefer official/stable `>=1.0`; otherwise require exact
 pin/lock, import, zero diff, API export, tests, and manual recovery. Move only
 control-plane objects. Keep containers/filesystem state with existing owners.
 Keep applies wired, saved-plan, and human-gated. Output a provider admission

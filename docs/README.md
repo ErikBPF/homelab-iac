@@ -25,6 +25,7 @@ blindly overwritten.
 - [Vault runtime secrets platform](decisions/2026-06-29-vault-secrets-platform.md)
 - [Offsite disaster-recovery anchor](decisions/2026-06-30-offsite-dr-crown-jewels.md)
 - [Fleet-wide Renovate](decisions/2026-07-11-fleet-renovate-consolidation.md)
+- [NetBird retirement; Pangolin deferred](decisions/2026-08-10-pangolin-netbird-retirement.md)
 
 ## Current records
 
@@ -33,7 +34,6 @@ blindly overwritten.
 - [Stateful stack release hardening](proposals/2026-07-13-stateful-stack-release-hardening-execution-plan.md)
 - [Fleet upgrade hardening](proposals/2026-07-12-fleet-upgrade-hardening.md)
 - [Observability continuation](proposals/2026-07-03-observability-continuation.md)
-- [NetBird overlay](proposals/2026-07-10-netbird-selfhosted-overlay.md)
 - [Telstar Oracle ARM host](proposals/2026-07-01-telstar-oracle-arm-host.md)
 - [Hermes Cleytin N0 responder](proposals/2026-07-21-hermes-argus-n0-responder.md)
 - [Runtime security monitoring](proposals/2026-07-25-runtime-security-monitoring.md)

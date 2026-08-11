@@ -1,6 +1,8 @@
 # Fleet container placement & SRP — one rule for "which runtime", plus separations
 
-**Status:** Proposed (exploration + decision scaffold; nothing refactored) — 2026-07-11
+**Status:** Proposed (exploration + decision scaffold; nothing refactored) —
+2026-07-11. PocketID/NetBird extraction sections are retired and must not be
+implemented; the general placement rule remains open.
 
 > Scaffold for human judgment. The inventory below is **researched** (three
 > read-only passes over `desktop-nixos/modules/` and `servarr/machines/`), cited to
@@ -209,11 +211,7 @@ human enables the touched piece.
 
 ---
 
-*Cross-refs:* [`2026-07-11-pocketid-idp-for-netbird.md`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-07-11-pocketid-idp-for-netbird.md)
-(the P0 consumer — retargets onto the extracted module),
-[`2026-07-10-netbird-selfhosted-overlay.md`](2026-07-10-netbird-selfhosted-overlay.md)
-(Q1/Q2 runtime ruling this rule generalizes),
-[`implemented/2026-06-29-repo-ssot-srp.md`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-repo-ssot-srp.md)
+*Cross-refs:* [`implemented/2026-06-29-repo-ssot-srp.md`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-repo-ssot-srp.md)
 (D1–D9 repo-ownership model this refines, not changes),
 [`reference/dendritic-contract.md`](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/reference/dendritic-contract.md)
 (where the §3 rule would be recorded).

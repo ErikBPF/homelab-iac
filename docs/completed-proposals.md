@@ -31,9 +31,6 @@ component implementation records remain in `desktop-nixos`.
 
 - [Declarative UniFi configuration](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-20-unifi-declarative-config.md)
 - [Cloudflare token Terraform migration](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-28-cloudflare-token-terraform-migration.md)
-- [NetBird implementation plan](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-07-10-netbird-implementation-plan.md)
-- [NetBird and PocketID declarative administration](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-07-11-netbird-terraform-declarative-admin.md)
-- [PocketID as NetBird identity provider](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-07-11-pocketid-idp-for-netbird.md)
 - [Free-tier cloud resources evaluation](proposals/2026-07-02-free-tier-cloud-resources.md)
 
 ## Hosts, hardware, storage, and developer substrate

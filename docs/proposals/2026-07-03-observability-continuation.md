@@ -306,8 +306,8 @@ targets via `/api/ds/query`) before `pull-servarr discovery`.
   SSH only in explicit bootstrap recipes.
 - Voyager and Vanguard were deployed and verified over their tailnet
   addresses. Both public TCP/2222 endpoints are closed or filtered, both
-  tailnet TCP/2222 endpoints remain reachable, and public TCP/443 remains open
-  for the NetBird relay. Final OCI and Tailscale plans report no changes.
+  tailnet TCP/2222 endpoints remain reachable. The retired relay's public
+  TCP/UDP 443 rules were removed on 2026-08-10.
 - The two SSH warnings recovered without a threshold or allowlist change. The
   only other active alert was Orion's cache warmer, which had failed on a
   transient GitHub `504` while fetching `klipper_tmc_autotune`. Its documented

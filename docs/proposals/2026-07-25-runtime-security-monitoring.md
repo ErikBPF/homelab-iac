@@ -29,8 +29,7 @@ service, or central notification service.
 - Fleet OpenSSH uses port 2222, public-key authentication, no root login,
   `MaxAuthTries = 3`, and no TCP/agent forwarding.
 - Active OCI guests accept TCP/2222 only on `tailscale0`; their cloud security
-  list does not publish SSH to the Internet. Public TCP/UDP 443 remains for the
-  NetBird relay.
+  list publishes neither SSH nor the retired relay's TCP/UDP 443 surface.
 - Fail2ban bans after three retries, starts with a one-hour ban, and increments
   repeat bans.
 - Host journals already flow through Alloy to Loki with a static `host` label.

@@ -3,6 +3,13 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
+test ! -e "$root/docs/proposals/2026-07-10-netbird-selfhosted-overlay.md"
+test -f "$root/docs/decisions/2026-08-10-pangolin-netbird-retirement.md"
+grep -Fq 'NetBird retired 2026-08-10' \
+  "$root/docs/decisions/2026-08-10-pangolin-netbird-retirement.md"
+! grep -Fq 'proposals/2026-07-10-netbird-selfhosted-overlay.md' \
+  "$root/docs/README.md" "$root/docs/proposal-index.md"
+
 if grep -Eq 'length == [0-9]+' "$root/bin/homelab" "$root/tests/contracts.sh"; then
   echo "repository validation must not hardcode the inventory size" >&2
   exit 1
