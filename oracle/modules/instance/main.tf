@@ -82,47 +82,16 @@ resource "oci_core_security_list" "voyager" {
     protocol    = "all"
   }
 
-  # SSH 22: the Ubuntu entrypoint + nixos-anywhere path. Closed entirely once
-  # this host becomes a NetBird public relay (relay_public_surface = true,
-  # NetBird RFC §6b-H2/Q8-b) — a standing public IP is a scan-accreting target
-  # and 22 isn't needed post-cutover. Fleet SSH on 2222 is tailnet-only and
-  # therefore has no OCI ingress rule.
+  # SSH 22 exists only for the Ubuntu entrypoint + nixos-anywhere bootstrap.
+  # Fleet SSH on 2222 is tailnet-only and has no OCI ingress rule.
   dynamic "ingress_security_rules" {
-    for_each = var.relay_public_surface ? [] : [1]
+    for_each = var.bootstrap_ssh_enabled ? [1] : []
     content {
       protocol = "6" # TCP
       source   = var.ssh_ingress_cidr
       tcp_options {
         min = 22
         max = 22
-      }
-    }
-  }
-
-  # NetBird relay public surface (RFC §5/§6b-H2, TODO(Phase-O): apply only from
-  # a wired LAN host; verify billing — reserved IP is free within 1/tenancy).
-  # The relay's single port, two protocols: WSS(tcp) + QUIC(udp), world-open by
-  # design (a public relay must be reachable by any peer). NB_ENABLE_STUN stays
-  # unset (host-side), so no UDP/3478 is ever opened here.
-  dynamic "ingress_security_rules" {
-    for_each = var.relay_public_surface ? [1] : []
-    content {
-      protocol = "6" # TCP
-      source   = "0.0.0.0/0"
-      tcp_options {
-        min = 443
-        max = 443
-      }
-    }
-  }
-  dynamic "ingress_security_rules" {
-    for_each = var.relay_public_surface ? [1] : []
-    content {
-      protocol = "17" # UDP
-      source   = "0.0.0.0/0"
-      udp_options {
-        min = 443
-        max = 443
       }
     }
   }
@@ -213,12 +182,9 @@ resource "oci_core_instance" "voyager" {
   }
 }
 
-# --- Reserved public IP (NetBird RFC §4/§4a) --------------------------------
-# TODO(Phase-O): apply only from a wired LAN host; verify billing (reserved IP
-# free within 1/tenancy). Oracle Always-Free includes exactly one reserved
-# public IP per tenancy — it survives instance recreate/terminate, unlike the
-# ephemeral IP above. Attached to this instance's primary private IP so
-# `relay.<zone>`/`relay2.<zone>` (cloudflare/dns) never need updating.
+# --- Reserved public IP ------------------------------------------------------
+# Oracle Always-Free includes exactly one reserved public IP per tenancy. Keep
+# Voyager's DR address stable across instance recreation.
 data "oci_core_vnic_attachments" "voyager" {
   count          = var.create_instance && var.reserve_public_ip ? 1 : 0
   compartment_id = var.compartment_ocid

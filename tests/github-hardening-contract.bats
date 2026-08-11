@@ -18,7 +18,7 @@ expected = {
     "nanda_colors", "nstech-dev-technical-test", "nstech-mdm-technical-test",
     "opencode-flake", "renovate-config", "romozinha", "sail", "sail-dev",
     "servarr", "spicyphus", "terraform-provider-adguardhome",
-    "terraform-provider-litellm", "terraform-provider-netbird", "vault",
+    "terraform-provider-litellm", "vault",
     "zmk-config-chary",
 }
 declared = set(re.findall(r'^\s{4}([a-zA-Z0-9_-]+)\s+=\s+\{', repos, re.M))

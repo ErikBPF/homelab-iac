@@ -48,16 +48,9 @@ inputs = {
   # Free-tier guard: alert on any real spend. Override via OCI_BUDGET_EMAIL.
   budget_alert_email = get_env("OCI_BUDGET_EMAIL", "erikbogado@gmail.com")
 
-  # NetBird public relay (self-hosted overlay RFC §4/§4a/§6b-H2). vanguard is
-  # this shared VCN's public relay (R3a), so its security list now carries the
-  # relay posture: SSH closed, 443/tcp+udp world-open. Applied
-  # from a wired LAN host. Env override (OCI_RELAY_PUBLIC_SURFACE=false) still
-  # closes it. Voyager owns the tenancy's reserved public IP; vanguard uses an
-  # ephemeral IP pinned in DNS by a static TF record (cloudflare/dns relay2).
-  # telstar
-  # (compute-telstar) sets neither, so it stays on the module defaults.
-  reserve_public_ip    = true
-  relay_public_surface = get_env("OCI_RELAY_PUBLIC_SURFACE", "true") == "true"
+  # Keep Voyager's DR address stable, but expose no bootstrap SSH after cutover.
+  reserve_public_ip     = true
+  bootstrap_ssh_enabled = false
 
   # Always-Free A1 allocation (pool total is 4 OCPU / 24 GB). Starts at 1/6 to
   # land scarce capacity and validate the flow; upgrade later by exporting

@@ -19,13 +19,6 @@ Terragrunt). Components, each under its own top-level dir:
 - **`github/`** — repo settings + Actions/workflow-token permissions
   (`integrations/github`) for all active `ErikBPF` repositories. Codifies the toggles whose
   drift broke the auto-update lanes. See `docs/2026-07-08-github-repo-iac.md`.
-- **`netbird/`** — the self-hosted NetBird overlay admin (`netbirdio/netbird`):
-  setup keys, groups, default-deny policy, split-DNS (`nameservers/`), routes.
-  The declarative replacement for the netbird dashboard (whose SSO is deferred —
-  upstream bug). Control plane lives on `discovery` (desktop-nixos). Tailnet-only
-  endpoint; apply from a wired LAN host. See `netbird/APPLY.md`.
-- **`pocketid/`** — the NetBird OIDC client (`Trozz/pocketid`): public + PKCE,
-  imported so the live client-id is never re-issued. Pairs with `netbird/`.
 - **`components/litellm/`** — LiteLLM models, aliases, routing, access, and
   budgets through the Terraform provider. The runtime container stays in
   `servarr`; provider secret values stay in Vault.
@@ -34,7 +27,6 @@ Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
 ## Active implementation plan
 
-- [`docs/2026-07-17-netbird-edge-consolidation-implementation-plan.md`](docs/2026-07-17-netbird-edge-consolidation-implementation-plan.md) — evaluate and stage an IaC-first NetBird Reverse Proxy pilot, move peer-only DNS into NetBird custom zones, retain AdGuard for filtered LAN DNS, and gate any SWAG retirement on compatibility and availability evidence.
 - [`docs/2026-07-12-infrastructure-ssot-implementation-plan.md`](docs/2026-07-12-infrastructure-ssot-implementation-plan.md) — fleet-wide infrastructure-resource SSOT, LiteLLM Terraform control plane, runtime-secret cutover, DR, and bounded chaos engineering.
 - [`docs/2026-07-12-litellm-provider-strategy.md`](docs/2026-07-12-litellm-provider-strategy.md) — provider importer, metadata parity, least-privilege authentication, and temporary-fork exit criteria.
 - [`docs/behaviors/infra-ssot-hard-cutover/`](docs/behaviors/infra-ssot-hard-cutover/) — human behavior seed and TDD contract.

@@ -67,17 +67,7 @@
       "zone": "homelab.pastelariadev.com"
     }
   },
-  "netbird": {
-    "dnsDomain": "netbird.internal",
-    "managementUrl": "https://nb.homelab.pastelariadev.com",
-    "overlayCidr": "10.100.0.0/16",
-    "relayHosts": [
-      "relay.pastelariadev.com",
-      "relay2.pastelariadev.com"
-    ]
-  },
   "overlays": {
-    "netbird": "10.100.0.0/16",
     "tailscale": "100.64.0.0/10"
   },
   "services": {
