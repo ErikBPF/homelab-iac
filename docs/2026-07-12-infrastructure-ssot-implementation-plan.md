@@ -51,7 +51,7 @@ Official `BerriAI/litellm` v0.2.2 must pass a canary against LiteLLM 1.91.2. It 
 - [ ] **S09: Discovery runtime-secret cutover** `risk:high` `depends:[S08]` `HITL`
   > Discovery dotenv/sops sources retain config/bootstrap only; runtime stacks consume Vault Agent renders.
 - [ ] **S10: Remaining compose/host secret cutovers** `risk:high` `depends:[S08]` `HITL`
-  > Kepler, Orion, Voyager, OpenCode, Hermes, and NetBird runtime credentials are Vault-sourced; ignored plaintext work copies are eliminated.
+  > Kepler, Orion, Voyager, OpenCode, and Hermes runtime credentials are Vault-sourced; ignored plaintext work copies are eliminated.
 - [ ] **S11: SOPS and secret hygiene gates** `risk:medium` `depends:[S09,S10]`
   > CI rejects plaintext/tracking errors; weekly trusted-host decrypt checks and quarterly two-copy escrow drills alert on failure.
 - [ ] **S12: Backup and DR hardening** `risk:high` `depends:[S01,S08]`
@@ -59,7 +59,7 @@ Official `BerriAI/litellm` v0.2.2 must pass a canary against LiteLLM 1.91.2. It 
 - [ ] **S13: Bounded chaos harnesses** `risk:medium` `depends:[S12]`
   > Chaos Mesh covers disposable k8s, Toxiproxy covers isolated dependencies, and confirmed recipes test production recovery paths safely.
 - [ ] **S14: Canonical network-component cutovers** `risk:high` `depends:[S01,S12]` `HITL`
-  > UniFi, Tailscale, Cloudflare, AdGuard, NetBird, and PocketID reach zero-diff from standardized component units.
+  > UniFi, Tailscale, Cloudflare, and AdGuard reach zero-diff from standardized component units.
 - [ ] **S15: Remaining infrastructure cutovers** `risk:medium` `depends:[S01,S12]` `HITL`
   > GitHub, Oracle, Vault, and other stable-provider resources use canonical units and independent state.
 - [ ] **S16: Full recovery exercise** `risk:high` `depends:[S05,S06,S09,S10,S11,S12,S13,S14,S15]` `HITL`
