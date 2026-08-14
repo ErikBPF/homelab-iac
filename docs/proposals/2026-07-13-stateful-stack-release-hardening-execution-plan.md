@@ -3,7 +3,8 @@
 **Status:** In progress — P0, Kepler recovery, Discovery P1 SWAG adoption, P2
 AdGuard in-place adoption, P3 secondary-DNS outage proof, and P4 full AdGuard
 Terraform ownership, P5 canonical-volume migration, and P6 kindle-dash
-protected automatic releases are complete. P7 is active.
+protected automatic releases are complete. P7 is active; Vaultwarden and Buzz
+PostgreSQL 18 slices are complete.
 
 ## 1. Purpose and authority
 
@@ -840,6 +841,27 @@ SQLite integrity `ok`. Reboot boot ID
 containers healthy. `infra_vaultwarden_data` remains retained for rollback; no
 source volume or backup was deleted.
 
+#### P7 checkpoint — Buzz PostgreSQL 18 complete
+
+Servarr `ae1c295` introduced the hash-gated PostgreSQL 17-to-18 dump/restore
+workflow; fixes through `d7f3a88` made the rollback source explicit, handled
+Compose dotenv safely, prepared the rootless Podman bind mount, retained failed
+targets, and compared extension presence across major versions. Servarr
+`5527ff0` records the value-free per-service ledger.
+
+Approved manifest `f891afe2…` migrated 53 public tables to PostgreSQL 18.4.
+Source and target database fingerprints both matched `5aab4f3b…`; the PG17
+source directory remains retained. Two failed attempts rolled back to healthy
+PG17 before cutover and remain retained as
+`postgres-18.failed-6a362d44ef28` and `postgres-18.failed-18a5716f6059`.
+
+Local and offsite backup restores passed before and after reboot. The first
+reboot watcher timed out while Kepler remained LAN-dark; operator recovery
+returned boot ID `2ac938a2-fd84-4341-9e78-1c8e37ea6b7d`. A subsequent five-minute
+observation held PostgreSQL and relay healthy with zero failed system or user
+units, HTTPS 200, and WebSocket 101 through Pangolin. No source, backup, dump,
+or failed target was deleted.
+
 ### P8 — Terraform control-plane inventory
 
 Inventory Grafana, Harbor, MinIO, Cloudflare, GitHub, Tailscale, and UniFi.
@@ -893,10 +915,10 @@ Stop and request only the narrow missing authority for:
 - unapproved GitHub branch-protection/repository-setting changes;
 - ambiguous ownership or missing/failed backup.
 
-The current active gate is P7: create per-service ledgers and migrate the
-remaining stateful stacks. P6 did not authorize deletion of bind state, volumes,
-snapshots, backups, failed journals, P0 fixtures, P1 evidence, or legacy
-resources.
+The current active gate is P7: resolve Kepler's reboot-return behavior, then
+continue per-service ledgers and migrate the remaining stateful stacks. P6 did
+not authorize deletion of bind state, volumes, snapshots, backups, failed
+journals, P0 fixtures, P1 evidence, or legacy resources.
 
 ## 8. Completion ledger
 
@@ -912,7 +934,7 @@ resources.
 | P4 | Complete | Homelab-IaC through `ff5e633`, `369f0d5`, `1b91cab`; signed provider 0.1.8; disposable lifecycle green; config and filtering production plans no-op; primary DNS recovered through approved recipe | P9 retained-evidence cleanup only |
 | P5 | Complete | Servarr `eaa1f4f`; retained ledger/snapshot/archive; canonical mount and reboot probes green | P9 retained-evidence cleanup only |
 | P6 | Complete | Protected releases through `v0.3.4`; App-merged Servarr pins; exact Harbor parity; fixed pull agent; v0.3.3 rollback and auth-degradation drills; resume fixtures; aligned reporting; scheduled trigger 2026-07-21 13:01:49 -03; live digest/volume/health/PNG green | P9 retained-evidence cleanup only |
-| P7 | Active | P0 inventory; Vaultwarden canonical migration `a0d9ca9`; transition `fd734b73`; post-migration restore `d616b8f1`; reboot/mount/health green; source retained | Next one-service stateful slice |
+| P7 | Active | Vaultwarden canonical migration `a0d9ca9`; Buzz PG18 migration through `d7f3a88`, ledger `5527ff0`, manifest `f891afe2…`, local/offsite restores, fingerprint match, Pangolin 200/101, five-minute post-reboot observation; sources and failed targets retained | Resolve Kepler reboot return, then next one-service stateful slice |
 | P8 | Pending | — | P7 |
 | P9 | Pending | Candidate inventory | P8; per-resource approvals |
 
