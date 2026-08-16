@@ -17,9 +17,6 @@ export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${MINIO_TFSTATE_ROOT_USER:-}}"
 export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${MINIO_TFSTATE_ROOT_PASSWORD:-}}"
 export TF_VAR_state_passphrase="${TF_VAR_state_passphrase:-${UNIFI_STATE_PASSPHRASE:-}}"
 
-# Measure drift against the latest committed IaC, not a stale local checkout.
-git pull --ff-only 2>/dev/null || true
-
 # Telstar's capture loop owns this state while it retries OCI capacity. Planning
 # it concurrently races the remote state lock; its service provides the health
 # signal instead.

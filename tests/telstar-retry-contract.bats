@@ -6,6 +6,14 @@
   grep -Fq 'exit 75' "$script"
 }
 
+@test "retry fails closed and cleans temporary credentials" {
+  script=oracle/bin/telstar-get-retry.sh
+  grep -Fq 'set -euo pipefail' "$script"
+  grep -Fq 'REPO="${REPO:-$HOME/homelab-iac}"' "$script"
+  grep -Fq 'trap cleanup EXIT' "$script"
+  grep -Fq 'grep -iE "public_ip|instance_ocid" "$log" | tail -3 || true' "$script"
+}
+
 @test "lock recovery validates identity age and active writers" {
   script=oracle/bin/telstar-lock-recover.sh
   test -x "$script"

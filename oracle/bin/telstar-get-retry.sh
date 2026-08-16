@@ -3,7 +3,7 @@
 # 60s for up to 7 days until Oracle free-tier A1 capacity frees ("Out of host
 # capacity" is intermittent in sa-saopaulo-1). Run as a systemd --user service
 # (erik) with linger so it survives reboots.
-set -uo pipefail
+set -euo pipefail
 export PATH="/run/current-system/sw/bin:$HOME/.nix-profile/bin:/usr/bin:/bin:$PATH"
 REPO="${REPO:-$HOME/homelab-iac}"
 # discovery's `tofu` is a tenv shim — let it auto-install the pinned OpenTofu.
@@ -14,6 +14,8 @@ export TENV_AUTO_INSTALL="${TENV_AUTO_INSTALL:-true}"
 # and .env.sops's ".sops" extension isn't auto-detected as dotenv, so decrypt via
 # `sops -d --input-type dotenv` into a 600 temp, parse (quote-stripped), wipe it.
 TMPENV="$(mktemp)"; chmod 600 "$TMPENV"
+cleanup() { shred -u "$TMPENV" 2>/dev/null || rm -f "$TMPENV"; }
+trap cleanup EXIT
 sops -d --input-type dotenv --output-type dotenv "$REPO/.env.sops" > "$TMPENV"
 # NB: split on the FIRST '=' via parameter expansion, NOT `IFS='=' read` — the
 # latter treats '=' as a delimiter and eats base64 padding ('=') off the end of
@@ -23,7 +25,8 @@ while IFS= read -r line; do
   v="${v%\"}"; v="${v#\"}"; v="${v%\'}"; v="${v#\'}"
   export "$k=$v"
 done < <(grep -E '^(OCI_[A-Za-z0-9_]+|MINIO_TFSTATE_[A-Za-z0-9_]+|UNIFI_STATE_PASSPHRASE)=' "$TMPENV")
-shred -u "$TMPENV" 2>/dev/null || rm -f "$TMPENV"
+cleanup
+trap - EXIT
 export AWS_ACCESS_KEY_ID="${MINIO_TFSTATE_ROOT_USER:-}"
 export AWS_SECRET_ACCESS_KEY="${MINIO_TFSTATE_ROOT_PASSWORD:-}"
 TG_TF_PATH="$(command -v tofu)"
@@ -44,7 +47,7 @@ while [ "$(date +%s)" -lt "$end" ]; do
   log=$(mktemp)
   if terragrunt apply -auto-approve >"$log" 2>&1; then
     echo ">>> TELSTAR CREATED on attempt $n"
-    grep -iE "public_ip|instance_ocid" "$log" | tail -3
+    grep -iE "public_ip|instance_ocid" "$log" | tail -3 || true
     echo ">>> next: set hosts.telstar.ip in desktop-nixos/modules/meta.nix, just fleet-json, then just deploy-telstar"
     rm -f "$log"; exit 0
   fi

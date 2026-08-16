@@ -6,6 +6,12 @@
   [ "$status" -eq 0 ]
 }
 
+@test "drift check executes its pinned working tree without git refresh" {
+  run grep -E 'git (pull|fetch|clone)' bin/drift-check.sh
+
+  [ "$status" -eq 1 ]
+}
+
 @test "drift check excludes the disposable LiteLLM lifecycle canary" {
   run grep -F -- "--filter '!components/litellm/environments/home/canary'" bin/drift-check.sh
 
