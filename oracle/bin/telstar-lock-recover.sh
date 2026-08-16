@@ -13,6 +13,7 @@ if pgrep -f '(tofu|terragrunt).*compute-telstar' >/dev/null; then
 fi
 
 REPO="${REPO:-$HOME/homelab-iac}"
+export OCI_SSH_PUBKEY_FILE="${OCI_SSH_PUBKEY_FILE:-$HOME/telstar-ssh-key.pub}"
 tmpenv="$(mktemp)"
 trap 'shred -u "$tmpenv" 2>/dev/null || rm -f "$tmpenv"' EXIT
 chmod 600 "$tmpenv"
