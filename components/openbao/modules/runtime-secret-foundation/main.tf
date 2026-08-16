@@ -48,6 +48,21 @@ resource "vault_policy" "iac_writer" {
   ])
 }
 
+resource "vault_policy" "eso" {
+  name   = "eso"
+  policy = <<-EOT
+    path "secret/data/lab/*" {
+      capabilities = ["read"]
+    }
+    path "secret/metadata/lab/*" {
+      capabilities = ["read", "list"]
+    }
+    path "secret/data/shared/*" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
 resource "vault_approle_auth_backend_role" "vault_agent" {
   backend        = vault_auth_backend.approle.path
   role_name      = "vault-agent"
@@ -65,5 +80,15 @@ resource "vault_approle_auth_backend_role" "iac_writer" {
   token_policies = ["homelab-iac-ha-harness"]
   token_ttl      = 3600
   token_max_ttl  = 14400
+  token_type     = "default"
+}
+
+resource "vault_approle_auth_backend_role" "eso" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "eso"
+  bind_secret_id = true
+  token_policies = ["eso"]
+  token_ttl      = 1200
+  token_max_ttl  = 3600
   token_type     = "default"
 }
