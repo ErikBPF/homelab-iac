@@ -27,6 +27,23 @@ while IFS= read -r path; do
   test -d "$root/$path/.git"
 done < <(jq -r '.[].path' "$root/repos.json")
 
+test -L "$root/CLAUDE.md"
+test "$(readlink "$root/CLAUDE.md")" = "AGENTS.md"
+grep -Fxq '/worktrees/' "$root/.gitignore"
+grep -Fxq '/graphify-out/' "$root/.gitignore"
+grep -Fxq '/worktrees/' "$root/.graphifyignore"
+test -f "$root/docs/decisions/2026-08-04-agent-worktree-policy.md"
+grep -Fq \
+  '(decisions/2026-08-04-agent-worktree-policy.md)' \
+  "$root/docs/README.md"
+grep -Fq '### 2026-08-03 — public-host SSH containment' \
+  "$root/docs/proposals/2026-07-25-runtime-security-monitoring.md"
+if grep -Fq 'Identify 15 unmapped offsite SSH accepts' \
+  "$root/docs/proposal-index.md"; then
+  echo "runtime-security index still treats contained public SSH as an open source-review gate" >&2
+  exit 1
+fi
+
 recipes="$(just --justfile "$root/justfile" --summary)"
 for recipe in status audit docs-check fleet-drift fleet-update test; do
   grep -qw "$recipe" <<<"$recipes"

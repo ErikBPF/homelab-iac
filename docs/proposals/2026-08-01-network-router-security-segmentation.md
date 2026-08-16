@@ -1,10 +1,12 @@
 # Home network and router security segmentation
 
-**Status:** Proposed — live sweep complete; containment and authenticated
-controller inventory not started
+**Status:** Proposed — live sweep and detection-control review complete;
+containment and authenticated controller inventory not started
 **Date:** 2026-08-01
+**Last reviewed:** 2026-08-03
 **Owners:** `homelab-iac` (UniFi networks, WLANs, edge policy),
-`desktop-nixos` (host firewall and service authorization), and `homelab`
+`desktop-nixos` (host firewall, service authorization, and managed-host
+inventory), `servarr` (Wazuh rules and event delivery), and `homelab`
 (cross-repo evidence and rollout gates)
 
 ## Goal
@@ -42,6 +44,13 @@ router apply ran.
   inconclusive because silence is reported as `open|filtered`.
 - Sleeping/offline devices remain a blind spot. NanoKVM and Pathfinder were
   offline during the sweep.
+- A read-only follow-up on 2026-08-03 found only Wazuh's local manager agent
+  registered. Its checked configuration runs Syscollector hourly with port
+  and process collection, and its UniFi rule already classifies `honeypot`
+  events as warnings. No OpenCanary, Cowrie, standalone network IDS, or
+  scheduled agentless port-drift scanner exists in the component repositories.
+  Native UniFi honeypot and IDS/IPS enablement remain unverified until the
+  authenticated controller inventory.
 
 ## Executive findings
 
@@ -56,6 +65,9 @@ router apply ran.
 | P1 | UniFi automation does not authenticate the controller certificate | Controller certificate is self-signed, lacks the management IP SAN, expires 2026-08-16, and `allow_insecure = true` | Install/renew a trusted controller certificate and switch IaC to a matching DNS name with verification enabled |
 | P1 | A Ubiquiti bridge reports unmanaged/default state | `.69`, named `U6Pro`, identifies as `UFP-UAP-B` / `Unifi-Protect-UAP-Bridge`, firmware `v1.1.0`, `config_status: default/unmanaged`; SSH accepts password authentication | Reconcile identity/adoption in the controller; rotate device credentials and isolate before trusting it |
 | P1 | Tailscale admin identity is stale in code | live/offline Pathfinder is `100.102.248.13`; `policy.hujson` names `100.104.92.5`, which has no matching peer | Update the named host and policy tests before any network rollout |
+| P1 | Managed-host port inventory is not fleet-wide | Wazuh Syscollector is configured hourly, but live `agent_control` lists only local agent `000`; the other hosts therefore have no central listener inventory | Reuse the planned Wazuh agent rollout and collect listening ports/processes; alert only on a new or widened listener outside the host's declared exposure |
+| P1 | Switch access/trunk policy is absent from IaC | `homelab-iac` declares networks and WLANs but no switch-port profiles; an unknown wired device can still land on Main | Inventory every switch port, disable unused ports, pin access ports to one zone, restrict trunks to named VLANs, and alert on protected-port/client changes where UniFi emits them |
+| P2 | Honeypot detection is wired but no decoy is proven | UniFi CEF reaches Wazuh and rule `100101` matches `honeypot`, but no repository or authenticated inventory proves a honeypot address exists | Use the gateway's native per-network honeypot and prove one synthetic hit reaches Wazuh; do not add a honeypot workload yet |
 | P2 | Two WLANs explicitly disable PMF | `Que Wifi?` and `Wifi Errado` use WPA2 with `pmf_mode = "disabled"`; `Fast` correctly uses WPA3 with PMF required | Use WPA2/WPA3 transition + PMF optional for normal clients; keep PMF disabled only on a separate legacy-IoT SSID with proven incompatible clients |
 | P2 | SMB signing is optional | Kepler and its `.245`/`.250` endpoints report SMB 3.1.1 signing enabled but not required | Require signing after checking client compatibility; keep network source restrictions regardless |
 | P2 | IaC/live WLAN mapping needs reconciliation | HCL comments say all SSIDs use Default, while the active `Wifi Errado` DHCP lease is on Main | Run authenticated refresh/plan from wired LAN and correct comments/IDs before changing WLAN mappings |
@@ -127,6 +139,33 @@ WLAN reuse avoids another SSID:
 Enable WLAN L2 isolation on IoT. It protects WiFi peers but does not replace
 VLAN policy for wired devices or traffic crossing non-UniFi swOS switches.
 
+### IoT admission and egress policy
+
+- Give every infrastructure, IoT, camera, and physical-control device an owner,
+  class, and stable reservation before migration. A new or unknown device does
+  not join Main: block it pending ownership, then use an Internet-only
+  quarantine network after Default is cleared. Randomized phone MACs remain a
+  Clients-inventory concern, not automatic IoT admission.
+- Pin wired IoT/camera access ports to one VLAN. Only AP, controller, and
+  intentional hypervisor/uplink ports are trunks, with an explicit VLAN
+  allow-list. Disable unused switch ports. Do not leave Main as the effective
+  native network on user-access wall ports.
+- Supply gateway DNS and NTP through DHCP. Allow IoT DNS only to the named
+  resolver on TCP/UDP 53 and NTP only to the named source on UDP 123; deny
+  direct external DNS and DoT (`853/tcp`). DoH blocking remains deferred
+  because maintaining endpoint lists is not justified.
+- Start ordinary IoT with Internet egress, but deny routed private/ULA zones,
+  outbound SMTP (`25/tcp`), SMB (`445/tcp`), and NFS/RPC
+  (`111`, `2049`, `4000-4002` TCP/UDP). Record flows for a canary before any
+  per-vendor Internet allow-list. Cameras stay Internet-denied except a bounded
+  firmware-update window proven necessary by a canary.
+- Prefer HAOS-initiated sessions into IoT. Permit an IoT-initiated callback
+  only for a named integration and port. Keep cross-network mDNS off until a
+  canary fails; then reflect only between the required networks and service
+  types supported by the controller.
+- Apply the same routed policy to IPv4 and IPv6. WLAN client isolation is an
+  additional L2 control, not the IPv6 policy.
+
 ## Required policy matrix
 
 Policies are stateful. Specific allows precede the broad deny. Apply the same
@@ -152,6 +191,45 @@ Keep UPnP disabled. Keep `relay.pastelariadev.com` on the non-routable
 placeholder until Voyager's reserved address exists. Public Home Assistant and
 Whisper remain behind Cloudflare Access; do not add home-router forwards.
 
+## Monitoring and deception policy
+
+Reuse the deployed controls. The runtime-security proposal already owns
+firewall-reject scan detection, persistent unknown-client detection, public
+edge drift, and the Suricata/Zeek decision gate. This proposal adds only the
+missing network exposure checks. None of them may delay the P0 NFS/Moonraker
+containment or the first VLAN canary.
+
+| Surface | Minimum control | Owner and action |
+|---|---|---|
+| Managed-host listeners | Wazuh Syscollector hourly, restricted to listening ports for fleet agents; compare protocol, bind address, port, and process with the host's declared exposure | `desktop-nixos` renders the agent policy; `servarr` warns on a new wildcard/untrusted-interface listener. A removed listener stays an availability event, not a security page |
+| Agentless gateway, switch, camera, and IoT surfaces | One bounded observe-only scan from a named monitoring source after controller/policy changes and weekly during migration; scan the documented management/service set, not continuous full-port sweeps | `desktop-nixos` owns the probe runtime; `homelab-iac` owns target zones and expected reachability. Review and accept a baseline before alerting on additions |
+| WAN exposure | Declarative drift asserts no port forward and UPnP disabled; repeat the external IPv4 and global-IPv6 scan after gateway, ISP, or host-firewall changes | `homelab-iac`; any new listener or widened source CIDR is critical |
+| Physical switch ports | Fixed access/trunk profiles, unused ports disabled, and protected-zone client/configuration events retained through UniFi CEF where available | `homelab-iac`; a new client on Main/management or an unplanned port-profile change is critical |
+| Lateral scanning | Rate-limited firewall rejects plus the native UniFi honeypot; scheduled scanner source is named and time-bounded | `servarr` correlates source, zone, distinct ports, and honeypot hit without Prometheus IP/port labels |
+
+### Honeypot decision
+
+Use UniFi Gateway Honeypot first. It is already on the UDM, uses an unused IP
+on a selected network, creates a Security Detection on contact, and can reuse
+the live CEF-to-Wazuh path. Reserve a controller-confirmed address outside the
+DHCP pool on Main during migration, then on Clients and IoT. Add Cameras only
+after its canary is stable. Never port-forward a decoy.
+
+Test with one controlled connection to the documented honeypot test port.
+Confirm source IP/MAC, network, destination, and time survive CEF decoding and
+rule `100101`; then replace the generic keyword rule with a honeypot-specific
+signature. A hit from the named scanner during its maintenance window is test
+evidence. Any other hit requires identifying the client and checking its
+processes, DNS, recent configuration, and peer traffic; do not auto-isolate.
+
+OpenCanary is the fallback only if the native event lacks the source/protocol
+detail needed for an investigation. Cowrie is not justified: its interactive
+SSH/Telnet emulation, captured commands, and uploaded files create a malware,
+privacy, egress, and maintenance boundary this defensive sweep does not need.
+If a fallback is later approved, it must be low-interaction, isolated from all
+trusted zones, denied egress except DNS/NTP/log delivery, contain no production
+credentials or mounts, and remain LAN-only.
+
 ## `homelab-iac` implementation
 
 ### 1. Reconcile before changing anything
@@ -163,6 +241,7 @@ Whisper remain behind Cloudflare Access; do not add home-router forwards.
    and any live policy resources. Resolve the HCL/live WLAN-network mismatch.
 3. Identify `192.168.1.2`, reconcile `.69` adoption/firmware, and list every
    current port forward, UPnP setting, firewall zone/policy, IDS/IPS setting,
+   honeypot network/address, switch-port profile, unused port, CEF category,
    admin account/MFA state, device firmware, and remote-access owner.
 4. Fix Pathfinder's named Tailscale address and tests independently. Do not
    couple that low-risk correction to a router apply.
@@ -202,9 +281,17 @@ new provider or abstraction.
 
 The pinned `filipowm/unifi` provider does not support current UniFi zone-based
 firewall policies. Use native UniFi ZBF for the matrix above. Record the exact
-manual rules in `homelab-iac/unifi/environments/home/POLICY.md`; do not build a
-custom Terraform provider. Add read-only drift comparison only if the official
-API can export these objects reliably without secrets.
+manual rules, switch-port profiles, IDS/IPS mode, honeypot networks/addresses,
+CEF settings, and disabled ports in
+`homelab-iac/unifi/environments/home/POLICY.md`; do not build a custom
+Terraform provider. Add read-only drift comparison only if the official API
+can export these objects reliably without secrets.
+
+Start IDS in notify-only mode on the routed Main, Clients, IoT, and Cameras
+networks. Run the official synthetic test, retain seven days of detections, and
+review false positives and gateway load. Promote reviewed signatures to
+notify-and-block only when each alert has an operator action; do not add
+Suricata or Zeek beside the gateway without a proven visibility gap.
 
 ### 4. Roll out one canary at a time
 
@@ -223,7 +310,9 @@ API can export these objects reliably without secrets.
 ## Acceptance gates
 
 - Fresh authenticated UniFi inventory has no unknown port forward, UPnP is
-  disabled, IDS/IPS state is recorded, and every administrator has MFA.
+  disabled, IDS/IPS and honeypot state are recorded, switch access/trunk
+  profiles are reviewed, unused ports are disabled, and every administrator
+  has MFA.
 - From IoT and Cameras, TCP 22/80/111/443/445/2049/2222/4000-4002/7125/8080
   to Main fails except the named matrix allows.
 - From Clients, UDM management and swOS HTTP fail; Discovery ingress/DNS and
@@ -235,6 +324,16 @@ API can export these objects reliably without secrets.
   camera reboot, and console reboot pass for the canary.
 - External self-scans again report no unexpected TCP port for WAN IPv4 and each
   global-IPv6 host class.
+- One controlled honeypot connection produces one UniFi Security Detection and
+  one source-attributed Wazuh event; an ordinary IoT client cannot reach the
+  honeypot on another zone.
+- Wazuh lists every enrolled canary's listening ports and owning processes. A
+  synthetic unexpected wildcard listener warns; stopping an expected service
+  remains owned by service-health monitoring.
+- The named agentless probe sees only the policy matrix's allowed management
+  and service ports. Its scheduled scan does not create an operator page.
+- A new client on Main/management and an unplanned UniFi port-profile or
+  firewall-policy change produce retained, source-attributed evidence.
 - A saved, reviewed plan contains only the intended network/WLAN changes. Apply
   from wired LAN; verify after each canary; retain the previous UniFi backup.
 
@@ -255,6 +354,14 @@ API can export these objects reliably without secrets.
 - Per-device Internet allow-lists, DNS-over-HTTPS blocking, country blocking,
   and learned anomaly detection: add only after retained flow evidence names a
   failure the base segmentation does not cover.
+- OpenCanary, Cowrie, T-Pot, Internet-facing honeypots, and malware collection:
+  the native gateway honeypot covers the current lateral-scan question without
+  adding an exposed workload.
+- Continuous full-port scanning and a new SNMP/exporter stack: use Wazuh
+  listener inventory, bounded agentless scans, UniFi CEF, and post-change
+  external verification first.
+- Suricata/Zeek: retain the existing runtime-security decision gate; add only
+  if gateway/firewall/DNS evidence cannot answer a documented incident.
 - A custom Terraform provider for UniFi ZBF: do not own this maintenance burden.
 
 ## Sources
@@ -264,4 +371,9 @@ API can export these objects reliably without secrets.
 - [UniFi required ports](https://help.ui.com/hc/en-us/articles/218506997-Required-Ports-Reference)
 - [UniFi WLAN security and PMF](https://help.ui.com/hc/en-us/articles/32065480092951-UniFi-WiFi-SSID-and-AP-Settings-Overview)
 - [UniFi UPnP guidance](https://help.ui.com/hc/en-us/articles/12648697125783-UniFi-Gateway-UPnP)
+- [UniFi Gateway Honeypot](https://help.ui.com/hc/en-us/articles/12569193992727-UniFi-Gateway-Honeypot)
+- [UniFi IDS/IPS](https://help.ui.com/hc/en-us/articles/360006893234-UniFi-Gateway-Intrusion-Detection-and-Prevention-IDS-IPS)
+- [Wazuh system inventory configuration](https://documentation.wazuh.com/current/user-manual/capabilities/system-inventory/configuration.html)
+- [OpenCanary](https://github.com/thinkst/opencanary)
+- [Cowrie](https://docs.cowrie.org/en/stable/README.html)
 - [filipowm/unifi provider](https://github.com/filipowm/terraform-provider-unifi)

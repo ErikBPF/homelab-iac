@@ -25,11 +25,13 @@ blindly overwritten.
 - [Vault runtime secrets platform](decisions/2026-06-29-vault-secrets-platform.md)
 - [Offsite disaster-recovery anchor](decisions/2026-06-30-offsite-dr-crown-jewels.md)
 - [Fleet-wide Renovate](decisions/2026-07-11-fleet-renovate-consolidation.md)
-- [NetBird retirement; Pangolin deferred](decisions/2026-08-10-pangolin-netbird-retirement.md)
+- [Agent repository and worktree policy](decisions/2026-08-04-agent-worktree-policy.md)
+- [NetBird retirement; Pangolin pilot](decisions/2026-08-10-pangolin-netbird-retirement.md)
 
 ## Current records
 
 - [Proposal index and risk/value matrix](proposal-index.md)
+- [Endeavour LUKS authentication](proposals/2026-08-12-endeavour-luks-authentication.md)
 - [Fleet backlog and decision gates](proposals/2026-07-02-open-decisions-and-work.md)
 - [Stateful stack release hardening](proposals/2026-07-13-stateful-stack-release-hardening-execution-plan.md)
 - [Fleet upgrade hardening](proposals/2026-07-12-fleet-upgrade-hardening.md)

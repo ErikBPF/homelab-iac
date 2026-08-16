@@ -1,2 +1,4 @@
-/references/repos/*
+/references/*
+/worktrees/
+/graphify-out/
 *.secrets.json

@@ -15,9 +15,9 @@ jq -e '
     and all(.cidrs[]; test("^([0-9a-fA-F:.]+)/(0|[1-9][0-9]{0,2})$"))
   )
   and (.addressSets["ssh-login-whitelist"].members
-    | sort == ["discovery", "endeavour", "gemini"])
+    | sort == ["discovery", "endeavour", "gemini", "laptop"])
   and (.addressSets["ssh-login-whitelist"].cidrs
-    | contains(["192.168.10.200/32", "192.168.10.205/32"]))
+    | contains(["192.168.10.147/32", "192.168.10.200/32", "192.168.10.205/32"]))
   and all(.hosts[];
     (.trustZone | IN("home", "public", "roaming", "appliance"))
     and (.sshExposure | IN("none", "overlay", "lan-overlay", "public"))

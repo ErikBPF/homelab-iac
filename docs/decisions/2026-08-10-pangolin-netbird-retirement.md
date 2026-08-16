@@ -1,6 +1,7 @@
 # NetBird retirement; Pangolin deferred
 
-**Status:** NetBird retired 2026-08-10; Pangolin remains a separate evaluation
+**Status:** NetBird retired 2026-08-10; Pangolin two-site pilot live, acceptance
+pending
 
 ## Decision
 
@@ -15,10 +16,8 @@
 
 - `desktop-nixos`: clients, Discovery control plane, Voyager/Vanguard relays,
   secrets, fleet facts, tests, and obsolete docs removed. Endeavour, Discovery,
-  Voyager, and Vanguard were activated and verified absent. Kepler has the
-  removal generation staged but remained unreachable after reboot, NanoKVM
-  checks, and Wake-on-LAN; verify it after physical recovery. Laptop is offline
-  and must activate the current source when it next returns.
+  Voyager, Vanguard, and Kepler were activated and verified absent. Laptop is
+  offline and must activate the current source when it next returns.
 - `servarr`: SWAG routes, relay monitoring, database provisioning, and NetBird
   environment names removed. Buzz now uses Tailscale. Discovery and Kepler
   stacks were recreated from the replacement source.
@@ -36,13 +35,23 @@
 
 ## Remaining gate
 
-Recover Kepler physically, confirm it booted the staged generation, and run the
-standard absence check. When the offline laptop returns, switch it to current
-`desktop-nixos` and run the same check. No NetBird service should be restored.
+When the offline laptop returns, switch it to current `desktop-nixos` and run
+the same absence check. No NetBird service should be restored.
 
 ## Pangolin boundary
 
-If application access beyond Tailscale is still needed, evaluate Pangolin Cloud
-with two outbound Newt connectors. Require LTE/restrictive-Wi-Fi access,
-single-site failure, recovery, alert delivery, and soak evidence before calling
-it production. Keep that work separate from this completed retirement.
+The independent Pangolin Cloud pilot was deployed 2026-08-11 with two outbound
+Newt sites (`home-discovery` and `home-kepler`). A user-bound private wildcard
+resource sends only TCP/443 for `*.homelab.pastelariadev.com` to Discovery's
+SWAG ingress. Bootstrap credentials live in Sops; Newt persists rotated site
+credentials locally. Metrics stay loopback-only and feed the existing Alloy
+pipeline.
+
+Both sites passed service, persisted-credential, connector-health, metrics, TLS,
+and SWAG/Grafana database checks. NetBird units, processes, containers, and live
+state are absent on Discovery and Kepler. Keep Tailscale as administration and
+break-glass access.
+
+Do not call Pangolin production until a real Pangolin client passes LTE and
+restrictive-Wi-Fi access, each single-site failure and recovery is exercised,
+the redundancy alert is delivered, and a seven-day soak completes.

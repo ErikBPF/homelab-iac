@@ -1,7 +1,7 @@
 # Runtime security monitoring and anomaly alarms
 
-**Status:** Observe-only alerting implemented; baseline, force-fire, and
-non-overlapping Wazuh ownership gates remain
+**Status:** Security alerting enabled; post-Cleytin Grafana force-fire,
+Vanguard metric deployment, and Wazuh canary-agent gates remain
 **Date:** 2026-07-25
 **Owners:** `desktop-nixos` (host signals), `servarr` (central alerting),
 `homelab-gitops` (Kubernetes signals), `homelab-iac` (external edge), and
@@ -20,9 +20,10 @@ for:
 - unexpected LAN clients, DNS behavior, and public-edge changes;
 - failure of the monitoring controls themselves.
 
-The first release reuses journald, Alloy, Loki, Prometheus, Grafana, fail2ban,
-auditd, and Discord. It does not deploy a SIEM, IDS, event bus, anomaly-learning
-service, or central notification service.
+The initial Grafana release reused journald, Alloy, Loki, Prometheus, Grafana,
+fail2ban, auditd, and Discord. Wazuh and Cleytin were added later under their
+own proposals; this proposal still owns the cross-plane detection and evidence
+gates.
 
 ## Current state
 
@@ -32,15 +33,18 @@ service, or central notification service.
   list publishes neither SSH nor the retired relay's TCP/UDP 443 surface.
 - Fail2ban bans after three retries, starts with a one-hour ban, and increments
   repeat bans.
-- Host journals already flow through Alloy to Loki with a static `host` label.
+- Host journals flow through Alloy or lightweight Vector to Loki with a static
+  `host` label.
 - Host metrics already flow through Alloy to Prometheus.
-- Grafana has a security dashboard with SSH failure counts, raw events, and
-  source-IP extraction, but no Loki-backed security alert rules.
-- Auditd watches PAM, passwd/group/shadow, sudoers, and sudo-log changes, but
-  those events do not page.
-- Firewall rejects are not logged, compose container logs do not reach Loki,
-  and the monitoring stack on Discovery cannot report its own complete loss.
-- Grafana already routes operational alarms to Discord.
+- Grafana has enabled Loki-backed SSH detections and Prometheus-backed
+  security-control health rules.
+- Auditd watches PAM, passwd/group/shadow, sudoers, and sudo-log changes;
+  Grafana pages when auditd or fail2ban reports inactive on a scraped host.
+- Compose journald logs reach Loki. Firewall rejects remain unlogged; the
+  independent offsite dead-man covers complete Discovery loss.
+- Grafana routes alarms to native Discord and authenticated firing-only Cleytin
+  analysis. The independent Discovery dead-man remains separate.
+- Kepler's Wazuh core ingests UniFi CEF, but no fleet host agent is enrolled.
 
 ## Implementation record
 
@@ -160,6 +164,35 @@ service, or central notification service.
   Discovery runs servarr `56131a1`; Grafana provisioned the revised rule with
   `isPaused=true`. Its first live baseline found 40 records across Kepler and
   Orion from one non-whitelisted source.
+
+### 2026-08-03 — live gate audit and follow-up fixes
+
+- Discovery runs `servarr` `c13ad52`. Grafana 13.1.0 is healthy; all five
+  `security-*` rules are file-provisioned, enabled, and evaluating with healthy
+  rule state. The committed provisioning files and live mounts match.
+- Grafana history records 49 firing/recovery transitions for the SSH failure
+  burst rule and 24 for the non-whitelisted-login rule. These prove evaluation
+  and recovery, not delivery through the newer Cleytin contact point.
+- A 24-hour aggregate found 27 non-whitelisted accepted logins: 12 mapped to
+  the fleet `laptop`; 15 on Voyager/Vanguard were subsequently matched to the
+  current home WAN address by four independent egress checks. Public SSH was
+  removed instead of adding that dynamic address to the allowlist.
+- Native Discord and authenticated Argus/Cleytin receivers are provisioned.
+  The existing labeled route canary returned HTTP 202 after the restart. It
+  exercises authenticated Argus ingestion directly; a controlled Grafana rule
+  transition and receipt remains required.
+- Current Loki journal traffic covers Archinaut, Discovery, Endeavour, Kepler,
+  Orion, Vanguard, and Voyager. Prometheus receives active auditd/fail2ban
+  state from Discovery, Endeavour, Kepler, Orion, and Voyager. Vanguard runs
+  the same lightweight node exporter but was not scraped.
+- Follow-up source changes are not deployed: merged `servarr` commit `25e78d2`
+  adds the Vanguard node-exporter scrape, and `desktop-nixos` prepares
+  `verify-wazuh-siem` use a syslog-shaped CEF fixture and fail unless decoder
+  `unifi-cef` plus rule `100100` match.
+- Kepler's Wazuh manager, indexer, and dashboard are healthy with fresh UniFi
+  archives and receiver-age telemetry. The manager lists only local agent
+  `000`; reusable NixOS agent and one-workstation/one-server canaries remain
+  gated by the Wazuh retention and credential decisions.
 
 ## Decisions
 
