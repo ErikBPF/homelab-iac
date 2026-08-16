@@ -21,6 +21,7 @@ export TF_VAR_state_passphrase="${TF_VAR_state_passphrase:-${UNIFI_STATE_PASSPHR
 # it concurrently races the remote state lock; its service provides the health
 # signal instead.
 out=$(terragrunt run --all \
+  --parallelism 1 \
   --filter '!oracle/compute-telstar' \
   --filter '!components/litellm/environments/home/canary' \
   --filter '!components/openbao/environments/home/runtime-secret-foundation' \
