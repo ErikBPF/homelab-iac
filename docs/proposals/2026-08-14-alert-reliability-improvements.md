@@ -1,7 +1,7 @@
 # Alert reliability improvements — truthful container state and actionable job failures
 
-**Status:** In progress — implementation merged and cache classification
-complete; cache retry, deployment, and live proof pending
+**Status:** In progress — producer and bounded-retry fixes deployed; three
+Airflow image-pull alerts remain behind Harbor credential recovery
 **Date:** 2026-08-14
 **Last reviewed:** 2026-08-16
 **Owners:** `desktop-nixos` (collector startup and host diagnostics), `servarr`
@@ -182,6 +182,24 @@ scope.
   [#185](https://github.com/ErikBPF/desktop-nixos/pull/185) and Servarr PR
   [#239](https://github.com/ErikBPF/servarr/pull/239); nothing was deployed,
   restarted, or force-fired.
+
+## Operational follow-up — 2026-08-16
+
+- Transient Discovery wiki seed, offsite restic, and IaC drift failures
+  recovered without workload recreation. Orion's retained logs proved DNS
+  failure; only failed state was reset, and the 56.6 GB cache build was not
+  retried automatically.
+- `desktop-nixos` PR
+  [#187](https://github.com/ErikBPF/desktop-nixos/pull/187) adds bounded retries
+  to the cheap wiki/restic jobs and deploys pinned IaC/Telstar execution.
+- Telstar's exact remote lock remains. The command maps an emitted lock error to
+  exit 75 without a systemd restart; the live backend call stayed blocked before
+  emitting it, so the exact retry unit was paused. Force-unlock requires the
+  exact UUID and refuses an active writer; none was run.
+- Grafana now reports `active=3`, all for unavailable Airflow API, scheduler,
+  and DAG-processor replicas. Runtime secrets are in Vault and the
+  digest-pinned GitOps release is manual; rollout waits for a pull-only robot
+  because the Vault admin credential returns HTTP 401 from live Harbor.
 
 ## Risks and rollback
 
