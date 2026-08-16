@@ -6,9 +6,22 @@
   grep -q 'resource "vault_auth_backend" "approle"' "$module"
   grep -q 'resource "vault_policy" "home_read"' "$module"
   grep -q 'resource "vault_policy" "iac_writer"' "$module"
+  grep -q 'resource "vault_policy" "eso"' "$module"
   grep -q 'resource "vault_approle_auth_backend_role" "vault_agent"' "$module"
   grep -q 'resource "vault_approle_auth_backend_role" "iac_writer"' "$module"
+  grep -q 'resource "vault_approle_auth_backend_role" "eso"' "$module"
   ! grep -R -q '^import {' components/openbao
+}
+
+@test "S08 preserves the ESO read-only policy and TTL" {
+  module=components/openbao/modules/runtime-secret-foundation/main.tf
+
+  grep -Fq 'path "secret/data/lab/*"' "$module"
+  grep -Fq 'path "secret/metadata/lab/*"' "$module"
+  grep -Fq 'path "secret/data/shared/*"' "$module"
+  grep -Fq 'token_policies = ["eso"]' "$module"
+  grep -Fq 'token_ttl      = 1200' "$module"
+  grep -Fq 'token_max_ttl  = 3600' "$module"
 }
 
 @test "S08 root-bootstrap unit is excluded from unattended AppRole drift" {
