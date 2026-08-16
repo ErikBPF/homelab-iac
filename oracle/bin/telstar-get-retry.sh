@@ -26,12 +26,13 @@ done < <(grep -E '^(OCI_[A-Za-z0-9_]+|MINIO_TFSTATE_[A-Za-z0-9_]+|UNIFI_STATE_PA
 shred -u "$TMPENV" 2>/dev/null || rm -f "$TMPENV"
 export AWS_ACCESS_KEY_ID="${MINIO_TFSTATE_ROOT_USER:-}"
 export AWS_SECRET_ACCESS_KEY="${MINIO_TFSTATE_ROOT_PASSWORD:-}"
-export TG_TF_PATH="$(command -v tofu)"
+TG_TF_PATH="$(command -v tofu)"
+export TG_TF_PATH
 # SSH pubkey injected into the telstar instance (a pubkey is not secret). Lets
 # the deploy host reach telstar for just deploy-telstar. Override via env (the
 # declarative discovery service points this at a nix-managed file).
 export OCI_SSH_PUBKEY_FILE="${OCI_SSH_PUBKEY_FILE:-$HOME/telstar-ssh-key.pub}"
-cd "$REPO/oracle/compute-telstar"
+cd "$REPO/oracle/compute-telstar" || exit
 
 end=$(( $(date +%s) + 7 * 24 * 3600 ))
 sleep_s="${SLEEP_SECONDS:-60}"
@@ -47,7 +48,10 @@ while [ "$(date +%s)" -lt "$end" ]; do
     echo ">>> next: set hosts.telstar.ip in desktop-nixos/modules/meta.nix, just fleet-json, then just deploy-telstar"
     rm -f "$log"; exit 0
   fi
-  if grep -q "Out of host capacity" "$log"; then
+  if grep -q "Error acquiring the state lock" "$log"; then
+    echo ">>> attempt $n BLOCKED by remote state lock — operator recovery required"
+    tail -25 "$log"; rm -f "$log"; exit 75
+  elif grep -q "Out of host capacity" "$log"; then
     echo "attempt $n: Out of host capacity — retry in ${sleep_s}s"
   else
     echo ">>> attempt $n FAILED (non-capacity) — stopping. Tail:"
