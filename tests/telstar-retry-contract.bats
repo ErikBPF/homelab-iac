@@ -25,3 +25,8 @@
   grep -Fq '240' "$script"
   grep -Fq 'force-unlock -force' "$script"
 }
+
+@test "lock recovery supplies the Telstar public key" {
+  script=oracle/bin/telstar-lock-recover.sh
+  grep -Fq 'OCI_SSH_PUBKEY_FILE="${OCI_SSH_PUBKEY_FILE:-$HOME/telstar-ssh-key.pub}"' "$script"
+}
