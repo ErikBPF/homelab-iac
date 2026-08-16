@@ -1,7 +1,7 @@
 # Repository responsibility hardening — publish, pin, and delegate
 
-**Status:** In progress — producer leaves and exact Servarr activation are
-landed; runtime equivalence, immutable Servarr publication, and rollout remain
+**Status:** In progress — P0–P2 and the exact Servarr Discovery canary are
+complete; immutable Servarr publication and credential-gated recovery remain
 **Date:** 2026-08-16
 **Last reviewed:** 2026-08-16
 **Owners:** `homelab` (cross-repository gates), each producer repository (its
@@ -116,13 +116,15 @@ Use `homelab-iac-drift` as the read-only canary.
    the service sandbox or runtime inputs.
 2. Keep only scheduling, sandboxing, credential projection, and reporting in
    `desktop-nixos`.
-3. Run the legacy checkout and pinned command back-to-back at the same commit;
-   compare normalized plans.
-4. Remove the runtime `git pull` only after equivalence and emergency pin-bump
-   procedures are recorded.
+3. Prove the pinned source is byte-identical to the Git archive for the recorded
+   commit, then run one read-only plan. Live plans are observational evidence,
+   not stable equality fixtures: provider state can change between executions.
+4. Remove the runtime `git pull` only after source identity, the successful
+   pinned plan, and emergency pin-bump procedures are recorded.
 
 **Gate:** the service executes the recorded revision with no sibling checkout or
-runtime source fetch, and two equivalent plan paths are retained as evidence.
+runtime source fetch; the Git archive, locked Nix input, and deployed store path
+have the same source hash; and the pinned read-only plan completes.
 
 ### P3 — migrate remaining live-checkout execution
 
@@ -147,8 +149,8 @@ deploy → prove health and rollback → remove the mutable path.
 |---|---|---|
 | P0 | All 13 live Applications are manual. The Airflow repository URL now uses GitHub SSH on port 443, matching the other Applications. | After Harbor recovery, sync only Airflow at reviewed GitOps merge `d736a9dfbcc58931881d0b636741f4fdb749efad`. |
 | P1 | Vendored fleet snapshots, ownership docs, and the Servarr authority-label explanation are landed and validated. | Retain fleet and registry drift gates. |
-| P2 | Discovery runs drift detection from an exact `homelab-iac` input with no runtime source refresh. Producer hardening is merged and the consumer pin is updated. | Compare one normalized pinned plan with its legacy baseline, deploy the new consumer, and retain evidence. |
-| P3 | Servarr's runtime-directory boundary and machine-bound v2 activation are merged. Operator and Kindle activation share the locked `servarr-pull` path; Discovery currently has no `.deploy-commit`. | Publish Servarr scripts through a CI-fetchable immutable channel, pin all Harbor/Kindle callers to it, then canary Discovery. |
+| P2 | Complete on Discovery. Drift runs from exact IaC revision `5de040bd…`; its Git archive, locked Nix input, and deployed store path share NAR hash `sha256-FRKTI+4TLDkPrvBEkshA1L0500V4qTYv+/v4QXnSyUY=`. The read-only canary completed with drift exit `2` and systemd result `success`. | Retain the pin/hash/invocation evidence and bump leaf-first for producer changes. |
+| P3 | Exact Servarr activation is proven on Discovery at `8307056b…`. The v2 pin, health checks, rollback to `ecae553…`, and repin passed without container recreation. | Publish Servarr scripts through an explicitly authorized CI-fetchable immutable channel, then pin Harbor/Kindle callers to it. |
 
 ## Routed out of scope
 
@@ -224,6 +226,31 @@ and rollback gates. IaC apply remains human-approved.
   rejects v1/v2 overlap, routes operator and Kindle activation through the
   shared lock, and pins the merged IaC producer. Full flake evaluation and 134
   focused tests pass.
+- `desktop-nixos` PRs
+  [#189](https://github.com/ErikBPF/desktop-nixos/pull/189),
+  [#190](https://github.com/ErikBPF/desktop-nixos/pull/190), and
+  [#191](https://github.com/ErikBPF/desktop-nixos/pull/191) merged as
+  `2bd070aba59a62778a6b2a91c87e12a911abfc7d`,
+  `1c9281b6bd9ee1e7f3a054c1bf131545cce49f32`, and
+  `9a4b599c65b746440ce77ba50e22b1bdd59a628f`. They provide Git for
+  Terragrunt repository discovery, initialize metadata in the archive copy,
+  and pin the serialized producer revision.
+- `homelab-iac` PR [#67](https://github.com/ErikBPF/homelab-iac/pull/67)
+  merged as `5de040bd3999fb16f6f14f81ab857fcc1b29f46b`, serializing
+  `terragrunt run --all` against the shared provider cache. The focused Bats
+  suite passes; the full suite has 49 passes and only its existing intentional
+  LiteLLM-provider red test.
+- Discovery deployed desktop merge `9a4b599c…`. Drift invocation
+  `f2cce2b006ef4e92b55e342888bfa377` completed read-only with exit `2` and
+  systemd result `success`. The exact Git archive, consumer lock, and deployed
+  Nix store source all hash to
+  `sha256-FRKTI+4TLDkPrvBEkshA1L0500V4qTYv+/v4QXnSyUY=`.
+- Discovery's v2 Servarr pin now records `8307056b8e5943d517672deba28fe6d254ccdf48`.
+  Pin verification, `servarr-pull`, Harbor, Kindle health, rollback to
+  `ecae553…`, and repin passed without recreating containers.
+- Telstar now exposes the existing remote-state lock as operator recovery
+  required and exits `75` without retry. Lock
+  `95a806a3-2c59-ab68-20e0-821a8534056a` was not force-unlocked.
 
 ## Implementation collision audit
 
@@ -233,6 +260,10 @@ and rollback gates. IaC apply remains human-approved.
 | The proposed Servarr and desktop changes shared dirty worktrees with AI-model, Gemini, Endeavour, overlay, lock-file, alert, and Tailscale work. | Leaves and consumer were rebuilt from current `main`; unrelated working-tree changes remain untouched. |
 | Airflow alone used GitHub SSH port 22, so the reviewed GitOps SHA still left repository access vulnerable to networks that block that port. | Canonicalize it to `ssh://git@ssh.github.com:443/...`; use the new GitOps merge for the eventual manual sync. |
 | A v1 exact pin and v2 machine pin cannot safely share `.deploy-commit`. | Both writers reject the other version before mutation. Live Discovery inventory found no pin, so no migration is currently required. |
+| Terragrunt's `get_repo_root()` still invokes Git even when source delivery no longer uses Git. | Keep `git` as a runtime input; this is command compatibility, not a mutable source fetch. |
+| GitHub archive inputs omit `.git`, while Terragrunt requires repository metadata. | Initialize a local empty repository in the copied state directory. No remote or sibling checkout is read. |
+| Parallel `tofu init` processes sharing one plugin cache stalled on fresh source. | Serialize the producer's existing `terragrunt run --all` with `--parallelism 1`; do not add another cache or lock layer. |
+| Normalized plans from separate times differed because live provider state changed and producer summaries were bounded. | Use immutable source identity as the equivalence gate and retain one successful pinned read-only invocation. Do not treat live plan text as a deterministic fixture. |
 
 ## Risks
 
@@ -266,13 +297,9 @@ and rollback gates. IaC apply remains human-approved.
    Harbor setup, proxy-cache, `mirror-kindle`, and the Kindle agent to that same
    artifact. Do not add a private Git input without an explicit credential and
    rotation design.
-3. Deploy `desktop-nixos` merge
-   `a8e87f1344614907df9c80fcccf289b4fc7cdd32` to Discovery, create its v2 pin at
-   merged Servarr revision `8307056b8e5943d517672deba28fe6d254ccdf48`, and
-   verify the pin hash, commit/tree, `servarr-pull`, Harbor, Kindle, and rollback
-   before widening. Current live inventory has no `.deploy-commit`.
-4. Compare and retain one normalized pinned IaC drift plan against its legacy
-   baseline. Telstar force-unlock remains a separate destructive gate.
+3. Reconcile Telstar's stale remote-state lock only under explicit destructive
+   authorization. The fail-closed service signal is correct and must remain
+   visible until then.
 
 ## References
 
