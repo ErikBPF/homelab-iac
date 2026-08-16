@@ -4,7 +4,10 @@
 > control planes** — network and edge resources, GitHub settings, and LiteLLM
 > API resources. Workload lifecycle stays with its workload repo; secret values
 > stay in Vault.
-> Consumes desktop-nixos's vendored, pinned `fleet.json`.
+> `fleet.json` is a deliberate vendored snapshot of desktop-nixos's canonical
+> file. Refresh and review it when the canonical fleet changes, then commit the
+> snapshot here. Terraform reads only this repo's pinned copy, never a sibling
+> working tree.
 
 Declarative, git-versioned **homelab infrastructure-as-code** (OpenTofu +
 Terragrunt). Components, each under its own top-level dir:
@@ -40,10 +43,10 @@ lifecycle and application behavior.
 
 | Sister repo | Owns | Coupling to this repo |
 |---|---|---|
-| `desktop-nixos` | Fleet host OS (kepler, orion, discovery, pathfinder, laptop…) | **Addressing contract** — the fixed-IP reservations here assign the IPs those hosts use (e.g. `kepler` → `.230`, `homeassistant` → `.205`, `archinaut` → `.225`, `nix-erik` → `.125`). Change a host's IP in one repo, update the reservation in the other. |
+| `desktop-nixos` | Fleet host OS (kepler, orion, discovery, pathfinder, laptop…) | **Addressing contract** — the fixed-IP reservations here assign the IPs those hosts use (e.g. `kepler` → `.230`, `homeassistant` → `.115`, `archinaut` → `.225`, `nix-erik` → `.125`). Change a host's IP in one repo, update the reservation in the other. |
 | `servarr` | Container stacks on kepler/discovery/orion | Containers talk over the LAN/VLANs defined here; ingress resolves via the static DNS records. |
 | `hermes-flake` | hermes-agent on kepler | Runs on a host addressed by a reservation here. |
-| `home-assistant-config` | HA app config | HA host = the `homeassistant` reservation (`.205`); voice backend on kepler. |
+| `home-assistant-config` | HA app config | HA host = the `homeassistant` reservation (`.115`); voice backend on kepler. |
 | `klipper-biqu` (→ `archinaut`) | 3D-printer host config | Printer host = the `archinaut` reservation (`.225`). |
 
 Rule of thumb: when a host IP or a service hostname changes, the matching half
