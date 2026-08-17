@@ -21,6 +21,7 @@
   grep -Fq 'Error acquiring the state lock' "$script"
   grep -Fq 'ID:' "$script"
   grep -Fq 'Created:' "$script"
+  grep -Fq "s/.*Created:[[:space:]]*//p" "$script"
   grep -Fq 'tofu-state/oracle/compute-telstar/terraform.tfstate' "$script"
   grep -Fq '240' "$script"
   grep -Fq 'force-unlock -force' "$script"
