@@ -1,6 +1,8 @@
 # Gemini persistent code stack
 
-**Status:** Proposed — exploration complete; no configuration or deployment approved
+**Status:** Partially implemented — Galaxy-scoped SSH/Tailscale to Gemini and
+Endeavour, Endeavour sync, and persistent Gemini Herdr workspaces are deployed;
+mobile Termius and native integration proof remain gated
 
 ## 1. Goal
 
@@ -307,7 +309,130 @@ them. Keep tmux installed unless a later audit shows no break-glass value.
 - after switching Orion, SSH and the Gemini container/Herdr session are checked
   live before calling rollout complete.
 
-## 11. Sources
+## 11. Galaxy S25 mobile-access process
+
+### 11.1 Current evidence and scope
+
+Live tailnet status on 2026-08-16 shows:
+
+- Galaxy: `S25 Ultra de Erik`, IPv4 `100.66.253.15`, present;
+- Gemini: IPv4 `100.91.131.59`, online;
+- `homelab-iac/tailscale/acl/policy.hujson` now maps both live IPv4 addresses,
+  permits only `galaxy-s25 -> {gemini,endeavour}:2222`, and tests rejection of
+  SSH to every other fleet host;
+- the reviewed Tailscale policy was applied interactively with `0` additions,
+  `1` in-place change, and `0` destroys; the follow-up plan reports no changes;
+- `desktop-nixos` declares the Termius public key only for `erik` on Gemini and
+  Endeavour; live checks prove it is present for `erik` and absent from root;
+- Orion runs and boots the deployed 2026-08-16 closure, Gemini SSH is active,
+  and the verified ED25519 host fingerprint is
+  `SHA256:Nt/XL0RR+quUkWvUxvUi0X2f0tuOH4ys3Ebe2yz19qk`;
+- Endeavour OpenSSH is active on tailnet IPv4 `100.107.225.13:2222`; its
+  rendered authorized-key file is activated without switching unrelated dirty
+  host changes, and its verified ED25519 host fingerprint is
+  `SHA256:AQKcDydacwz3f3LRYsC066BR2YBoR28kcKnLiiYfCCM`;
+- the stale Gemini Syncthing device ID was replaced with its live public ID;
+  Endeavour carries the laptop Syncthing identity, and a scoped bidirectional
+  `endeavour <-> gemini:22000` tailnet grant is applied and policy-tested;
+- `~/Documents/erik/homelab` is synced to Gemini. Both declared Herdr sessions
+  are active with zero restarts, and the Homelab workspace is live with three
+  tabs and seven panes.
+
+The pilot grants the Galaxy access only to Gemini and Endeavour OpenSSH on port
+2222. It does not make the phone a fleet admin device, enable Tailscale SSH,
+expose a public port, or add an agent web UI. Coding-agent access remains the
+existing server-side `herdr session attach ...` path on Gemini.
+
+### 11.2 Prepare both source changes without activating access
+
+1. In `homelab-iac`:
+   - replace the stale `gemini` IPv4 with `100.91.131.59`;
+   - add `galaxy-s25 = 100.66.253.15`;
+   - allow only `galaxy-s25 -> gemini:2222`;
+   - add policy tests accepting that path and denying Galaxy SSH to Discovery,
+     Kepler, Orion, and the remaining fleet;
+   - run `terragrunt plan` from `tailscale/acl` and review the complete policy
+     replacement before any apply.
+2. In Termius on the Galaxy, generate a dedicated Ed25519 key. The private key
+   stays in Termius; only its public half enters the repository.
+3. In `desktop-nixos` Gemini and Endeavour configuration:
+   - declare the Galaxy public key next to the existing host-specific keys;
+   - authorize it only for `users.users.erik` on those two endpoints;
+   - never add it to `users.users.root` or the fleet-wide key set;
+   - verify no automation uses `root@gemini`, then remove Gemini's existing
+     direct root authorization or record why it must remain.
+4. Verify source before deployment:
+
+   ```bash
+   cd references/repos/desktop-nixos
+   just lint && just fmt-check && just dry orion
+
+   cd ../homelab-iac/tailscale/acl
+   terragrunt plan
+   ```
+
+The phone key is root-equivalent on Gemini because `erik` has passwordless
+sudo. The tailnet rule is therefore the primary blast-radius boundary.
+
+### 11.3 Activate in fail-closed order
+
+1. Land and deploy the `desktop-nixos` key change to Orion first. The Galaxy
+   still has no tailnet route, so the new key is not remotely usable.
+2. From an existing trusted admin device, verify:
+
+   ```bash
+   ssh gemini 'hostname; sudo -n true'
+   ssh gemini 'ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub'
+   ```
+
+   Record the host-key fingerprint for comparison in Termius.
+3. Land the reviewed `homelab-iac` policy change and run `terragrunt apply`
+   from `tailscale/acl`. This resource replaces the complete tailnet policy;
+   do not auto-approve it.
+4. Configure the Termius host with:
+   - address `100.91.131.59` for the IPv4-scoped pilot;
+   - port `2222`;
+   - user `erik`;
+   - the dedicated Galaxy key;
+   - the verified Gemini host-key fingerprint.
+
+   Add a second host for Endeavour using address `100.107.225.13`, port `2222`,
+   user `erik`, the same dedicated Galaxy key, and the verified Endeavour
+   fingerprint above. Do not configure an agent startup command on Endeavour;
+   the persistent Herdr session lives on Gemini.
+
+Use the explicit IPv4 during the pilot. Move to MagicDNS only after equivalent
+IPv6 selectors and policy tests exist; default-deny must remain symmetric.
+
+### 11.4 Live acceptance
+
+With Galaxy Wi-Fi disabled and Tailscale connected:
+
+1. Termius reaches Gemini and Endeavour and reports the expected hostname for
+   each endpoint.
+2. Termius cannot SSH to Discovery, Kepler, Orion, or another fleet host.
+3. `herdr session attach homelab` opens the existing session.
+4. Start or observe a harmless long-running pane, background/close Termius,
+   reconnect, and confirm the same process and agent panes remain.
+5. An existing workstation can still attach normally; only one client drives
+   the session at a time.
+6. `herdr integration status` is captured as evidence. Missing native
+   integrations remain a separate declarative leaf-first change; they do not
+   block basic detach/reattach.
+
+### 11.5 Revocation and rollback
+
+For a lost or untrusted phone, disable the Galaxy node in Tailscale immediately.
+Then remove `galaxy-s25` and its ACL/test entries, apply the tailnet policy, and
+remove the Galaxy public key from Gemini and Endeavour in later host
+deployments. Network revocation comes first so access stops without waiting for
+a host rebuild.
+
+For an ordinary failed pilot, use the same order: remove/apply the ACL first,
+then remove/deploy the host key. Do not remove the existing workstation key or
+Herdr sessions during rollback.
+
+## 12. Sources
 
 - [Codex manual: configuration and local state](https://developers.openai.com/codex/codex-manual.md)
 - [Claude Code: session storage and export](https://code.claude.com/docs/en/sessions)
