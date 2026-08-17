@@ -37,7 +37,7 @@ set -e
 grep -Fq 'Error acquiring the state lock' <<<"$lock_output"
 grep -Fq "ID:        $lock_id" <<<"$lock_output"
 grep -Fq 'Path:      tofu-state/oracle/compute-telstar/terraform.tfstate' <<<"$lock_output"
-created="$(sed -n 's/^  Created:   //p' <<<"$lock_output" | head -1)"
+created="$(sed -n 's/.*Created:[[:space:]]*//p' <<<"$lock_output" | head -1)"
 [ -n "$created" ]
 age=$(( $(date +%s) - $(date -d "$created" +%s) ))
 [ "$age" -ge 240 ] || { echo "refusing recovery: lock is younger than 240 seconds" >&2; exit 1; }
