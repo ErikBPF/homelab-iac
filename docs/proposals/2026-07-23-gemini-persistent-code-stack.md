@@ -1,8 +1,9 @@
 # Gemini persistent code stack
 
-**Status:** Partially implemented — Galaxy-scoped SSH/Tailscale to Gemini and
-Endeavour, Endeavour sync, and persistent Gemini Herdr workspaces are deployed;
-mobile Termius and native integration proof remain gated
+**Status:** Partially implemented and paused at a safe checkpoint — server-side
+Galaxy SSH/Tailscale, Endeavour sync, and persistent Gemini Herdr support are
+deployed and merged; mobile-client acceptance and native integration proof are
+deferred
 
 ## 1. Goal
 
@@ -337,6 +338,14 @@ Live tailnet status on 2026-08-16 shows:
 - `~/Documents/erik/homelab` is synced to Gemini. Both declared Herdr sessions
   are active with zero restarts, and the Homelab workspace is live with three
   tabs and seven panes.
+- source reconciliation completed on 2026-08-17 through
+  [`desktop-nixos#200`](https://github.com/ErikBPF/desktop-nixos/pull/200)
+  (`c0558fa`),
+  [`homelab-iac#70`](https://github.com/ErikBPF/homelab-iac/pull/70)
+  (`4fc15f1`), and
+  [`homelab#39`](https://github.com/ErikBPF/homelab/pull/39) (`0368b60`);
+  required CI, focused security contracts, Orion/Endeavour dry-builds, and the
+  coordination docs check passed.
 
 The pilot grants the Galaxy access only to Gemini and Endeavour OpenSSH on port
 2222. It does not make the phone a fleet admin device, enable Tailscale SSH,
@@ -432,6 +441,27 @@ For an ordinary failed pilot, use the same order: remove/apply the ACL first,
 then remove/deploy the host key. Do not remove the existing workstation key or
 Herdr sessions during rollback.
 
+### 11.6 Paused checkpoint and open-source client choice
+
+No further server-side implementation is required for the pilot. The existing
+mobile key remains valid, restricted by the tailnet ACL and host authorization
+described above.
+
+For an open-source Android client, prefer Termux with OpenSSH: standard
+`~/.ssh/config`, explicit host-key verification, and a direct
+`ssh -t gemini 'exec herdr session attach homelab'` entry path. ConnectBot is
+the simpler GUI fallback. No client migration or private-key transfer was
+performed during this checkpoint.
+
+When work resumes:
+
+1. choose Termius, Termux, or ConnectBot on the Galaxy;
+2. if moving to Termux, generate a new phone-local Ed25519 key and replace the
+   current public key declaratively rather than exporting the existing private
+   key;
+3. complete the allow/deny and detach/reattach checks in section 11.4;
+4. treat native agent-integration restore evidence as a separate follow-up.
+
 ## 12. Sources
 
 - [Codex manual: configuration and local state](https://developers.openai.com/codex/codex-manual.md)
@@ -441,5 +471,7 @@ Herdr sessions during rollback.
 - [Herdr: session state and restore](https://herdr.dev/docs/session-state/)
 - [Herdr: official agent integrations](https://herdr.dev/docs/integrations/)
 - [Herdr: agent automation](https://herdr.dev/docs/agent-automation/)
+- [Termux application source](https://github.com/termux/termux-app)
+- [ConnectBot on F-Droid](https://f-droid.org/packages/org.connectbot/)
 - [Existing Gemini sandbox record](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-07-10-orion-dev-sandbox-microvm.md)
 - [Existing terminal tooling record](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-07-10-terminal-tooling-additions.md)
