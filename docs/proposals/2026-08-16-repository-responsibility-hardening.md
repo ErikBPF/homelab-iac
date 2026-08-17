@@ -1,7 +1,7 @@
 # Repository responsibility hardening — publish, pin, and delegate
 
-**Status:** In progress — P0–P2 and the exact Servarr Discovery canary are
-complete; immutable Servarr publication and credential-gated recovery remain
+**Status:** In progress — P0–P2, the exact Servarr Discovery canary, and Telstar
+lock recovery are complete; Servarr publication and credential recovery remain
 **Date:** 2026-08-16
 **Last reviewed:** 2026-08-16
 **Owners:** `homelab` (cross-repository gates), each producer repository (its
@@ -248,9 +248,25 @@ and rollback gates. IaC apply remains human-approved.
 - Discovery's v2 Servarr pin now records `8307056b8e5943d517672deba28fe6d254ccdf48`.
   Pin verification, `servarr-pull`, Harbor, Kindle health, rollback to
   `ecae553…`, and repin passed without recreating containers.
-- Telstar now exposes the existing remote-state lock as operator recovery
-  required and exits `75` without retry. Lock
-  `95a806a3-2c59-ab68-20e0-821a8534056a` was not force-unlocked.
+- `desktop-nixos` PRs
+  [#192](https://github.com/ErikBPF/desktop-nixos/pull/192),
+  [#195](https://github.com/ErikBPF/desktop-nixos/pull/195), and
+  [#196](https://github.com/ErikBPF/desktop-nixos/pull/196) merged as
+  `190179fd367028742c2938efb24c79f09c01144d`,
+  `f520562c2c5a18484c9ff449138bf593720fe4ec`, and
+  `dfc394c582d8c28e79f282c9c06d33878a1aca49`. They invoke archive-carried
+  helpers through Bash and pin both Telstar recovery fixes leaf-first.
+- `homelab-iac` PRs
+  [#68](https://github.com/ErikBPF/homelab-iac/pull/68) and
+  [#69](https://github.com/ErikBPF/homelab-iac/pull/69) merged as
+  `4688ca36df81c138e68269ac6962e50406fbb6e9` and
+  `7f9968feb662c164891eded784370be1effb2fdc`. Recovery now supplies the required
+  public key and parses Terragrunt-prefixed lock age metadata.
+- After all three encrypted state copies matched SHA-256 and no active Telstar
+  writer existed, stale lock `95a806a3-2c59-ab68-20e0-821a8534056a` was
+  force-unlocked through the exact guarded recipe. Discovery deployed
+  `dfc394c5…`; retry invocation `9c69bea72ed14185aeeb409e92ab839f` reached
+  Oracle, observed `Out of host capacity`, and resumed its 60-second loop.
 
 ## Implementation collision audit
 
@@ -264,6 +280,9 @@ and rollback gates. IaC apply remains human-approved.
 | GitHub archive inputs omit `.git`, while Terragrunt requires repository metadata. | Initialize a local empty repository in the copied state directory. No remote or sibling checkout is read. |
 | Parallel `tofu init` processes sharing one plugin cache stalled on fresh source. | Serialize the producer's existing `terragrunt run --all` with `--parallelism 1`; do not add another cache or lock layer. |
 | Normalized plans from separate times differed because live provider state changed and producer summaries were bounded. | Use immutable source identity as the equivalence gate and retain one successful pinned read-only invocation. Do not treat live plan text as a deterministic fixture. |
+| The Nix archive copy is mode-normalized, so the recovery helper was not executable when the consumer invoked it directly. | Invoke the producer helper through Bash; do not add a second copied script or runtime chmod. |
+| Telstar lock validation evaluated Terraform inputs before backend inspection and lacked `OCI_SSH_PUBKEY_FILE`. | Give recovery the retry command's existing public-key default so validation reaches the exact remote lock. |
+| Terragrunt prefixes lock metadata, so a column-anchored `Created:` parser rejected the confirmed lock silently. | Parse the timestamp after `Created:` regardless of prefix while retaining UUID, path, writer, and minimum-age guards. |
 
 ## Risks
 
@@ -297,9 +316,6 @@ and rollback gates. IaC apply remains human-approved.
    Harbor setup, proxy-cache, `mirror-kindle`, and the Kindle agent to that same
    artifact. Do not add a private Git input without an explicit credential and
    rotation design.
-3. Reconcile Telstar's stale remote-state lock only under explicit destructive
-   authorization. The fail-closed service signal is correct and must remain
-   visible until then.
 
 ## References
 
