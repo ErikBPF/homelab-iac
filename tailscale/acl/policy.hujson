@@ -13,7 +13,8 @@
 		"archinaut":  "100.67.123.113",
 		"voyager":    "100.105.38.10",
 		"vanguard":   "100.90.247.79",
-		"gemini":     "100.127.231.110",
+		"gemini":     "100.91.131.59",
+		"galaxy-s25": "100.66.253.15",
 	},
 
 	// Auto-approve discovery's advertised routes (the node is owned by this
@@ -44,6 +45,10 @@
 		// 1. Admin devices: OpenSSH (port 2222) into everything.
 		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["*:2222"]},
 
+		// Galaxy mobile pilot: OpenSSH only to its two workstation endpoints;
+		// never fleet-admin access.
+		{"action": "accept", "src": ["galaxy-s25"], "dst": ["gemini:2222", "endeavour:2222"]},
+
 		// Endeavour fallback: direct SWAG access when another overlay shadows the
 		// routed 192.168.10.210/32 path.
 		{"action": "accept", "src": ["endeavour"], "dst": ["discovery:80,443"]},
@@ -68,6 +73,10 @@
 			"src":    ["laptop", "endeavour", "pathfinder", "kepler", "orion", "discovery"],
 			"dst":    ["laptop:22000", "endeavour:22000", "pathfinder:22000", "kepler:22000", "orion:22000", "discovery:22000"],
 		},
+		// Gemini syncs only with the replacement workstation carrying the laptop
+		// Syncthing identity. Allow either peer to initiate the stateful connection.
+		{"action": "accept", "src": ["endeavour"], "dst": ["gemini:22000"]},
+		{"action": "accept", "src": ["gemini"], "dst": ["endeavour:22000"]},
 
 		// 6. Preserved: NFS / SMB to the kepler NAS from fleet hosts.
 		{
@@ -174,6 +183,10 @@
 		{"src": "gemini", "deny": ["discovery:3100"]},     // dev sandbox has no Loki grant
 		{"src": "gemini", "accept": ["orion:2222"]},       // build-on-host SSH from the sandbox
 		{"src": "gemini", "deny": ["kepler:2222"]},        // but not admin SSH into the rest of the fleet
+		{"src": "endeavour", "accept": ["gemini:22000"]}, // replacement workstation syncs Gemini
+		{"src": "gemini", "accept": ["endeavour:22000"]}, // Gemini may initiate the same sync
+		{"src": "galaxy-s25", "accept": ["gemini:2222", "endeavour:2222"]}, // mobile reaches only its workstation endpoints
+		{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "orion:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}, // never fleet-admin SSH
 		{"src": "endeavour", "accept": ["voyager:2222", "vanguard:2222"]}, // admin reaches public hosts through Tailscale
 		{"src": "orion", "deny": ["voyager:2222", "vanguard:2222"]},       // ordinary servers cannot administer them
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
