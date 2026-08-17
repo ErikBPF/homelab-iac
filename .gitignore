@@ -44,3 +44,4 @@ Thumbs.db
 
 # devenv git-hooks generated (machine-specific store paths)
 .pre-commit-config.yaml
+/worktrees/
