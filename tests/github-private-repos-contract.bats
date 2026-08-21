@@ -3,7 +3,7 @@
 @test "private model and device repos use least-privilege Actions defaults" {
   config="$BATS_TEST_DIRNAME/../github/repos/terragrunt.hcl"
 
-  for repo in ha-harness cosmo-notes; do
+  for repo in agent-evals ha-harness cosmo-notes; do
     grep -Eq "$repo[[:space:]]*=[[:space:]]*\\{" "$config"
     block="$(grep -A6 -E "$repo[[:space:]]*=[[:space:]]*\\{" "$config")"
     grep -Eq 'visibility[[:space:]]*=[[:space:]]*"private"' <<<"$block"
