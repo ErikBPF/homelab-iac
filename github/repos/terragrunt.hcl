@@ -55,6 +55,10 @@ inputs = {
       visibility   = "private"
       protect_main = false
     }
+    deepseek-harness-flake = {
+      protect_main    = true
+      required_checks = ["check", "secrets"]
+    }
     desktop-nixos = {
       protect_main = true
       required_checks = [
