@@ -65,6 +65,11 @@
     "responsibility": "Buzz package and Home Manager module"
   },
   {
+    "name": "deepseek-harness-flake",
+    "path": "references/repos/deepseek-harness-flake",
+    "responsibility": "DeepSeek Harness package flake"
+  },
+  {
     "name": "ha-harness",
     "path": "references/repos/ha-harness",
     "responsibility": "Private Home Assistant tool-calling model and safety harness"
