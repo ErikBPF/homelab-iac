@@ -63,6 +63,27 @@ resource "vault_policy" "eso" {
   EOT
 }
 
+locals {
+  gitops_eso_lanes = {
+    platform      = "platform/*"
+    homelab       = "lab/*"
+    home-services = "home-services/*"
+  }
+}
+
+resource "vault_policy" "gitops_lane" {
+  for_each = local.gitops_eso_lanes
+  name     = "eso-${each.key}"
+  policy   = <<-EOT
+    path "secret/data/${each.value}" {
+      capabilities = ["read"]
+    }
+    path "secret/metadata/${each.value}" {
+      capabilities = ["read", "list"]
+    }
+  EOT
+}
+
 resource "vault_approle_auth_backend_role" "vault_agent" {
   backend        = vault_auth_backend.approle.path
   role_name      = "vault-agent"
@@ -88,6 +109,17 @@ resource "vault_approle_auth_backend_role" "eso" {
   role_name      = "eso"
   bind_secret_id = true
   token_policies = ["eso"]
+  token_ttl      = 1200
+  token_max_ttl  = 3600
+  token_type     = "default"
+}
+
+resource "vault_approle_auth_backend_role" "gitops_lane" {
+  for_each       = local.gitops_eso_lanes
+  backend        = vault_auth_backend.approle.path
+  role_name      = "eso-${each.key}"
+  bind_secret_id = true
+  token_policies = [vault_policy.gitops_lane[each.key].name]
   token_ttl      = 1200
   token_max_ttl  = 3600
   token_type     = "default"
