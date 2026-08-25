@@ -44,9 +44,11 @@
 	"acls": [
 		// 1. Admin devices: OpenSSH (port 2222) into everything.
 		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["*:2222"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["gemini:6443"]},
 
-		// Galaxy mobile pilot: OpenSSH only to its named endpoints.
-		{"action": "accept", "src": ["galaxy-s25"], "dst": ["gemini:2222", "endeavour:2222", "orion:2222"]},
+		// Galaxy mobile pilot: OpenSSH only to its two workstation endpoints;
+		// never fleet-admin access.
+		{"action": "accept", "src": ["galaxy-s25"], "dst": ["gemini:2222", "endeavour:2222"]},
 
 		// Endeavour fallback: direct SWAG access when another overlay shadows the
 		// routed 192.168.10.210/32 path.
@@ -158,6 +160,7 @@
 	"tests": [
 		{"src": "laptop", "accept": ["kepler:2222"]},    // admin can SSH
 		{"src": "endeavour", "accept": ["kepler:2222", "kepler:2049", "orion:2222", "orion:4321"]}, // replacement workstation
+		{"src": "endeavour", "accept": ["gemini:6443"]}, // admin reaches pastelariadev API
 		{"src": "endeavour", "accept": ["discovery:80", "discovery:443"]}, // admin reaches SWAG directly over Tailscale
 		{"src": "orion", "deny": ["discovery:80", "discovery:443"]}, // non-admin cannot bypass routed SWAG ingress
 		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
@@ -184,8 +187,8 @@
 		{"src": "gemini", "deny": ["kepler:2222"]},        // but not admin SSH into the rest of the fleet
 		{"src": "endeavour", "accept": ["gemini:22000"]}, // replacement workstation syncs Gemini
 		{"src": "gemini", "accept": ["endeavour:22000"]}, // Gemini may initiate the same sync
-		{"src": "galaxy-s25", "accept": ["gemini:2222", "endeavour:2222", "orion:2222"]}, // mobile reaches only its named endpoints
-		{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}, // no other fleet-admin SSH
+		{"src": "galaxy-s25", "accept": ["gemini:2222", "endeavour:2222"]}, // mobile reaches only its workstation endpoints
+		{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "orion:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}, // never fleet-admin SSH
 		{"src": "endeavour", "accept": ["voyager:2222", "vanguard:2222"]}, // admin reaches public hosts through Tailscale
 		{"src": "orion", "deny": ["voyager:2222", "vanguard:2222"]},       // ordinary servers cannot administer them
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
