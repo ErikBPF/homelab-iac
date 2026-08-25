@@ -84,6 +84,15 @@ resource "vault_policy" "gitops_lane" {
   EOT
 }
 
+resource "vault_policy" "wazuh_agent" {
+  name   = "wazuh-agent"
+  policy = <<-EOT
+    path "secret/data/platform/wazuh/wazuh-authd-pass" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
 resource "vault_approle_auth_backend_role" "vault_agent" {
   backend        = vault_auth_backend.approle.path
   role_name      = "vault-agent"
@@ -122,5 +131,15 @@ resource "vault_approle_auth_backend_role" "gitops_lane" {
   token_policies = [vault_policy.gitops_lane[each.key].name]
   token_ttl      = 1200
   token_max_ttl  = 3600
+  token_type     = "default"
+}
+
+resource "vault_approle_auth_backend_role" "wazuh_agent" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "wazuh-agent"
+  bind_secret_id = true
+  token_policies = [vault_policy.wazuh_agent.name]
+  token_ttl      = 3600
+  token_max_ttl  = 14400
   token_type     = "default"
 }
