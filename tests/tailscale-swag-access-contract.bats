@@ -27,3 +27,10 @@
   grep -qF 'type        = map(set(string))' "$variables"
   grep -qF '"k8s.pastelariadev.com" = ["100.76.140.121"]' "$unit"
 }
+
+@test "Orion Wazuh canary can read its enrollment secret" {
+  policy="$BATS_TEST_DIRNAME/../tailscale/acl/policy.hujson"
+
+  grep -qF '{"action": "accept", "src": ["orion"], "dst": ["discovery:8200"]}' "$policy"
+  grep -qF '{"src": "orion", "accept": ["discovery:8200"]}' "$policy"
+}
