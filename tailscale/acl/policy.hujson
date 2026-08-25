@@ -121,6 +121,9 @@
 		//    pods egress SNAT'd to kepler's tailnet IP, so src "kepler" covers them
 		//    (same path rule 7's in-cluster Alloy uses). Blast radius = lab only.
 		{"action": "accept", "src": ["kepler"], "dst": ["discovery:8200"]},
+		// Orion's single Wazuh canary reads only its enrollment password from
+		// OpenBao. Broader fleet enrollment gets a dedicated AppRole first.
+		{"action": "accept", "src": ["orion"], "dst": ["discovery:8200"]},
 
 		// 11. Kepler sends its config backup to voyager's append-only Restic
 		//     receiver. No other voyager service is exposed to Kepler.
@@ -171,6 +174,7 @@
 		{"src": "voyager", "accept": ["discovery:3100"]}, // public host ships SSH journals
 		{"src": "vanguard", "accept": ["discovery:3100"]}, // public host ships SSH journals
 		{"src": "kepler", "accept": ["discovery:8200"]}, // lab ESO reads OpenBao
+		{"src": "orion", "accept": ["discovery:8200"]}, // Wazuh canary reads enrollment secret
 		{"src": "kepler", "accept": ["voyager:8000"]},   // offsite Restic backup
 		{"src": "orion", "accept": ["discovery:9090"]},  // host Alloy ships metrics
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
