@@ -9,6 +9,14 @@
   grep -qF '{"src": "orion", "deny": ["discovery:80", "discovery:443"]}' "$policy"
 }
 
+@test "admin devices can reach pastelariadev on Gemini" {
+  repo_root="$(CDPATH= cd -- "$BATS_TEST_DIRNAME/.." && pwd)"
+  policy="$repo_root/tailscale/acl/policy.hujson"
+
+  grep -qF '{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["gemini:6443"]}' "$policy"
+  grep -qF '{"src": "endeavour", "accept": ["gemini:6443"]}' "$policy"
+}
+
 @test "k8s zone uses discovery's tailnet DNS" {
   module=tailscale/modules/dns/main.tf
   variables=tailscale/modules/dns/variables.tf
