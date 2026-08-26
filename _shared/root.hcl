@@ -29,20 +29,19 @@ generate "encryption" {
       type      = string
       sensitive = true
     }
-
     terraform {
       encryption {
-        key_provider "pbkdf2" "primary" {
+        key_provider "pbkdf2" "current" {
           passphrase = var.state_passphrase
         }
-        method "aes_gcm" "primary" {
-          keys = key_provider.pbkdf2.primary
+        method "aes_gcm" "current" {
+          keys = key_provider.pbkdf2.current
         }
         state {
-          method = method.aes_gcm.primary
+          method = method.aes_gcm.current
         }
         plan {
-          method = method.aes_gcm.primary
+          method = method.aes_gcm.current
         }
       }
     }
