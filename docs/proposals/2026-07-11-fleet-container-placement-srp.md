@@ -9,17 +9,19 @@ extraction sections remain retired and must not be implemented.
 - `homelab-gitops` now owns the lab Kubernetes workload lifecycle and the
   Kubernetes-hosted home/platform services: Immich, Karakeep, Changedetection,
   Langfuse, monitoring, and Wazuh. Argo CD reports every application Healthy and
-  Synced at `homelab-gitops` revision `5c9895ad66c3d19f4c7182966f385661cef9ccb1`.
+  Synced at `homelab-gitops` revision `a1ae7782708e276ad08add0a12976b4dab8324ff`.
 - `servarr` retired the first-wave Compose definitions for Immich, Karakeep,
-  Changedetection, and Langfuse. It remains the owner of household Compose
-  workloads and their runtime lifecycle; “media-only” is a target boundary, not
-  a completed-state claim.
-- Native host Alloy telemetry is live for Orion and Kepler. The temporary
-  Prometheus federation still carries application exporters that native host
-  Alloy does not replace, so removing federation is not yet safe.
+  Changedetection, Langfuse, Discovery monitoring, and the Kepler Wazuh
+  fallback. It remains the owner of household Compose workloads and their
+  runtime lifecycle; “media-only” is a target boundary, not a completed-state
+  claim.
+- Native host Alloy telemetry is live for Discovery and Kepler, including the
+  application exporters previously carried through Discovery Prometheus.
+  Kubernetes Prometheus has no federation config or target.
 - Wazuh's Orion host-agent canary produced an attributed synthetic SSH alert on
-  2026-08-26. The accepted seven-day observation gate ends on 2026-09-02; the
-  Compose fallback must remain until that gate passes.
+  2026-08-26. The operator explicitly waived the seven-day fallback observation
+  gate on 2026-08-26; Kubernetes Wazuh remained Healthy after the Compose
+  fallback was retired.
 - Kepler's real offsite Restic push completed at Servarr revision
   `99e3a00544fa5e517980c7cfa06ab5494c49dbdb`; Prometheus observed a fresh
   `restic_kepler_offsite_last_success_seconds` sample.

@@ -1,12 +1,13 @@
 # Fleet Wazuh SIEM integration
 
-**Status:** In progress; Kubernetes Wazuh is healthy, Orion's attributed agent
-canary started its seven-day observation window on 2026-08-26, and encrypted
-local/offsite restore remains proven. Compose retirement is gated until
-2026-09-02.
+**Status:** In progress; Kubernetes Wazuh is the sole live Wazuh runtime,
+Orion's attributed agent canary and encrypted local/offsite restore remain
+proven, and the Compose fallback was retired on 2026-08-26 after the operator
+explicitly waived the seven-day fallback observation gate.
 **Date:** 2026-07-26
-**Owners:** `servarr` (Wazuh runtime and rules), `desktop-nixos` (host agents
-and host security signals), `homelab-gitops` (Kubernetes security signals),
+**Owners:** `homelab-gitops` (Wazuh runtime, rules, and Kubernetes security
+signals), `desktop-nixos` (host agents and host security signals), `servarr`
+(household Compose security-signal producers),
 `homelab-iac` (network reachability and external control planes), and
 `homelab` (cross-repository policy and acceptance)
 
@@ -27,16 +28,25 @@ The target answers these questions:
   printer, or AI workload lose its security controls?
 - Is the evidence pipeline itself alive, retained, backed up, and testable?
 
-## Current foundation
+## 2026-08-26 deployment record and historical foundation
 
 The following exists on the default branches and live Kepler deployment:
 
 - Wazuh is reconciled by Argo CD in the `homelab` cluster at
-  `homelab-gitops` revision `5c9895ad66c3d19f4c7182966f385661cef9ccb1`.
+  `homelab-gitops` revision `a1ae7782708e276ad08add0a12976b4dab8324ff`.
 - Orion's NixOS-managed rootful Wazuh agent is enrolled as `orion-canary`; a
   harmless synthetic SSH failure produced an attributed rule `5710` alert on
-  2026-08-26. Keep the Compose fallback for the full observation window through
-  2026-09-02.
+  2026-08-26.
+- The operator waived the planned seven-day fallback observation gate on
+  2026-08-26. `servarr` revision
+  `c7dc389ebfca80b5705f11d2670b83d0916831d5` removed the Kepler Wazuh manager,
+  indexer, dashboard, configuration, certificate generator, snapshot scripts,
+  tests, and backup mounts. No persistent host data was deleted.
+- The Kepler `security` Compose stack now contains only ClamAV. Kubernetes Wazuh
+  remained Healthy and Synced after the fallback containers were removed.
+- The Compose-only UniFi silence metric and its Grafana alert were retired with
+  the fallback. Kubernetes Wazuh workload health remains covered by native
+  Kubernetes/Prometheus alerts.
 
 - Wazuh 4.14.6 single-node indexer, manager, and dashboard with digest-pinned
   images, TLS, secret-backed authentication, health checks, persistent volumes,
@@ -45,8 +55,9 @@ The following exists on the default branches and live Kepler deployment:
   (`1515/tcp`), and rootless UniFi syslog (`5514/udp`).
 - UniFi CEF destination `192.168.10.230:5514`; Network and Protect categories
   are enabled and decoder coverage includes OS, Network, and Protect products.
-- Rootless Podman forwarding accepted through its `10.89.0.0/24` internal
-  network while the host firewall remains the external LAN boundary.
+- Kubernetes NodePort Services expose agent and appliance ingest while the host
+  firewall remains the external LAN/tailnet boundary; the dashboard uses the
+  private Traefik ingress.
 - JSON retention for all received Wazuh events; alert-only indexing remains the
   current Filebeat behavior.
 - UniFi CEF decoding with structured source/destination IP, user, action,
@@ -58,10 +69,6 @@ The following exists on the default branches and live Kepler deployment:
   UniFi OS `5.1.19`, reporting device IP `192.168.50.57`; current Network CEF
   reports the gateway as `192.168.1.1`, so the older address remains inventory
   evidence to reconcile rather than an allowlist input.
-- A Prometheus textfile gauge records the latest received UniFi CEF timestamp;
-  Grafana warns after 26 hours of silence and treats missing data as failure.
-- The Kepler compose host configuration includes the `security` stack so Wazuh
-  returns after host reboot.
 - Live decoder fixes in `servarr` PRs #163, #164, and #165 account for Wazuh's
   syslog pre-decoder and split parent/header/extension extraction correctly.
 - A fresh archived Network threat event on 2026-08-02 decoded product,
@@ -151,12 +158,12 @@ Host agents connect to Kepler over Tailscale, with stable agent names matching
 - `1515/tcp`: enrollment, temporarily open only during controlled enrollment
   or restricted to named fleet sources.
 - `5514/udp`: LAN appliance syslog only; never port-forwarded.
-- `5601/tcp`: dashboard remains LAN-bound until an authenticated reverse-proxy
-  decision exists.
+- The dashboard remains private through the cluster ingress; its internal
+  `5601/tcp` port is not a host-published endpoint.
 
-Do not rely on the Wazuh event `location` for appliance attribution under
-rootless Podman: it records the Podman forwarding address. Extract and retain
-CEF device IP, MAC, model, name, source, destination, user, action, and message.
+Do not rely on the Wazuh event transport source for appliance attribution.
+Extract and retain CEF device IP, MAC, model, name, source, destination, user,
+action, and message.
 
 ### D5 — Keep raw security events, but measure the cost
 
@@ -209,8 +216,8 @@ lossy remote-only device.
 |---|---|---|---|
 | `desktop-nixos` | NixOS hosts, OpenSSH, auditd, systemd, firewall, k3s microVM substrate | Reusable Wazuh agent module for capable hosts; security-focused journal/audit/FIM collection; agent health metric | Owns agent package, enrollment projection, service hardening, host labels, and deployment |
 | `homelab-iac` | UniFi, overlays, Cloudflare, GitHub and external control planes | Tailnet/LAN reachability and named source sets; document UniFi SIEM as UI-managed because the pinned provider exposes no SIEM resource | Owns ACL/firewall intent and external drift; no Wazuh workload |
-| `servarr` | Compose workloads, Wazuh, Loki, Prometheus, Grafana, Discord routing | Wazuh runtime, decoder/rule files, archive policy, snapshots, dashboards, alert delivery, and container security-log selection | Primary SIEM runtime owner |
-| `homelab-gitops` | Argo CD workloads, Kubernetes events, OTEL, in-cluster Alloy | Add one cluster security collection path for Kubernetes audit and selected workload events; no per-pod Wazuh agents | Owns Kubernetes objects and tests; substrate audit source remains `desktop-nixos` |
+| `servarr` | Household Compose workloads and their security-signal producers | Select and redact container security logs/signals for the Kubernetes Wazuh consumer | Owns household workload runtime logs; no Wazuh lifecycle |
+| `homelab-gitops` | Wazuh, monitoring, Argo CD workloads, Kubernetes events, OTEL, and in-cluster Alloy | Own the Wazuh runtime/rules and add one cluster security collection path for Kubernetes audit and selected workload events; no per-pod Wazuh agents | Primary SIEM runtime owner; substrate audit source remains `desktop-nixos` |
 | `hermes-flake` | Hermes systemd/container/microVM packaging and service hardening | No repo-specific agent; deployed Hermes units are observed through the host agent. Alert on auth failures, denied operations, service identity/config changes, and sandbox-policy regressions | Module may expose structured safe metadata; host owns transport |
 | `hermes-skills` | Read-only curated content and reviewed skill PRs | No runtime feed. Keep GitHub security/provenance checks; host FIM may watch the deployed read-only skill path without ingesting skill contents | Explicitly no agent or content ingestion |
 | `home-assistant-config` | HAOS application config, auth events, Zigbee2MQTT/MQTT, Advanced SSH add-on | HAOS cannot consume the NixOS agent module. Evaluate a supported add-on/syslog export for authentication and add-on security logs; never ingest entity-state history by default | Repo owns safe logging config; HAOS appliance owns exporter/add-on lifecycle |
@@ -249,7 +256,7 @@ contention violates the recorded SLO.
 
 ### I1 — Strengthen the current Wazuh server
 
-**Repository:** `servarr`
+**Repository:** `homelab-gitops`
 
 1. Split Wazuh API and indexer credentials; stop reusing one password.
 2. Add explicit CPU/memory limits after measuring the live baseline.
@@ -271,7 +278,8 @@ contention violates the recorded SLO.
 
 **Tests**
 
-- Compose render test for TLS, secret separation, mounts, limits, and health.
+- Helm render and kubeconform checks for TLS, secret separation, mounts,
+  limits, and health.
 - `wazuh-logtest` fixtures for the captured UniFi test event and one fixture
   per warning class.
 - Malformed/escaped CEF fixtures must not crash decoding or mislabel severity.
@@ -280,7 +288,7 @@ contention violates the recorded SLO.
 - Fill a disposable index past the configured watermark and verify safe
   behavior.
 - Restore configuration, certificates, rules, and an index snapshot into an
-  isolated test stack.
+  isolated test namespace.
 
 **Revision gate**
 
@@ -346,7 +354,7 @@ audit pipeline. Do not do both without a named detection gap.
 1. Add named SIEM server/agent source sets from fleet metadata.
 2. Grant agents only Kepler `1514/tcp`; restrict `1515/tcp` to the enrollment
    window or selected unenrolled hosts.
-3. Keep `5514/udp` LAN-only and `5601/tcp` LAN-bound.
+3. Keep `5514/udp` LAN-only and the dashboard on its private cluster ingress.
 4. Narrow the NixOS firewall from global port opens to the intended interfaces
    and source ranges where the firewall model permits it.
 5. Record UniFi System Logging/SIEM as a UI-managed exception until the provider
@@ -438,7 +446,7 @@ Implement only supported, redacted events:
 
 ### I6 — Notify and operate
 
-**Repositories:** `servarr` and `homelab`
+**Repositories:** `homelab-gitops` and `homelab`
 
 Map Wazuh rules to the existing severity/response contract:
 
@@ -469,13 +477,14 @@ dashboard/runbook link. Disable mentions and never include raw event bodies.
 
 Land changes leaf-first:
 
-1. `servarr`: harden server, structure UniFi fields, test backup/retention.
+1. `homelab-gitops`: own the migrated server/rules and continue hardening,
+   structured UniFi fields, and backup/retention tests.
 2. `homelab-iac`: narrow agent/SIEM network policy.
 3. `desktop-nixos`: enroll Kepler and Endeavour canaries.
 4. `desktop-nixos`: expand to capable NixOS servers/workstations.
 5. `homelab-gitops`: Kubernetes audit/security pipeline.
 6. Appliance/constrained-host slices only where retained evidence shows a gap.
-7. `servarr`: enable notifications after observe-only gates.
+7. `homelab-gitops`: enable notifications after observe-only gates.
 8. `homelab`: record results, accepted exceptions, and final ownership.
 
 Consumer changes pin the producer revision or artifact they depend on. No build
