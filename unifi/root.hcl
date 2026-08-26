@@ -22,6 +22,8 @@ locals {
   api_key = get_env("UNIFI_API_KEY_${local.env}")
 
   backend = read_terragrunt_config(find_in_parent_folders("backend.hcl"))
+
+  state_passphrase = get_env("UNIFI_STATE_PASSPHRASE")
 }
 
 # Local state, one file per env/stack, kept out of git (.gitignore: unifi/.state/).
@@ -77,20 +79,19 @@ generate "encryption" {
       type      = string
       sensitive = true
     }
-
     terraform {
       encryption {
-        key_provider "pbkdf2" "primary" {
+        key_provider "pbkdf2" "current" {
           passphrase = var.state_passphrase
         }
-        method "aes_gcm" "primary" {
-          keys = key_provider.pbkdf2.primary
+        method "aes_gcm" "current" {
+          keys = key_provider.pbkdf2.current
         }
         state {
-          method = method.aes_gcm.primary
+          method = method.aes_gcm.current
         }
         plan {
-          method = method.aes_gcm.primary
+          method = method.aes_gcm.current
         }
       }
     }
@@ -102,5 +103,5 @@ inputs = {
   unifi_api_key    = local.api_key
   unifi_site       = local.site
   unifi_insecure   = local.allow_insecure
-  state_passphrase = get_env("UNIFI_STATE_PASSPHRASE")
+  state_passphrase = local.state_passphrase
 }
