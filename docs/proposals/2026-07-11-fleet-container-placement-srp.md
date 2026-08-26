@@ -1,8 +1,32 @@
 # Fleet container placement & SRP — one rule for "which runtime", plus separations
 
-**Status:** Proposed (exploration + decision scaffold; nothing refactored) —
-2026-07-11. PocketID/NetBird extraction sections are retired and must not be
-implemented; the general placement rule remains open.
+**Status:** Partially implemented. The 2026-08-26 first-wave Kubernetes cutover
+established the current ownership boundary; the historical PocketID/NetBird
+extraction sections remain retired and must not be implemented.
+
+## 2026-08-26 implementation record
+
+- `homelab-gitops` now owns the lab Kubernetes workload lifecycle and the
+  Kubernetes-hosted home/platform services: Immich, Karakeep, Changedetection,
+  Langfuse, monitoring, and Wazuh. Argo CD reports every application Healthy and
+  Synced at `homelab-gitops` revision `5c9895ad66c3d19f4c7182966f385661cef9ccb1`.
+- `servarr` retired the first-wave Compose definitions for Immich, Karakeep,
+  Changedetection, and Langfuse. It remains the owner of household Compose
+  workloads and their runtime lifecycle; “media-only” is a target boundary, not
+  a completed-state claim.
+- Native host Alloy telemetry is live for Orion and Kepler. The temporary
+  Prometheus federation still carries application exporters that native host
+  Alloy does not replace, so removing federation is not yet safe.
+- Wazuh's Orion host-agent canary produced an attributed synthetic SSH alert on
+  2026-08-26. The accepted seven-day observation gate ends on 2026-09-02; the
+  Compose fallback must remain until that gate passes.
+- Kepler's real offsite Restic push completed at Servarr revision
+  `99e3a00544fa5e517980c7cfa06ab5494c49dbdb`; Prometheus observed a fresh
+  `restic_kepler_offsite_last_success_seconds` sample.
+
+This record supersedes the stale workload examples in the researched 2026-07-11
+inventory below. The placement principles remain historical context; current
+repository ownership is defined by `AGENTS.md` and `repos.json`.
 
 > Scaffold for human judgment. The inventory below is **researched** (three
 > read-only passes over `desktop-nixos/modules/` and `servarr/machines/`), cited to

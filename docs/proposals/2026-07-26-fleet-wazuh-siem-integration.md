@@ -1,7 +1,9 @@
 # Fleet Wazuh SIEM integration
 
-**Status:** In progress; fresh UniFi CEF-to-index delivery, disk watermarks,
-encrypted snapshots, and isolated local/offsite restores are proven on Kepler
+**Status:** In progress; Kubernetes Wazuh is healthy, Orion's attributed agent
+canary started its seven-day observation window on 2026-08-26, and encrypted
+local/offsite restore remains proven. Compose retirement is gated until
+2026-09-02.
 **Date:** 2026-07-26
 **Owners:** `servarr` (Wazuh runtime and rules), `desktop-nixos` (host agents
 and host security signals), `homelab-gitops` (Kubernetes security signals),
@@ -28,6 +30,13 @@ The target answers these questions:
 ## Current foundation
 
 The following exists on the default branches and live Kepler deployment:
+
+- Wazuh is reconciled by Argo CD in the `homelab` cluster at
+  `homelab-gitops` revision `5c9895ad66c3d19f4c7182966f385661cef9ccb1`.
+- Orion's NixOS-managed rootful Wazuh agent is enrolled as `orion-canary`; a
+  harmless synthetic SSH failure produced an attributed rule `5710` alert on
+  2026-08-26. Keep the Compose fallback for the full observation window through
+  2026-09-02.
 
 - Wazuh 4.14.6 single-node indexer, manager, and dashboard with digest-pinned
   images, TLS, secret-backed authentication, health checks, persistent volumes,
