@@ -1,7 +1,8 @@
 # Cognee homelab contextual graph canary
 
-**Status:** P0 local foundation complete; supported canary healthy, Cognee
-`1.5.3` blocked by the adapter's exact `1.4.2` pin, production unsynchronized
+**Status:** P0 local foundation complete; supported canary healthy, isolated
+Cognee `1.5.3` adapter registration passes but remains unsupported, production
+unsynchronized
 **Date:** 2026-08-17
 **Last reviewed:** 2026-08-28
 **Owners:** `homelab` for gates and evidence; `cognee-homelab` for packaging,
@@ -92,8 +93,9 @@ and the existing ACL contract pass.
   PostgreSQL password. Local model endpoints are deliberately closed, so this
   is packaging/startup/restart evidence, not ingestion or retrieval evidence.
 - Live PyPI metadata on 2026-08-28 reports stable Cognee `1.5.3` and Falkor
-  adapter `0.4.0` with `cognee==1.4.2`. The compatibility seam therefore fails
-  closed before building, publishing, or syncing an unsupported pair.
+  adapter `0.4.0` with `cognee==1.4.2`. An isolated digest-pinned `1.5.3`
+  `--no-deps` image builds and registers the adapter. ACL, ingestion, search,
+  and deletion remain unproved, so publishing and production sync stay closed.
 - `homelab-gitops` PR `#85` merged the Cognee, PostgreSQL, FalkorDB, ingress,
   ExternalSecret, PVC, network-policy, image, and manual-Argo source at
   `f489af8`. Its GitHub validation job never started because of account billing,
