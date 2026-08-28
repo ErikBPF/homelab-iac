@@ -1,21 +1,16 @@
-# telstar A1 capture — persistent retry (running on discovery)
+# telstar A1 capture — cutover complete
 
-**Status:** RUNNING since 2026-07-04 · **Host:** discovery · **Goal:** create the
-`telstar` Oracle Always-Free Ampere A1 instance the moment free-tier capacity
-frees ("Out of host capacity" is intermittent in `sa-saopaulo-1`).
+**Status:** CREATED AND CUT OVER 2026-08-20 · **Host:** discovery · **Result:**
+`telstar` runs NixOS on Oracle Always-Free Ampere A1.
 
-## What's running
-- **discovery**, systemd **--user** service `telstar-get` (erik). **Linger is
-  enabled** on discovery → survives reboots.
-- Retries `terragrunt apply` on `oracle/compute-telstar` **every 60s for up to 7
-  days**, stopping on success or a non-capacity error.
-- Script: `/home/erik/telstar-get-retry.sh` on discovery (⚠️ **not in git yet** —
-  copied over; formalize as `oracle/bin/telstar-get-retry.sh` if kept).
-- Shape: telstar's default **2 OCPU / 12 GB** — the *scarce* A1 shape. It may
-  take days, or never within 7d. (1 OCPU/6 GB lands far easier; switch the
-  `OCI_OCPUS`/`OCI_MEMORY_GBS` env if you'd rather grab the box now + upgrade.)
+## Acquisition runner (stopped)
+- **discovery**, systemd **--user** service `telstar-get` (erik), is inactive
+  with result `success`; creation ended the retry loop.
+- Source: `oracle/bin/telstar-get-retry.sh`; deployed copy:
+  `/home/erik/telstar-get-retry.sh` on discovery.
+- Acquired shape: **2 OCPU / 12 GB** A1 Flex.
 
-## Controls (run on discovery; user shell is fish, so use bash -lc)
+## Re-arm controls (run on discovery only after a reviewed recreate/resize plan)
 ```
 # status / logs (from discovery)
 XDG_RUNTIME_DIR=/run/user/1000 systemctl --user status telstar-get
@@ -28,11 +23,14 @@ XDG_RUNTIME_DIR=/run/user/1000 systemd-run --user --unit=telstar-get --collect \
 ```
 From the laptop: `ssh -p 2222 erik@<discovery> 'bash -lc "journalctl --user -u telstar-get --no-pager | tail"'`.
 
-## On success
-The apply prints `public_ip`. Then (per `compute-telstar/terragrunt.hcl`):
-1. Set `hosts.telstar.ip` in `desktop-nixos/modules/meta.nix`, regenerate
-   (`just fleet-json`).
-2. `just deploy-telstar` (nixos-anywhere converts the Ubuntu A1 → NixOS).
+## Completed cutover
+1. Applied temporary `/32` bootstrap/recovery ingress on TCP/22 and TCP/2222.
+2. Added Telstar's public and Tailscale addresses to the fleet metadata.
+3. Converted Ubuntu to NixOS, then deployed the corrected `enp0s6` DHCP config.
+4. **Mandatory reversal completed 2026-08-20:** applied Voyager normally and
+   restored the diagnostic console connection to Vanguard.
+5. Verified public TCP/22 and TCP/2222 are closed; fleet SSH on tailnet TCP/2222,
+   clean-boot DHCP, and Tailscale autoconnect are healthy.
 
 ## How it authenticates (the fiddly bits, for future me)
 - Creds live in `homelab-iac/.env.sops` (dotenv-sops). Committed 2026-07-04

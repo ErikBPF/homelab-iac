@@ -2,7 +2,7 @@
 
 Two Always-Free OCI hosts, each its own Terragrunt unit (own state) over a shared
 instance module: VCN + subnet + internet gateway + route table + security list +
-instance (+ a free-tier budget guard). Both boot Ubuntu as the install
+instance (+ a shared monthly budget and alerts). Both boot Ubuntu as the install
 entrypoint; `desktop-nixos` then converts them to NixOS via nixos-anywhere.
 
 - **voyager** — x86 `VM.Standard.E2.1.Micro` (Always-Free x86, 1 GB). The fleet's
@@ -15,7 +15,7 @@ entrypoint; `desktop-nixos` then converts them to NixOS via nixos-anywhere.
 ## Layout
 - `root.hcl` — `oci` provider (creds from `.env.sops`) + pbkdf2 state encryption,
   MinIO S3 backend (shared `backend.hcl`).
-- `modules/instance/` — network + instance + free-tier budget guard.
+- `modules/instance/` — network + instance + shared monthly spend alerts.
 - `compute/` — the **voyager** unit (x86 micro).
 - `compute-telstar/` — the **telstar** unit (A1).
 - `bin/telstar-get-retry.sh` — loops `terragrunt apply` for telstar until A1

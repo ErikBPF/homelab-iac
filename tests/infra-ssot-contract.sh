@@ -319,17 +319,15 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 12 and
-    (unique | length) == 12 and
+    length == 14 and
+    (unique | length) == 14 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 12 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 14 unique sorted aliases"
 
   jq -e '
     . as $aliases |
     [
-      "bge-m3",
-      "bge-reranker-v2-m3",
       "faster-whisper-pt-br",
       "faster-whisper-turbo-pt-br",
       "parakeet-pt-br",
@@ -344,8 +342,8 @@ check_s05() {
   jq -e --slurpfile aliases "$aliases" '
     (.models | type == "object") and
     ((.models | keys) == $aliases[0]) and
-    ([.models[].mode] | unique) == ["audio_transcription", "chat"] and
-    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription", "chat"] and
+    ([.models[].mode] | unique) == ["audio_transcription", "chat", "embedding", "rerank"] and
+    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription", "chat", "embedding", "rerank"] and
     ([.models[] | select((.context_limit // null) == null)] | length) > 0 and
     ([.models[] | select((.output_limit // null) == null)] | length) > 0 and
     (all(.models[];
@@ -374,6 +372,9 @@ check_s05() {
       ($models[$route.alias].output_cost_per_million_tokens == $benchmark.output_price_per_million))
   ' "$manifest" >/dev/null \
     || fail "S05 RED: reviewed Zen routes diverge from the normalized context or pricing benchmark"
+
+  jq -e '.models["qwen-chat"].max_tokens == 98304' "$manifest" >/dev/null \
+    || fail "S05 RED: qwen-chat metadata must match Orion's 98304-token context"
 
   for mode in completion embedding image_generation chat moderation audio_transcription audio_speech rerank; do
     assert_file_contains "$variables" "\"${mode}\"" \
@@ -415,8 +416,10 @@ check_s05() {
     || fail "S05 RED: manual exceptions must be exact, reasoned, and review-dated"
 
   jq -e --slurpfile aliases "$aliases" '
-    (keys == ["hermes", "opencode"]) and
-    (all(.[]; index("deepseek-v4-flash") != null)) and
+    (keys == ["cognee", "hermes", "opencode"]) and
+    (.cognee == ["bge-m3", "bge-reranker-v2-m3", "qwen-chat"]) and
+    (.hermes | index("deepseek-v4-flash") != null) and
+    (.opencode | index("deepseek-v4-flash") != null) and
     ([to_entries[].value[]] |
       all(.[]; . as $alias | $aliases[0] | index($alias) != null))
   ' "$allowlists" >/dev/null \
@@ -438,7 +441,7 @@ check_s05() {
   [[ -n "$production_key" && -n "$canary_key" && "$production_key" != "$canary_key" ]] \
     || fail "S05 RED: production and canary units share a state key"
 
-  printf '%s\n' "S05 PASS: exact Discovery production manifest, Kepler retirement, allowlists, and cutoff guard proven offline"
+  printf '%s\n' "S05 PASS: exact Discovery production manifest, Kepler retrieval routes, allowlists, and cutoff guard proven offline"
 }
 
 case "$1" in
