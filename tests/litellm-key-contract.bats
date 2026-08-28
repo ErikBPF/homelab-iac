@@ -22,10 +22,13 @@
 @test "Cognee gets a local-only LiteLLM key through OpenBao" {
   key_unit=components/litellm/environments/home/cognee-key/terragrunt.hcl
   vault_unit=components/openbao/environments/home/cognee-litellm/terragrunt.hcl
+  policy=components/openbao/modules/runtime-secret-foundation/main.tf
 
   grep -Fq 'models                = ["bge-m3", "bge-reranker-v2-m3", "qwen-chat"]' "$key_unit"
   grep -Fq 'consumer = "cognee"' "$key_unit"
   grep -Fq 'dependency "cognee_key"' "$vault_unit"
   grep -Fq 'name          = "lab/cognee-litellm"' "$vault_unit"
   grep -Fq 'LLM_API_KEY = dependency.cognee_key.outputs.key' "$vault_unit"
+  grep -Fq 'path \"secret/data/lab/cognee-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }' "$policy"
+  grep -Fq 'path \"secret/metadata/lab/cognee-litellm\" { capabilities = [\"read\"] }' "$policy"
 }
