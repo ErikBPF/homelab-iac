@@ -10,6 +10,11 @@
     "responsibility": "Terraform-managed infrastructure and external/platform control planes"
   },
   {
+    "name": "cognee-homelab",
+    "path": "references/repos/cognee-homelab",
+    "responsibility": "Cognee packaging, dataset-routing policy, local development, and compatibility tests"
+  },
+  {
     "name": "agent-evals",
     "path": "references/repos/agent-evals",
     "responsibility": "Cross-harness benchmark manifests, adapters, execution, and reviewed results"

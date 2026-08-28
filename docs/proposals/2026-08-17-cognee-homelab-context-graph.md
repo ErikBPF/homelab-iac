@@ -1,11 +1,13 @@
 # Cognee homelab contextual graph canary
 
-**Status:** Proposed; Falkor manifests and image source prepared, live canary not started
+**Status:** P0 local foundation complete; supported canary healthy, Cognee
+`1.5.3` blocked by the adapter's exact `1.4.2` pin, production unsynchronized
 **Date:** 2026-08-17
-**Last reviewed:** 2026-08-17
-**Owners:** `homelab` for gates and evidence; `homelab-gitops` for the Kepler
-workload; `homelab-iac` for LiteLLM routes and consumer policy; Vault for
-runtime secret values
+**Last reviewed:** 2026-08-28
+**Owners:** `homelab` for gates and evidence; `cognee-homelab` for packaging,
+dataset-routing policy, and local development; `homelab-gitops` for the Kepler
+workload; `homelab-iac` for GitHub/LiteLLM control planes; Vault for runtime
+secret values
 
 ## Goal
 
@@ -39,6 +41,24 @@ Do not replace the source-backed retrieval ladder in
 Cognee is an optional contextual layer. Git, current source, tests, decisions,
 and runbooks remain authoritative; retrieved relationships are leads to verify.
 
+The dedicated private `cognee-homelab` repository owns the implementation.
+It starts with a local-only minikube canary patterned after
+`dataplatform-airflow`'s devenv, DevSpace, and just workflow. SecretSpec is a
+new explicit dependency, not copied from that repository: one committed
+manifest declares required values, local bootstrap generates them ephemerally,
+and production continues to resolve runtime values from Vault through GitOps.
+
+Stable Cognee is now `1.5.3`, but Falkor adapter `0.4.0` still declares the
+exact dependency `cognee==1.4.2`. Keep the supported `1.4.2` pair for the first
+local health canary and test `1.5.3` in a separate compatibility seam. Neither
+`--no-deps` nor a successful import is permission to publish or sync an
+unsupported pair.
+
+The unautomated behavior contract is
+[`../behaviors/cognee-canary/canary.feature`](../behaviors/cognee-canary/canary.feature).
+Its scenarios become tests only after their named shell/API seams are bound and
+observed failing before implementation.
+
 | Graph option | Decision for this canary | Reason |
 |---|---|---|
 | FalkorDB | Use | Local server process; concurrent clients; per-dataset graph/vector isolation; persistent OpenCypher store |
@@ -46,28 +66,77 @@ and runbooks remain authoritative; retrieved relationships are leads to verify.
 | Self-hosted Neo4j | Reject | Cognee does not support this combination for multi-user isolation |
 | Neo4j Aura | Reject | External storage violates the local-only requirement |
 
+### Relevant Cognee 1.5.x changes
+
+The upstream `v1.4.2...v1.5.3` history contains several features worth the
+compatibility wait: dataset-scoped data and deduplication with stable IDs across
+`update()`; dataset IDs and per-dataset rows in search history; principal grant
+listing and corrected ACL-reader raw downloads; single-session search and lazy
+session-TTL sliding; incremental code-graph/repository ingestion; audit-grade
+provenance; and a superuser guard on runtime LLM/vector settings. These align
+with branch overlays, private session memory, scope-aware audit, and provenance.
+They remain candidate value, not deployed capability, until Falkor compatibility
+and the existing ACL contract pass.
+
 ## Current state
 
-- Local GitOps manifests exist for Cognee, PostgreSQL and FalkorDB StatefulSets,
-  three PVCs, ingress, ExternalSecret, and default-deny network policy.
-- The Argo application is manual-sync only. The live cluster has no `cognee`
-  namespace or Argo application, so PostgreSQL 18 starts on a fresh data
-  directory; there is no PostgreSQL 17 upgrade path in this canary.
+- `homelab-iac` created private `ErikBPF/cognee-homelab` with read-only Actions
+  token defaults and no workflow PR approval. A saved targeted plan applied
+  exactly the repository and its two Actions-permission resources; two unrelated
+  fleet drifts were observed and intentionally left unapplied.
+- The local repository now has devenv, DevSpace, just, and SecretSpec contracts.
+  A dedicated rootless-Podman minikube profile runs pinned Cognee `1.4.2`, Falkor
+  adapter `0.4.0`, PostgreSQL 18, and FalkorDB. All three pods became ready,
+  `/health` passed, a controlled three-workload restart returned healthy, and a
+  second deploy reused its Kubernetes Secret without rotating the persisted
+  PostgreSQL password. Local model endpoints are deliberately closed, so this
+  is packaging/startup/restart evidence, not ingestion or retrieval evidence.
+- Live PyPI metadata on 2026-08-28 reports stable Cognee `1.5.3` and Falkor
+  adapter `0.4.0` with `cognee==1.4.2`. The compatibility seam therefore fails
+  closed before building, publishing, or syncing an unsupported pair.
+- `homelab-gitops` PR `#85` merged the Cognee, PostgreSQL, FalkorDB, ingress,
+  ExternalSecret, PVC, network-policy, image, and manual-Argo source at
+  `f489af8`. Its GitHub validation job never started because of account billing,
+  so it is not CI evidence. The static Cognee contract and Kubernetes server-side
+  dry-run pass locally; full `kubeconform` evidence remains open.
+- The live `cognee` namespace exists, but there is no Cognee Argo Application,
+  workload, runtime secret, or PVC. The root Argo application is healthy but
+  `OutOfSync`. PostgreSQL 18 will therefore start on a fresh data directory;
+  there is no PostgreSQL 17 upgrade path.
 - Cognee `1.4.2` is the exact dependency of Falkor adapter `0.4.0`. The custom
   image source pins both upstream wheels by SHA-256, imports the adapter through
   `sitecustomize.py`, and bakes the BGE-M3 tokenizer at a pinned Hugging Face
-  revision for offline runtime. A local build proved all Falkor providers and
-  dataset handlers register. The GHCR publish workflow exists; its first signed
-  digest is not yet published or pinned, so sync remains blocked.
+  revision for offline runtime. PyPI metadata confirms the exact dependency and
+  wheel hash. Do not independently bump to Cognee `1.5.x`. A local build proved
+  all Falkor providers and dataset handlers register. The GHCR publish workflow
+  has never run; no signed digest is published or pinned, so sync remains blocked.
+- Cognee `1.4.2` has an open upstream dashboard/API `graph-summary` mismatch.
+  This API-first canary does not score dashboard completeness; health,
+  authentication, documented API calls, and the fixed benchmark remain required.
 - PostgreSQL 18, FalkorDB `4.20.3`, adapter dependencies, and BGE tokenizer
   source are version/digest pinned.
-- Terraform defines a dedicated Cognee LiteLLM key limited to `bge-m3`,
+- `homelab-iac` PR `#79` merged a dedicated Cognee LiteLLM key limited to `bge-m3`,
   `bge-reranker-v2-m3`, and `qwen-chat`, with ephemeral handoff to
   `secret/lab/cognee-litellm` in OpenBao. Cognee uses BGE-M3 and `qwen-chat`;
-  reranking remains available but disabled for the storage experiment.
+  reranking remains available but disabled for the storage experiment. Source
+  CI passed; no reviewed apply or live-path evidence has been recorded.
 - Kepler's prior embedding experiment measured BGE-M3 retrieval at R@1 `0.84`
   and BGE reranking at `0.87`. Keep BGE-M3 as the baseline rather than reopening
   model selection during the storage experiment.
+
+## Decision map
+
+| Field | Current decision |
+|---|---|
+| Destination | Decide with fixed evidence whether relationship-aware recall earns one bounded, single-replica service. |
+| Actors and outcomes | Operators get source-verifiable context; authenticated users get isolated datasets; agents remain unable to make Cognee authoritative. |
+| Settled decisions | Dedicated private implementation repo; supported Cognee `1.4.2` + Falkor adapter `0.4.0` local baseline; isolated `1.5.3` compatibility probe; API-first synthetic canary; manual production sync; Git/Vault authority unchanged. |
+| Dependencies | Validated signed image, reviewed IaC apply, runtime secret metadata, and the source-backed 18-question baseline precede live value claims. |
+| Fog | Real Falkor/NFS restart behavior, cross-user isolation, deletion, latency, and coordinated restore remain unproven. |
+| Open questions | Whether Falkor gains supported Cognee `1.5.3` compatibility; whether the local ACL/handler contract passes; anonymous pull must still fail closed before production sync. |
+| Risks and gates | Security, reliability, test, compatibility, and operations gates are P0-P4 below; any ACL or egress failure deletes the canary. |
+| Out of scope | Dashboard completeness, private-content ingestion, HA, model selection, reranking, and replacement of source-backed retrieval. |
+| Frontier | Decide whether to run the synthetic ACL/routing fixture on the supported local pair or wait for a Falkor adapter supporting stable Cognee; production P0 remains closed. |
 
 ## Boundaries
 
@@ -86,6 +155,22 @@ Never ingest `.env*`, `*.secrets.json`, Sops/Vault material, certificates,
 credentials, Terraform state, backups, dependency trees, build outputs, or
 `worktrees/`. Repository allowlists and existing `.graphifyignore` exclusions
 are the floor, not an override target.
+
+### Dataset and query architecture
+
+| Scope | Dataset shape | Lifetime and visibility |
+|---|---|---|
+| Homelab global | `homelab-global` | Durable, shared, cross-repository facts and decisions; one copy only |
+| Repository branch | `repo:<repo>:branch:<branch>` | Mutable branch overlay; never duplicates the global base |
+| Global knowledge | `knowledge-global` | Durable, reviewed non-repository knowledge |
+| Package docs | `package:<name>:<version>` | Durable and versioned; selected only when the active repo depends on it |
+| Session | `session:<principal>:<session>` | Private, expiring working memory; never silently promoted |
+
+Every query composes, in precedence order, the private session, active branch
+overlay, `homelab-global`, related versioned package docs, then reviewed global
+knowledge. Results retain dataset, source path or URL, revision/version, and
+ingestion timestamp. Higher-precedence context may supersede an answer but does
+not erase contradictory lower-precedence evidence.
 
 ### Egress
 
@@ -113,31 +198,55 @@ the live FalkorDB instance before any private ingestion.
 
 ## Delivery plan
 
+### Test seams and vertical slices
+
+Use three seams only: the existing `homelab-gitops/tests/cognee-contract.sh` for
+static release/configuration policy; one live API runner for authentication,
+ACL, restart, deletion, egress, and restore checks; and the source-backed
+retrieval benchmark for comparative value. The static seam cannot prove runtime
+isolation, the live seam cannot prove retrieval value, and the benchmark must
+not become a deployment validator.
+
+| Slice | Observable result | RED then minimum GREEN | Verification, owner, rollout, rollback |
+|---|---|---|---|
+| S-2 — repository authority | One private repository owns Cognee packaging, local tooling, routing policy, and tests. | RED: the GitHub fleet contract expects `cognee-homelab` before IaC declares it. GREEN: add one least-privilege private repo entry and apply a saved three-create targeted plan. | IaC Bats contract, exact plan, GitHub metadata. `homelab-iac`; archive through IaC if abandoned. |
+| S-1 — local contract | A fresh checkout exposes devenv, DevSpace, just, SecretSpec, one behavior contract, and one local stack. | RED: scaffold contract reports every missing surface. GREEN: add only the files needed to start, deploy, inspect, and stop the canary. | Shell contract, Nix evaluation, DevSpace config parse, client dry-run. `cognee-homelab`; delete the local profile. |
+| S-0 — compatibility canary | Supported `1.4.2` reaches health locally and `1.5.3` gets an isolated adapter/API probe. | RED: supported stack is absent and the `1.5.3` dependency check reports the hard pin. GREEN: start the supported pair on minikube; record the newer pair as blocked unless its full ACL/handler contract passes. | Rollout status, `/health`, package metadata, handler registration, ACL negatives. `cognee-homelab`; stop/delete the minikube profile. |
+| S0 — validated release | Reviewed manifests name one signed immutable Cognee image. | RED: extend the static contract to require `@sha256:`; it fails on the current tag. GREEN: run the existing image workflow, verify the signature, pin the digest, and restore full manifest validation. | Focused contract + server dry-run + full GitOps validation. `homelab-gitops`; no sync. Revert the digest commit or publish a new version—never overwrite the tag. |
+| S1 — runtime authority | Approved local models and only sanctioned runtime secret paths exist before workload creation. | RED: `terragrunt plan -detailed-exitcode` returns `2` for the unapplied key and handoff units. GREEN: apply key first, then OpenBao handoff; re-plan to `0`; verify required metadata without values and anonymous image pull. | IaC contract, plans, post-apply metadata, and ESO access proof. `homelab-iac` then Vault/GitOps; revoke key/path on rollback. |
+| S2 — synthetic canary | Two users get private/shared datasets with denied cross-user reads, writes, deletes, existence probes, and graph queries across restart. | RED: bind the feature scenarios to one live API runner and observe failure before sync. GREEN: manually sync the exact reviewed revision and fix only the minimum configuration needed for the declared posture. | API runner, provider/handler registration, record equivalence, egress observation, and resource ceiling. `homelab-gitops`; scale to zero and delete app/PVCs on failure. |
+| S3 — comparative value | Fixed queries show whether Cognee adds relationship recall without regressing exact source answers. | RED: run the source-backed baseline without Cognee results. GREEN: ingest only the reviewed fixture and add Cognee measurements to the same scoring schema. | Five timed repeats after warm-up, p50/p95, provenance and ACL negatives. `homelab`; stop writes and delete on a failed retention gate. |
+| S4 — recoverability | One coordinated PostgreSQL/Falkor backup restores counts, ACLs, searches, and relationships. | RED: the live runner fails against empty disposable PVCs. GREEN: restore one stop-write backup set under one run ID. | Restored benchmark subset and ACL negatives. GitOps workload owner + operator; delete disposable PVCs, then restart original only after evidence. |
+| S5 — disposition | Evidence ends in delete, bounded retention, or a separately approved HA proposal. | RED: no default-keep path. GREEN: record exactly one P4 outcome and execute its cleanup or operating ceiling. | Proposal/index closure and credential/PVC inventory. `homelab`; deletion is the default failed-gate rollback. |
+
 ### P0 — make the deployment claim honest
 
 Before sync:
 
-1. publish and sign the custom Cognee image, then pin its immutable GHCR digest
-   in the Deployment; a version tag is not a deployable release. Confirm the
-   secret-free package is anonymously pullable or add a Vault-backed pull secret;
-2. run Terraform plan/review for the Cognee LiteLLM key and OpenBao handoff,
+1. restore reproducible full GitOps validation; the billing-blocked GitHub job
+   is not a pass, while the local server-side dry-run is supporting evidence;
+2. publish and sign the custom Cognee image, then pin its immutable GHCR digest
+   in the Deployment; a version tag is not a deployable release. Make the
+   secret-free package anonymously pullable and prove the pull before sync;
+3. run Terraform plan/review for the Cognee LiteLLM key and OpenBao handoff,
    then apply leaf-first only after approval;
-3. verify the four non-LiteLLM `lab/cognee` Vault values exist without printing
+4. verify the four non-LiteLLM `lab/cognee` Vault values exist without printing
    them and that ESO can read the Terraform-managed LiteLLM key path;
-4. render the Argo application and manifests, confirm immutable images, and
+5. render the Argo application and manifests, confirm immutable images, and
    prove ingress/TLS exposure plus the LAN-only LiteLLM egress path;
-5. extend the planned 18-question source-backed retrieval benchmark with six
+6. complete the 18-question source-backed retrieval baseline, then extend it
+   with six
    Cognee-only cases covering ACLs, restart persistence, repeated ingestion,
    deletion, and relationship recall;
-6. define a synthetic/public fixture capped at 100 documents or `25MiB`,
+7. define a synthetic/public fixture capped at 100 documents or `25MiB`,
    containing code-like symbols, history, contradictory revisions, and a
    secret-canary file that must be excluded;
-7. record exact API calls, repetitions, scoring, and a LiteLLM request/token
+8. record exact API calls, repetitions, scoring, and a LiteLLM request/token
    ceiling before deploying.
 
-**Gate:** signed image digest pinned, Terraform plan reviewed/applied, secret
-paths present, configuration validation and fixture review pass. Any mismatch
-blocks sync; do not disable access control to make startup succeed.
+**Gate:** full validation passes, signed image digest is pinned, Terraform is
+reviewed/applied, secret paths exist, and baseline/fixture review passes. Any
+mismatch blocks sync; do not disable access control to make startup succeed.
 
 ### P1 — fresh Kepler canary
 
@@ -247,6 +356,7 @@ an approved private-content LLM route or explicit external-egress policy.
 - enabling raw Cypher, arbitrary URL ingestion, or local-path ingestion;
 - changing BGE-M3, adding a reranker, or running another embedding bake-off;
 - accepting private-data egress by implication.
+- evaluating or repairing Cognee dashboard feature completeness.
 
 ## Rollback
 
@@ -258,19 +368,26 @@ consumer access. Canonical Git sources and the Hermes wiki remain unchanged.
 
 ## Next gate
 
-Complete P0 only: merge and run the signed image workflow, pin its digest, review
-and apply the two Terraform units leaf-first, verify Vault paths, extend the
-benchmark, and prepare the bounded synthetic multi-user/secret-negative fixture.
-Do not sync the application or ingest homelab content yet.
+Choose one local next gate: either authorize temporary use of the dedicated
+Cognee LiteLLM credential to bind the synthetic ACL/routing scenarios on
+`1.4.2`, or wait for a Falkor adapter that supports stable Cognee and rerun the
+compatibility seam. After that, return to the existing signed-image, Vault, and
+benchmark P0 gates. Do not sync production or ingest private homelab content.
 
 ## References
 
+- [Cognee 1.5.3 package metadata](https://pypi.org/project/cognee/1.5.3/)
+- [Cognee v1.4.2 to v1.5.3 comparison](https://github.com/topoteretes/cognee/compare/v1.4.2...v1.5.3)
+- [SecretSpec project manifest and CLI](https://secretspec.dev/quick-start/)
+- [SecretSpec providers](https://secretspec.dev/concepts/providers/)
 - [Cognee setup and database guidance](https://docs.cognee.ai/setup-configuration/overview)
 - [Cognee security and multi-user isolation](https://docs.cognee.ai/setup-configuration/security)
 - [Cognee permissions and provider/handler compatibility](https://docs.cognee.ai/setup-configuration/permissions)
 - [Cognee Kuzu dataset handler](https://docs.cognee.ai/core-concepts/multi-user-mode/dataset-database-handlers/existing-dataset-database-handlers/kuzu)
 - [Cognee FalkorDB community handler](https://docs.cognee.ai/core-concepts/multi-user-mode/dataset-database-handlers/existing-dataset-database-handlers/falkor)
 - [Cognee official Falkor image-registration recipe](https://github.com/topoteretes/cognee-integrations/blob/main/integrations/openclaw/skills/falkor/SKILL.md)
+- [Falkor adapter 0.4.0 package metadata](https://pypi.org/project/cognee-community-hybrid-adapter-falkor/0.4.0/)
+- [Cognee 1.4.2 dashboard/API mismatch](https://github.com/topoteretes/cognee/issues/4431)
 - [FalkorDB persistence guidance](https://docs.falkordb.com/operations/persistence.html)
 - [Local repository knowledge and retrieval](2026-08-16-local-repository-knowledge-retrieval.md)
 - [Stateful stack and release hardening](2026-07-13-stateful-stack-release-hardening.md)
