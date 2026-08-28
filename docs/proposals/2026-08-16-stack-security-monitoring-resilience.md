@@ -16,8 +16,9 @@ monitoring, ingress, or orchestration stack.
 
 This is an execution map over existing records, not a replacement for them:
 
-- [runtime security monitoring](2026-07-25-runtime-security-monitoring.md)
-  owns deterministic runtime detections and external dead-man behavior;
+- [fleet alerting reliability and response](2026-08-28-fleet-alerting-reliability-and-response.md)
+  owns deterministic runtime detections, delivery, response, and external
+  dead-man behavior;
 - [fleet Wazuh integration](2026-07-26-fleet-wazuh-siem-integration.md) owns
   security events, agent rollout, retention, and SIEM restore;
 - [network segmentation](2026-08-01-network-router-security-segmentation.md)
@@ -25,8 +26,6 @@ This is an execution map over existing records, not a replacement for them:
 - [stateful release hardening](2026-07-13-stateful-stack-release-hardening.md)
   owns workload backup, restore, migration, and rollback gates, including the
   secondary fleet DNS gate (its P3);
-- [alert reliability](2026-08-14-alert-reliability-improvements.md) owns
-  truthful producers and actionable notification delivery.
 
 ## Audit scope and limits
 
@@ -230,7 +229,7 @@ settings and each leaf for its workflow. Any repository excluded from items
    enrollment.
 5. Keep Prometheus/Grafana for rates/absence and Loki for broad logs. Add no
    duplicate event bus. Force-fire one security alert through native Discord
-   and Cleytin and retain one recovery.
+   and retain one recovery; the retired Cleytin webhook is historical only.
 6. Extend Compose validation beyond registry existence: reject an undeclared
    wildcard (`0.0.0.0`/`[::]`) publication and an unpinned public image, so
    the acceptance fixtures below have an implementing check.

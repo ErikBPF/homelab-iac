@@ -1,13 +1,14 @@
 # Hermes Cleytin as N0 — first-line alert responder
 
-**Status:** Implemented — Cleytin (`argus`) and Hackerman (`daedalus`) are
-deployed; authenticated Grafana firing alerts now trigger Cleytin and deliver
-its analysis to `#incidents` (verified 2026-08-02).
+**Status:** Historical implementation — Cleytin (`argus`) and Hackerman
+(`daedalus`) remain deployed, but Grafana's Cleytin webhooks were retired in
+the Kubernetes monitoring cutover; native Discord is the current Grafana route
+(reviewed 2026-08-28).
 **Date:** 2026-07-21. **Seed:** Erik — "secondary agent as our N0: see incidents
 and deploys in Discord, act on them; integrate with llm-wiki + obsidian +
 agentmemory."
 
-## Current acceptance evidence
+## Acceptance evidence at implementation
 
 - `just hermes-agents-health` sees all three containers running, verifies the
   authenticated `grafana-alerts` route, and proves both secondary agents can

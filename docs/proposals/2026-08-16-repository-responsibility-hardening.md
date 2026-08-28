@@ -154,7 +154,8 @@ deploy → prove health and rollback → remove the mutable path.
 
 ## Routed out of scope
 
-- Fleet upgrade, network security, alert reliability, runtime security, and
+- Fleet upgrade, network security,
+  [fleet alerting](2026-08-28-fleet-alerting-reliability-and-response.md), and
   stateful migration continue under their existing proposals.
 - Component-local dead-code and test cleanup belongs in that component's issue
   or change, not this cross-repository hardening proposal.

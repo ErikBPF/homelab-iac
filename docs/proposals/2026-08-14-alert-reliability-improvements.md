@@ -1,12 +1,18 @@
 # Alert reliability improvements — truthful container state and actionable job failures
 
-**Status:** Implementation complete — producer and bounded-retry fixes are
-deployed; bounded G5 drills and G6 observation remain
+**Status:** Superseded by
+[fleet alerting reliability and response](2026-08-28-fleet-alerting-reliability-and-response.md);
+implementation history retained, with remaining drills and observation moved
+to the canonical record
 **Date:** 2026-08-14
 **Last reviewed:** 2026-08-25
 **Owners:** `desktop-nixos` (collector startup and host diagnostics), `servarr`
 (Grafana rules, tests, and runbook), and `homelab` (cross-repository gates and
 evidence)
+
+> Historical ownership note: Grafana moved from Servarr Compose to
+> `homelab-gitops` after this implementation. The body below records the work as
+> executed; it is not current operational guidance.
 
 ## Goal
 
@@ -251,7 +257,7 @@ Close this proposal only when:
 Threshold changes, automatic recovery, and broader alert taxonomy remain
 out of scope unless the evidence creates a new narrow trigger.
 
-## Final execution plan — 2026-08-25
+## Superseded execution-plan snapshot — 2026-08-25
 
 Behavior review found no remaining decision: G5 and G6 are operational proof,
 not a new implementation. Run them as two staffed slices:

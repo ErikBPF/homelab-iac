@@ -1,12 +1,17 @@
 # Runtime security monitoring and anomaly alarms
 
-**Status:** Security alerting enabled; post-Cleytin Grafana force-fire,
-Vanguard metric deployment, and the shared Wazuh canary-agent gate remain —
-reviewed 2026-08-25
+**Status:** Superseded by
+[fleet alerting reliability and response](2026-08-28-fleet-alerting-reliability-and-response.md);
+implementation history retained — reviewed 2026-08-28
 **Date:** 2026-07-25
 **Owners:** `desktop-nixos` (host signals), `servarr` (central alerting),
 `homelab-gitops` (Kubernetes signals), `homelab-iac` (external edge), and
 `homelab` (cross-repo policy and contracts)
+
+> Current-route correction: Grafana now runs under `homelab-gitops` and sends
+> directly to native Discord. Cleytin's Grafana webhooks were retired during the
+> Kubernetes cutover, Vanguard scraping is live, and the Orion Wazuh canary was
+> proven. The body below preserves the chronological implementation record.
 
 ## Goal
 
@@ -26,7 +31,7 @@ fail2ban, auditd, and Discord. Wazuh and Cleytin were added later under their
 own proposals; this proposal still owns the cross-plane detection and evidence
 gates.
 
-## Current state
+## Historical baseline at proposal start
 
 - Fleet OpenSSH uses port 2222, public-key authentication, no root login,
   `MaxAuthTries = 3`, and no TCP/agent forwarding.
@@ -948,7 +953,7 @@ Do not make builds read sibling working trees. Publish/pin any shared fixture
 or schema needed by consumers; root contracts may inspect local symlinks only
 for developer/CI coordination.
 
-### Current vertical frontier — 2026-08-25
+### Superseded vertical frontier snapshot — 2026-08-25
 
 Do not restart the seven-phase backlog. The next useful release has three
 bounded evidence slices:

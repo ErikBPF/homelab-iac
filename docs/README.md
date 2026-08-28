@@ -35,10 +35,8 @@ blindly overwritten.
 - [Fleet backlog and decision gates](proposals/2026-07-02-open-decisions-and-work.md)
 - [Stateful stack release hardening](proposals/2026-07-13-stateful-stack-release-hardening-execution-plan.md)
 - [Fleet upgrade hardening](proposals/2026-07-12-fleet-upgrade-hardening.md)
-- [Observability continuation](proposals/2026-07-03-observability-continuation.md)
+- [Fleet alerting reliability and response](proposals/2026-08-28-fleet-alerting-reliability-and-response.md)
 - [Telstar Oracle ARM host](proposals/2026-07-01-telstar-oracle-arm-host.md)
-- [Hermes Cleytin N0 responder](proposals/2026-07-21-hermes-argus-n0-responder.md)
-- [Runtime security monitoring](proposals/2026-07-25-runtime-security-monitoring.md)
 - [Fleet Wazuh SIEM integration](proposals/2026-07-26-fleet-wazuh-siem-integration.md)
 - [Gemini persistent code stack](proposals/2026-07-23-gemini-persistent-code-stack.md)
 

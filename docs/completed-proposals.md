@@ -57,10 +57,13 @@ component implementation records remain in `desktop-nixos`.
 
 These closed records cover shipped foundation scopes. Remaining observability
 work stays in the
-[active continuation proposal](proposals/2026-07-03-observability-continuation.md).
+[fleet alerting proposal](proposals/2026-08-28-fleet-alerting-reliability-and-response.md).
 
 - [Telemetry hardening](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-20-telemetry-hardening.md)
 - [Grafana fleet monitoring](https://github.com/ErikBPF/desktop-nixos/blob/main/docs/implemented/2026-06-29-grafana-fleet-monitoring.md)
+- [Observability continuation](proposals/2026-07-03-observability-continuation.md)
+- [Alert reliability improvements](proposals/2026-08-14-alert-reliability-improvements.md)
+- [Runtime security monitoring](proposals/2026-07-25-runtime-security-monitoring.md)
 
 ## Home automation, AI, and agent tooling
 
