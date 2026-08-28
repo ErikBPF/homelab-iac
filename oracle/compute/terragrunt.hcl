@@ -45,7 +45,8 @@ inputs = {
   # required for the x86 micro (can't kexec-install). Empty = Ubuntu entrypoint.
   custom_image_ocid = get_env("OCI_IMAGE_OCID", "")
 
-  # Free-tier guard: alert on any real spend. Override via OCI_BUDGET_EMAIL.
+  # Shared $1 monthly budget: usage warning at $0.10, forecast warning at $1.
+  # Override the recipient via OCI_BUDGET_EMAIL.
   budget_alert_email = get_env("OCI_BUDGET_EMAIL", "erikbogado@gmail.com")
 
   # Keep Voyager's DR address stable, but expose no bootstrap SSH after cutover.

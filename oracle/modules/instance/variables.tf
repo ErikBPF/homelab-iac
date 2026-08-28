@@ -23,7 +23,7 @@ variable "name" {
 variable "create_budget" {
   type        = bool
   default     = true
-  description = "Create the COMPARTMENT-target free-tier budget guard. Unique per compartment, so only one host's unit owns it (voyager); secondary units set false and share it."
+  description = "Create the COMPARTMENT-target monthly budget and alerts. Unique per compartment, so only one host's unit owns it (voyager); secondary units set false and share it."
 }
 
 variable "display_name" {
@@ -58,17 +58,17 @@ variable "ssh_public_key" {
   description = "Public key injected for the default 'ubuntu' user (used by nixos-anywhere before the NixOS cutover)."
 }
 
-# --- Budget guard (PAYG safety net) ----------------------------------------
+# --- Monthly spend alerts --------------------------------------------------
 variable "budget_amount" {
   type        = number
   default     = 1
-  description = "Monthly budget cap in USD. Tiny on purpose — everything should stay free-tier ($0)."
+  description = "Monthly budget target in USD. OCI budgets alert but do not cap spending."
 }
 
 variable "budget_alert_threshold" {
   type        = number
-  default     = 1
-  description = "Alert when ACTUAL spend crosses this percent of budget_amount (1% of $1 = $0.01 → fires on any real charge)."
+  default     = 0.1
+  description = "Alert when ACTUAL spend crosses this amount in USD."
 }
 
 variable "budget_alert_email" {
