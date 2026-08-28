@@ -1,7 +1,8 @@
 # Runtime security monitoring and anomaly alarms
 
 **Status:** Security alerting enabled; post-Cleytin Grafana force-fire,
-Vanguard metric deployment, and Wazuh canary-agent gates remain
+Vanguard metric deployment, and the shared Wazuh canary-agent gate remain —
+reviewed 2026-08-25
 **Date:** 2026-07-25
 **Owners:** `desktop-nixos` (host signals), `servarr` (central alerting),
 `homelab-gitops` (Kubernetes signals), `homelab-iac` (external edge), and
@@ -946,6 +947,25 @@ For each phase:
 Do not make builds read sibling working trees. Publish/pin any shared fixture
 or schema needed by consumers; root contracts may inspect local symlinks only
 for developer/CI coordination.
+
+### Current vertical frontier — 2026-08-25
+
+Do not restart the seven-phase backlog. The next useful release has three
+bounded evidence slices:
+
+1. Deploy the existing Vanguard node-scrape source and prove Prometheus target,
+   expected host labels, and the external dead-man series. Roll back the scrape
+   target if label/cardinality or reachability checks fail.
+2. In an approved window, force-fire one existing Grafana security rule through
+   native Discord and Cleytin, confirm redaction, route, runbook, and resolved
+   delivery, then restore the normal expression. No new notification service.
+3. Consume the Wazuh proposal's single Kepler-agent canary evidence; do not
+   create a second enrollment plan here. Record only whether its attributed
+   event and agent-loss alert close this proposal's named detection gap.
+
+RED is missing target/series, missing or unsafe delivery, or absent host
+attribution. GREEN is retained value-free evidence for each slice. Any failure
+stops before later phases; it does not weaken existing prevention controls.
 
 ## Test layers
 

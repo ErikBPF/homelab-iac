@@ -11,7 +11,7 @@ files=(
   references/repos/desktop-nixos/modules/services/restic-tofu-state.nix
   references/repos/desktop-nixos/modules/services/swag-cert-monitor.nix
   references/repos/homelab-iac/bin/drift-check.sh
-  references/repos/servarr/machines/discovery/config/grafana/provisioning/alerting/templates.yaml
+  references/repos/homelab-gitops/platform/monitoring/files/alerting/templates.yaml
   references/repos/servarr/machines/discovery/scripts/litellm-validate-cron.sh
   references/repos/servarr/machines/discovery/scripts/pricing-drift-cron.sh
 )

@@ -22,6 +22,13 @@ jq -e '
   and ([.[].path] | unique | length) == length
 ' "$root/repos.json" >/dev/null
 
+jq -e 'any(.[]; .name == "agent-evals" and .path == "references/repos/agent-evals")' \
+  "$root/repos.json" >/dev/null
+grep -Fq \
+  'https://github.com/ErikBPF/agent-evals/blob/main/features/agent-benchmark-matrix.feature' \
+  "$root/docs/proposals/2026-08-21-cross-harness-agent-benchmark-matrix.md"
+test ! -e "$root/docs/behaviors/agent-benchmark-matrix.feature"
+
 while IFS= read -r path; do
   test -L "$root/$path"
   test -d "$root/$path/.git"
@@ -29,6 +36,7 @@ done < <(jq -r '.[].path' "$root/repos.json")
 
 test -L "$root/CLAUDE.md"
 test "$(readlink "$root/CLAUDE.md")" = "AGENTS.md"
+grep -Fq 'installed declaratively by `desktop-nixos`' "$root/AGENTS.md"
 grep -Fxq '/worktrees/' "$root/.gitignore"
 grep -Fxq '/graphify-out/' "$root/.gitignore"
 grep -Fxq '/worktrees/' "$root/.graphifyignore"

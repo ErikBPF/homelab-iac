@@ -1,9 +1,9 @@
 # Alert reliability improvements — truthful container state and actionable job failures
 
-**Status:** In progress — producer and bounded-retry fixes deployed; three
-Airflow image-pull alerts remain behind Harbor credential recovery
+**Status:** Implementation complete — producer and bounded-retry fixes are
+deployed; bounded G5 drills and G6 observation remain
 **Date:** 2026-08-14
-**Last reviewed:** 2026-08-16
+**Last reviewed:** 2026-08-25
 **Owners:** `desktop-nixos` (collector startup and host diagnostics), `servarr`
 (Grafana rules, tests, and runbook), and `homelab` (cross-repository gates and
 evidence)
@@ -200,6 +200,20 @@ scope.
   and DAG-processor replicas. Runtime secrets are in Vault and the
   digest-pinned GitOps release is manual; rollout waits for a pull-only robot
   because the Vault admin credential returns HTTP 401 from live Harbor.
+- After approved Harbor recovery, pull-only robot creation, and exact-revision
+  Airflow sync, all seven ExternalSecrets are healthy and the replacement API,
+  scheduler, and DAG-processor pods are Ready with zero restarts. The existing
+  `grafana-alert-status` path reports `active=0`; the three image-pull alerts
+  recovered without widening `library` or reusing a privileged robot.
+
+## Operational follow-up — 2026-08-17
+
+- `just recache-orion` ran under observation. The first retry warmed seven host
+  closures but left Discovery with two failed dependencies after 23 minutes;
+  the immediate cached retry completed every closure in eight seconds.
+  `nix-cache-builder.service` is inactive with `Result=success`, its timer remains
+  armed, and Orion's post-reboot failed-unit gate is empty. No automatic retry
+  or new recovery path was added.
 
 ## Risks and rollback
 
@@ -236,3 +250,22 @@ Close this proposal only when:
 
 Threshold changes, automatic recovery, and broader alert taxonomy remain
 out of scope unless the evidence creates a new narrow trigger.
+
+## Final execution plan — 2026-08-25
+
+Behavior review found no remaining decision: G5 and G6 are operational proof,
+not a new implementation. Run them as two staffed slices:
+
+1. **G5 drills:** capture the healthy baseline; stop Alloy for less than the
+   host-alert window; prove exactly one telemetry alert, zero false per-workload
+   alerts, and recovery. Restore Alloy and baseline before the separate bounded
+   Loki drill, which must produce the expected workload alert and recovery.
+2. **G6 observation:** retain seven complete days of alert fan-out, recovery,
+   and failed-unit response evidence. Close only if every completion criterion
+   above is met; otherwise open one narrow defect against the owning producer or
+   rule.
+
+The RED evidence is any wrong count, missing recovery, unsafe payload, or stuck
+state. GREEN is the existing rule/collector behavior plus value-free timestamps
+and counts. Final review rejects new retry automation, thresholds, dashboards,
+or services without evidence from these two slices.

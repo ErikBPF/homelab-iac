@@ -1,11 +1,9 @@
 # Telstar — Oracle Ampere A1 host for public-facing personal projects
 
 **Date:** 2026-07-01
-**Status:** Ready — host and IaC staged; blocked on Oracle A1 host capacity.
-Discovery is the sole acquisition owner. Its declarative service runs the
-IaC-owned retry script every minute for up to seven days; no second host or
-container may compete for the Terragrunt state lock. Not yet provisioned.
-Graduates to `implemented/` on first successful cutover.
+**Status:** Implemented 2026-08-20 — A1 acquired, NixOS cut over, clean reboot
+verified, and temporary recovery access reversed. Discovery's sole-owner retry
+service exited successfully. Public project ingress remains decision-gated.
 **Owner:** erik
 **Scope:** A second Oracle Always-Free VM, `telstar` — an **Ampere A1** (aarch64,
 2 OCPU / 12 GB) — to expose personal projects to the public internet, kept off
@@ -48,7 +46,7 @@ substitutes. No infect, no image-import workaround.
 - Rollback guard: `criticalUnits = [sshd, tailscaled]` (public host must stay
   reachable across unattended upgrades).
 
-## 4. What's already staged
+## 4. As built
 
 NixOS (this flake):
 
@@ -56,9 +54,10 @@ NixOS (this flake):
 |---|---|
 | `modules/hosts/telstar/default.nix` | Registers `configurations.nixos.telstar`; imports base/server/oci-guest + hardware/networking; aarch64; criticalUnits guard. |
 | `modules/hosts/telstar/hardware.nix` | disko `/dev/sda` layout, ESP at `/boot`, generation cap, aarch64 platform. |
-| `modules/hosts/telstar/networking.nix` | Hostname, DHCP on `ens3`, firewall (no project ports yet), Tailscale client. |
-| `modules/meta.nix` (`fleet.hosts.telstar`) | `role = "server"`; `ip`/`tailscaleIp` filled in after provisioning. |
-| `modules/deploy-rs.nix` (`telstar` node) | deploy-rs node (magic rollback via IP/sshd). |
+| `modules/hosts/telstar/networking.nix` | Hostname, DHCP on OCI's observed `enp0s6`, firewall (no project ports yet), Tailscale client. |
+| `modules/meta.nix` (`fleet.hosts.telstar`) | `role = "server"`; public and stable Tailscale addresses recorded. |
+| `modules/deploy-rs.nix` (`telstar` node) | Tailnet-only deploy-rs node with activation-failure rollback. |
+| `modules/profiles/oci-guest.nix` | Shared OCI boot, tailnet-only SSH firewall, and virtual-block-device `smartd` policy. |
 
 Terragrunt (`homelab-iac`):
 
@@ -73,29 +72,24 @@ Justfile:
 | `deploy-telstar` | First install: nixos-anywhere from the Ubuntu entrypoint (`ubuntu@telstar:22`), disko wipe of `/dev/sda`, closure built on orion. |
 | `switch-telstar` | Post-install switches (`erik@…:2222`, orion builder). |
 
-## 5. Blocker — Oracle A1 host capacity
+## 5. Resolved blocker — Oracle A1 host capacity
 
-The instance can't be created: every launch returns
+Before acquisition, every launch returned
 
 ```text
 500-InternalError, Out of host capacity.
 ```
 
-This is Oracle's free-tier A1 pool being empty in the region, **not** a config
-error — telstar dry-evaluates clean and the Terragrunt plan is a valid single
-`oci_core_instance` create. Capacity appears randomly; the only known method on
-free-tier A1 is persistent retry.
+Persistent retry acquired the requested 2 OCPU / 12 GB instance on 2026-08-20.
 
 Evidence: a per-minute `terragrunt apply` loop ran **10 h (586 attempts,
 2026-06-30 → 07-01)** and a one-shot retry on 2026-07-01 12:11 — **all** returned
 "Out of host capacity." Zero slots in the window.
 
-## 6. Scheduled acquisition plan
+## 6. Completed acquisition plan
 
-Use Discovery's declarative systemd service to run the IaC-owned retry script.
-It makes one real `terragrunt apply` attempt every 60 seconds for up to seven
-days. Discovery is always on, already holds the encrypted OCI credentials, and
-is the only host allowed to run this acquisition loop.
+Discovery's declarative systemd service ran the IaC-owned retry script as the
+sole acquisition owner and exited successfully after creation.
 
 Required safeguards:
 
@@ -111,17 +105,21 @@ Required safeguards:
 Implementation and verification details live in the free-resource proposal's
 §1e. IaC owns retry behavior; this flake owns the Discovery service.
 
-## 7. Cutover path (when capacity appears)
+## 7. Completed cutover path
 
-1. `cd homelab-iac/oracle/compute-telstar && terragrunt apply` succeeds → note
-   the assigned public IP.
-2. Set `fleet.hosts.telstar.ip` in `modules/meta.nix` → `just fleet-json`.
-3. `just deploy-telstar` (nixos-anywhere + disko; wipes `/dev/sda`, converts the
-   Ubuntu entrypoint). Closure cross-built on orion.
-4. Verify SSH on `2222`, `tailscale status` shows telstar as `tag:server`.
-5. Per project: open the Nix firewall port **and** the matching Oracle
-   security-list ingress rule in `homelab-iac`; deploy with `just switch-telstar`.
-6. Graduate this doc to `implemented/`.
+1. Acquired the A1 instance and recorded its public IP.
+2. Added its public and Tailscale addresses to fleet metadata; regenerated
+   `fleet.json`.
+3. Temporarily opened deploy-host `/32` recovery ingress, installed with
+   nixos-anywhere + disko, and corrected DHCP from nonexistent `ens3` to
+   observed OCI NIC `enp0s6`.
+4. Deployed the corrected generation, disabled unsupported `smartd` in the
+   shared OCI profile, and verified clean-boot DHCP plus Tailscale autoconnect.
+5. **Mandatory reversal completed:** normal Voyager apply removed temporary
+   TCP/22 and TCP/2222 ingress; diagnostic console ownership returned to
+   Vanguard. Both public ports were verified closed.
+6. Verified fleet SSH on tailnet TCP/2222. Per-project public ingress remains a
+   separate Nix firewall + Oracle security-list decision.
 
 ## 8. Open items (post-cutover)
 

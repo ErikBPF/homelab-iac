@@ -14,6 +14,14 @@ device firmware belongs to its device repo, infrastructure edge resources to
 `desktop-nixos`. The dated inventory and audit below remain the 2026-06-29
 decision evidence.
 
+**Workload-placement amendment (2026-08-24):** D1 and the household-default
+placement text below are superseded by
+[`../proposals/2026-07-11-fleet-container-placement-srp.md`](../proposals/2026-07-11-fleet-container-placement-srp.md).
+The accepted destination narrows `servarr` to media, makes Kubernetes the first
+target for non-media workloads, and separates `homelab-gitops` into shared
+platform, homelab-workload, and home-services lanes. The historical text below
+remains evidence of the former decision, not current placement guidance.
+
 **Execution status (2026-06-29):**
 - **P3 (Secrets SSOT) — DONE** (own sub-RFC `2026-06-29-vault-secrets-platform.md`,
   status Implemented): OpenBao on discovery; lab ESO + host vault-agent + harbor +

@@ -15,6 +15,27 @@ This is a coordination repo, not a monorepo.
 - Root commands may delegate to component commands; never duplicate their
   deployment implementation.
 
+## Development workflow skills
+
+Reusable workflow skills are installed declaratively by `desktop-nixos`.
+Invoke them as `$name` in Codex or `/name` in slash-skill harnesses.
+
+- `pl`: ground and conceptualize an idea, run bounded party elicitation,
+  build its mental map, and write the BDD `.feature` contract.
+- `ip`: turn accepted behavior into grilled vertical
+  RED-GREEN slices with ownership, verification, rollout, and rollback.
+- `rv`: review and revise plans, documents, or code; apply verified correctness
+  and conformance fixes, simplify, then rerun relevant checks.
+- `codehero`: independent security and other risk-focused review perspectives
+  used during planning, plan grilling, and `rv`.
+- `party`, `map`, `grill`: reusable elicitation, decision-mapping, and
+  pressure-testing primitives orchestrated by `pl` and `ip`.
+
+A `.feature` file is a behavior contract. Call it an automated test only when
+its scenarios are bound to runnable steps and observed failing before the
+implementation. Small documentation or wiring changes may start at the first
+applicable workflow gate; do not invent tests or ceremony.
+
 ## Local secret handoff
 
 - Pass secrets to Codex only through a purpose-named `*.secrets.json` file in
@@ -30,7 +51,8 @@ This is a coordination repo, not a monorepo.
   planes, including LiteLLM API resources. It does not own workload lifecycle,
   model training, prompts, or secret values.
 - `desktop-nixos`: hosts, fleet metadata, NixOS, and cluster substrate.
-- `servarr`: household compose workloads and their runtime lifecycle.
-- `homelab-gitops`: lab Kubernetes workloads.
+- `servarr`: media workloads and temporary legacy Compose owners pending a
+  verified Kubernetes cutover.
+- `homelab-gitops`: non-media home-services and lab Kubernetes workloads.
 - Vault: runtime secret values. Sops: root-of-trust and host/build/bootstrap
   secrets.

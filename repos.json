@@ -10,6 +10,11 @@
     "responsibility": "Terraform-managed infrastructure and external/platform control planes"
   },
   {
+    "name": "agent-evals",
+    "path": "references/repos/agent-evals",
+    "responsibility": "Cross-harness benchmark manifests, adapters, execution, and reviewed results"
+  },
+  {
     "name": "servarr",
     "path": "references/repos/servarr",
     "responsibility": "Household compose workloads"
