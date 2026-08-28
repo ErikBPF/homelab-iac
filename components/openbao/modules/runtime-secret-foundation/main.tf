@@ -45,6 +45,8 @@ resource "vault_policy" "iac_writer" {
   policy = join("\n", [
     "path \"secret/data/home/ha-harness-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/home/ha-harness-litellm\" { capabilities = [\"read\"] }",
+    "path \"secret/data/lab/cognee-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
+    "path \"secret/metadata/lab/cognee-litellm\" { capabilities = [\"read\"] }",
   ])
 }
 
