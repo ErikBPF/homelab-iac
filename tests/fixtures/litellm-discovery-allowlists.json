@@ -1,4 +1,9 @@
 {
+  "cognee": [
+    "bge-m3",
+    "bge-reranker-v2-m3",
+    "qwen-chat"
+  ],
   "hermes": [
     "deepseek-v4-flash",
     "glm-5",

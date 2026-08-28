@@ -18,3 +18,14 @@
   ! grep -R -q 'HA_HARNESS_TOKEN' components/openbao
   grep -q 'skip_child_token *= *true' components/openbao/root.hcl
 }
+
+@test "Cognee gets a local-only LiteLLM key through OpenBao" {
+  key_unit=components/litellm/environments/home/cognee-key/terragrunt.hcl
+  vault_unit=components/openbao/environments/home/cognee-litellm/terragrunt.hcl
+
+  grep -Fq 'models                = ["bge-m3", "bge-reranker-v2-m3", "qwen-chat"]' "$key_unit"
+  grep -Fq 'consumer = "cognee"' "$key_unit"
+  grep -Fq 'dependency "cognee_key"' "$vault_unit"
+  grep -Fq 'name          = "lab/cognee-litellm"' "$vault_unit"
+  grep -Fq 'LLM_API_KEY = dependency.cognee_key.outputs.key' "$vault_unit"
+}

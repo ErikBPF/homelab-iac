@@ -1,4 +1,6 @@
 [
+  "bge-m3",
+  "bge-reranker-v2-m3",
   "deepseek-v4-flash",
   "glm-5",
   "ha-agent-qwen4b",
