@@ -47,6 +47,8 @@ resource "vault_policy" "iac_writer" {
     "path \"secret/metadata/home/ha-harness-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/lab/cognee-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/lab/cognee-litellm\" { capabilities = [\"read\"] }",
+    "path \"secret/data/platform/authentik\" { capabilities = [\"create\", \"update\", \"read\"] }",
+    "path \"secret/metadata/platform/authentik\" { capabilities = [\"read\"] }",
   ])
 }
 

@@ -19,3 +19,10 @@
   ! grep -R -E -q 'AUTHENTIK_(SECRET_KEY|POSTGRESQL_PASSWORD)[[:space:]]*=[[:space:]]*"[^$]' \
     components/openbao/environments/home/authentik-runtime
 }
+
+@test "Authentik writer access is limited to its exact KV path" {
+  policy=components/openbao/modules/runtime-secret-foundation/main.tf
+  grep -Fq 'path \"secret/data/platform/authentik\" { capabilities = [\"create\", \"update\", \"read\"] }' "$policy"
+  grep -Fq 'path \"secret/metadata/platform/authentik\" { capabilities = [\"read\"] }' "$policy"
+  ! grep -Fq 'secret/data/platform/*' "$policy"
+}
