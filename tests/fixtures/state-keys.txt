@@ -5,6 +5,8 @@ cloudflare/dns cloudflare/dns/terraform.tfstate
 cloudflare/ratelimit cloudflare/ratelimit/terraform.tfstate
 cloudflare/swag-token cloudflare/swag-token/terraform.tfstate
 cloudflare/tunnel cloudflare/tunnel/terraform.tfstate
+components/authentik/environments/home/iac-access components/authentik/environments/home/iac-access/terraform.tfstate
+components/harbor-iam/environments/home/production components/harbor-iam/environments/home/production/terraform.tfstate
 components/litellm/environments/home/canary components/litellm/environments/home/canary/terraform.tfstate
 components/litellm/environments/home/cognee-key components/litellm/environments/home/cognee-key/terraform.tfstate
 components/litellm/environments/home/ha-harness-key components/litellm/environments/home/ha-harness-key/terraform.tfstate
