@@ -28,6 +28,7 @@
   module=components/harbor-iam/modules/oidc/main.tf
 
   grep -Eq 'matching_mode[[:space:]]*=[[:space:]]*"strict"' "$module"
+  grep -Eq 'redirect_uri_type[[:space:]]*=[[:space:]]*"authorization"' "$module"
   grep -Eq 'url[[:space:]]*=[[:space:]]*"https://harbor.homelab.pastelariadev.com/c/oidc/callback/"' "$module"
   grep -Eq 'client_type[[:space:]]*=[[:space:]]*"confidential"' "$module"
   grep -Eq 'grant_types[[:space:]]*=[[:space:]]*\["authorization_code", "refresh_token"\]' "$module"
@@ -50,6 +51,7 @@
   grep -Fq 'data "harbor_projects" "all"' "$module"
   ! grep -Fq 'data "harbor_project" "this"' "$module"
   grep -Fq 'for project in data.harbor_projects.all.projects' "$module"
+  grep -Fq 'project_id = "/projects/${' "$module"
   grep -Eq 'auth_mode[[:space:]]*=[[:space:]]*"oidc_auth"' "$module"
   grep -Eq 'primary_auth_mode[[:space:]]*=[[:space:]]*false' "$module"
   grep -Eq 'oidc_verify_cert[[:space:]]*=[[:space:]]*true' "$module"
