@@ -24,6 +24,7 @@ out=$(terragrunt run --all \
   --parallelism 1 \
   --filter '!oracle/compute-telstar' \
   --filter '!components/litellm/environments/home/canary' \
+  --filter '!components/authentik/environments/home/iac-access' \
   --filter '!components/openbao/environments/home/runtime-secret-foundation' \
   --non-interactive -- plan -detailed-exitcode -no-color 2>&1)
 code=$?
