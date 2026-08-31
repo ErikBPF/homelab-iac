@@ -26,12 +26,18 @@
   grep -Eq 'matching_mode[[:space:]]*=[[:space:]]*"strict"' "$module"
   grep -Eq 'url[[:space:]]*=[[:space:]]*"https://harbor.homelab.pastelariadev.com/c/oidc/callback/"' "$module"
   grep -Eq 'client_type[[:space:]]*=[[:space:]]*"confidential"' "$module"
+  grep -Eq 'grant_types[[:space:]]*=[[:space:]]*\["authorization_code", "refresh_token"\]' "$module"
+  grep -Fq 'authentication_flow = data.authentik_flow.authentication.id' "$module"
   grep -Eq 'issuer_mode[[:space:]]*=[[:space:]]*"per_provider"' "$module"
   grep -Eq 'access_code_validity[[:space:]]*=[[:space:]]*"minutes=1"' "$module"
   grep -Eq 'access_token_validity[[:space:]]*=[[:space:]]*"minutes=5"' "$module"
+  grep -Eq 'refresh_token_validity[[:space:]]*=[[:space:]]*"hours=8"' "$module"
   grep -Eq 'signing_key[[:space:]]*=[[:space:]]*data.authentik_certificate_key_pair.signing.id' "$module"
   grep -Fq 'startswith("harbor-")' "$module"
   grep -Fq 'group  = data.authentik_group.readers.id' "$module"
+  grep -Fq 'ak_user_has_authenticator(request.user, "totp")' "$module"
+  grep -Fq 'ak_user_has_authenticator(request.user, "webauthn")' "$module"
+  grep -Fq 'policy = authentik_policy_expression.mfa_enrolled.id' "$module"
 }
 
 @test "Harbor keeps local breakglass and maps readers only as project guests" {
@@ -59,6 +65,10 @@
 
   grep -Fq 'authentik_core.view_group' "$unit"
   grep -Fq 'authentik_core.view_user' "$unit"
+  grep -Fq 'authentik_policies_expression.add_expressionpolicy' "$unit"
+  grep -Fq 'authentik_policies_expression.change_expressionpolicy' "$unit"
+  grep -Fq 'authentik_policies_expression.delete_expressionpolicy' "$unit"
+  grep -Fq 'authentik_policies_expression.view_expressionpolicy' "$unit"
   ! grep -Eq 'authentik_core\.(add|change|delete)_(group|user)' "$unit"
   grep -Fq 'is_superuser = false' "$module"
   grep -Eq 'service_account_username[[:space:]]*=[[:space:]]*"homelab-iac"' "$unit"

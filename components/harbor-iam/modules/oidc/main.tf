@@ -6,6 +6,10 @@ data "authentik_flow" "authorization" {
   slug = "default-provider-authorization-explicit-consent"
 }
 
+data "authentik_flow" "authentication" {
+  slug = "default-authentication-flow"
+}
+
 data "authentik_flow" "invalidation" {
   slug = "default-provider-invalidation-flow"
 }
@@ -40,20 +44,23 @@ resource "authentik_property_mapping_provider_scope" "groups" {
 }
 
 resource "authentik_provider_oauth2" "harbor" {
-  name               = "Harbor"
-  client_id          = "harbor"
-  client_type        = "confidential"
-  authorization_flow = data.authentik_flow.authorization.id
-  invalidation_flow  = data.authentik_flow.invalidation.id
+  name                = "Harbor"
+  client_id           = "harbor"
+  client_type         = "confidential"
+  grant_types         = ["authorization_code", "refresh_token"]
+  authorization_flow  = data.authentik_flow.authorization.id
+  authentication_flow = data.authentik_flow.authentication.id
+  invalidation_flow   = data.authentik_flow.invalidation.id
   allowed_redirect_uris = [{
     matching_mode = "strict"
     url           = "https://harbor.homelab.pastelariadev.com/c/oidc/callback/"
   }]
-  access_code_validity  = "minutes=1"
-  access_token_validity = "minutes=5"
-  issuer_mode           = "per_provider"
-  signing_key           = data.authentik_certificate_key_pair.signing.id
-  sub_mode              = "user_uuid"
+  access_code_validity   = "minutes=1"
+  access_token_validity  = "minutes=5"
+  refresh_token_validity = "hours=8"
+  issuer_mode            = "per_provider"
+  signing_key            = data.authentik_certificate_key_pair.signing.id
+  sub_mode               = "user_uuid"
   property_mappings = concat(
     data.authentik_property_mapping_provider_scope.defaults.ids,
     [authentik_property_mapping_provider_scope.groups.id],
@@ -71,6 +78,22 @@ resource "authentik_policy_binding" "harbor_readers" {
   target = authentik_application.harbor.uuid
   group  = data.authentik_group.readers.id
   order  = 0
+}
+
+resource "authentik_policy_expression" "mfa_enrolled" {
+  name       = "Harbor MFA enrollment"
+  expression = <<-EOT
+    return (
+      ak_user_has_authenticator(request.user, "totp") or
+      ak_user_has_authenticator(request.user, "webauthn")
+    )
+  EOT
+}
+
+resource "authentik_policy_binding" "harbor_mfa" {
+  target = authentik_application.harbor.uuid
+  policy = authentik_policy_expression.mfa_enrolled.id
+  order  = 10
 }
 
 resource "harbor_config_auth" "oidc" {
