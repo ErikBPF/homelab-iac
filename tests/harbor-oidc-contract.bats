@@ -47,6 +47,9 @@
 @test "Harbor keeps local breakglass and maps readers only as project guests" {
   module=components/harbor-iam/modules/oidc/main.tf
 
+  grep -Fq 'data "harbor_projects" "all"' "$module"
+  ! grep -Fq 'data "harbor_project" "this"' "$module"
+  grep -Fq 'for project in data.harbor_projects.all.projects' "$module"
   grep -Eq 'auth_mode[[:space:]]*=[[:space:]]*"oidc_auth"' "$module"
   grep -Eq 'primary_auth_mode[[:space:]]*=[[:space:]]*false' "$module"
   grep -Eq 'oidc_verify_cert[[:space:]]*=[[:space:]]*true' "$module"

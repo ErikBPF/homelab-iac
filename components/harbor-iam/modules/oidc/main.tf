@@ -114,15 +114,15 @@ resource "harbor_config_auth" "oidc" {
   oidc_logout                   = true
 }
 
-data "harbor_project" "this" {
-  for_each = var.projects
-  name     = each.key
-}
+data "harbor_projects" "all" {}
 
 resource "harbor_project_member_group" "readers" {
   for_each = var.projects
 
-  project_id = data.harbor_project.this[each.key].id
+  project_id = tostring([
+    for project in data.harbor_projects.all.projects : project.project_id
+    if project.name == each.key
+  ][0])
   group_name = var.reader_group_name
   role       = "guest"
   type       = "oidc"
