@@ -52,8 +52,9 @@ resource "authentik_provider_oauth2" "harbor" {
   authentication_flow = data.authentik_flow.authentication.id
   invalidation_flow   = data.authentik_flow.invalidation.id
   allowed_redirect_uris = [{
-    matching_mode = "strict"
-    url           = "https://harbor.homelab.pastelariadev.com/c/oidc/callback/"
+    matching_mode     = "strict"
+    redirect_uri_type = "authorization"
+    url               = "https://harbor.homelab.pastelariadev.com/c/oidc/callback/"
   }]
   access_code_validity   = "minutes=1"
   access_token_validity  = "minutes=5"
@@ -119,10 +120,10 @@ data "harbor_projects" "all" {}
 resource "harbor_project_member_group" "readers" {
   for_each = var.projects
 
-  project_id = tostring([
+  project_id = "/projects/${[
     for project in data.harbor_projects.all.projects : project.project_id
     if project.name == each.key
-  ][0])
+  ][0]}"
   group_name = var.reader_group_name
   role       = "guest"
   type       = "oidc"
