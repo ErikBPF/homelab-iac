@@ -1,5 +1,9 @@
 #!/usr/bin/env bats
 
+@test "purpose-named secret handoffs stay ignored" {
+  git check-ignore -q authentik-admin-token.secrets.json
+}
+
 @test "Harbor IAM providers are pinned and credentials stay environment-only" {
   versions=components/harbor-iam/modules/oidc/versions.tf
   root=components/harbor-iam/root.hcl

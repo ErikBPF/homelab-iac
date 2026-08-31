@@ -8,6 +8,7 @@ devenv.local.yaml
 .env
 
 # Secrets dropped during exploration (never commit)
+*.secrets.json
 unifi_key
 unifi-api-key.json
 github-app-oauth.json
