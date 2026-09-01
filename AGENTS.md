@@ -45,6 +45,18 @@ applicable workflow gate; do not invent tests or ceremony.
 - Codex must not print secret values. Consume only the requested keys, then
   delete the handoff file after the secret reaches its sanctioned store.
 
+## Machine identity naming
+
+- Name standing nonhuman identities as
+  `<identity-type>-<controller>-<target>-<capability>`. Keep a product-required
+  prefix such as Harbor's `robot$`, then apply the remaining segments.
+- Use a separate identity and credential for each target trust boundary. Never
+  use a human credential for unattended work.
+- Reject vague standing names such as `automation`, `robot`, `service-account`,
+  or a bare repository name. Fixed upstream break-glass users are exempt.
+- Examples: `svc-homelab-iac-authentik-config-manager` and
+  `robot$homelab-iac-harbor-project-iam-manager`.
+
 ## Ownership
 
 - `homelab-iac`: Terraform-managed infrastructure and external/platform control
