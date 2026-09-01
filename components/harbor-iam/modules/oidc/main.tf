@@ -1,3 +1,11 @@
+locals {
+  proxy_registries = {
+    ghcr = { provider_name = "github", endpoint_url = "https://ghcr.io" }
+    quay = { provider_name = "docker-registry", endpoint_url = "https://quay.io" }
+    lscr = { provider_name = "docker-registry", endpoint_url = "https://lscr.io" }
+  }
+}
+
 data "authentik_group" "readers" {
   name          = var.reader_group_name
   include_users = false
@@ -173,5 +181,68 @@ resource "harbor_robot_account" "project_iam_manager" {
         resource = "member"
       }
     }
+  }
+
+  depends_on = [harbor_project.proxy]
+}
+
+resource "harbor_registry" "proxy" {
+  for_each = local.proxy_registries
+
+  name          = each.key
+  provider_name = each.value.provider_name
+  endpoint_url  = each.value.endpoint_url
+  insecure      = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "harbor_project" "proxy" {
+  for_each = local.proxy_registries
+
+  name                           = each.key
+  public                         = true
+  vulnerability_scanning         = true
+  auto_sbom_generation           = true
+  registry_id                    = harbor_registry.proxy[each.key].registry_id
+  proxy_cache_local_on_not_found = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+data "harbor_projects" "all" {}
+
+locals {
+  dockerhub_project_id = one([
+    for project in data.harbor_projects.all.projects : project.project_id
+    if project.name == "dockerhub"
+  ])
+  cache_projects = toset(["dockerhub", "ghcr", "lscr", "quay"])
+}
+
+resource "harbor_retention_policy" "cache" {
+  for_each = local.cache_projects
+  scope    = each.key == "dockerhub" ? "/projects/${local.dockerhub_project_id}" : harbor_project.proxy[each.key].id
+
+  rule {
+    most_recently_pulled = 3
+    repo_matching        = "**"
+    tag_matching         = "**"
+    untagged_artifacts   = false
+  }
+
+  rule {
+    n_days_since_last_pull = 90
+    repo_matching          = "**"
+    tag_matching           = "**"
+    untagged_artifacts     = false
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 }

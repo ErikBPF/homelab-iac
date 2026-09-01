@@ -10,5 +10,5 @@ variable "harbor_project_iam_manager_secret_version" {
 
 variable "harbor_project_iam_manager_projects" {
   type    = set(string)
-  default = ["dockerhub", "library"]
+  default = ["dockerhub", "ghcr", "library", "lscr", "quay"]
 }
