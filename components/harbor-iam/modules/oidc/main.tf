@@ -154,35 +154,32 @@ resource "harbor_robot_account" "project_iam_manager" {
     }
   }
 
-  dynamic "permissions" {
-    for_each = var.harbor_project_iam_manager_projects
-    content {
-      kind      = "project"
-      namespace = permissions.value
-      access {
-        action   = "read"
-        resource = "project"
-      }
-      access {
-        action   = "create"
-        resource = "member"
-      }
-      access {
-        action   = "read"
-        resource = "member"
-      }
-      access {
-        action   = "update"
-        resource = "member"
-      }
-      access {
-        action   = "list"
-        resource = "member"
-      }
-      access {
-        action   = "delete"
-        resource = "member"
-      }
+  permissions {
+    kind      = "project"
+    namespace = "*"
+    access {
+      action   = "read"
+      resource = "project"
+    }
+    access {
+      action   = "create"
+      resource = "member"
+    }
+    access {
+      action   = "read"
+      resource = "member"
+    }
+    access {
+      action   = "update"
+      resource = "member"
+    }
+    access {
+      action   = "list"
+      resource = "member"
+    }
+    access {
+      action   = "delete"
+      resource = "member"
     }
   }
 

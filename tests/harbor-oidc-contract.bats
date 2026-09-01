@@ -82,7 +82,7 @@
     components/harbor-iam/environments/home/project-members/terragrunt.hcl
 }
 
-@test "Harbor bootstrap creates one explicit least-privilege project IAM manager" {
+@test "Harbor bootstrap creates one future-project-safe IAM manager" {
   module=components/harbor-iam/modules/oidc/main.tf
 
   grep -Fq 'resource "harbor_robot_account" "project_iam_manager"' "$module"
@@ -97,10 +97,9 @@
     grep -Fq "action   = \"$action\"" "$module"
   done
   grep -Fq 'resource = "member"' "$module"
-  grep -Fq 'namespace = permissions.value' "$module"
-  grep -Fq 'default = ["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"]' \
-    components/harbor-iam/modules/oidc/variables.tf
-  ! grep -Eq 'namespace[[:space:]]*=[[:space:]]*"\*"' "$module"
+  grep -Eq 'namespace[[:space:]]*=[[:space:]]*"\*"' "$module"
+  ! grep -Fq 'namespace = permissions.value' "$module"
+  ! grep -Rq 'harbor_project_iam_manager_projects' components/harbor-iam
   ! grep -Eq 'resource[[:space:]]*=[[:space:]]*"(repository|artifact|robot|user-group)"' "$module"
   grep -Eq 'harbor_project_iam_manager_secret[[:space:]]*=[[:space:]]*get_env\("HARBOR_PROJECT_IAM_MANAGER_SECRET", ""\)' \
     components/harbor-iam/root.hcl
@@ -300,7 +299,6 @@ SH
 
 @test "Harbor cache endpoints, projects, retention, and GC are declarative but unscheduled" {
   module=components/harbor-iam/modules/oidc/main.tf
-  variables=components/harbor-iam/modules/oidc/variables.tf
   members=components/harbor-iam/environments/home/project-members/terragrunt.hcl
 
   grep -Eq 'ghcr[[:space:]]*=[[:space:]]*\{ provider_name = "github", endpoint_url = "https://ghcr.io" \}' "$module"
@@ -323,7 +321,6 @@ SH
   ! grep -Eq '^[[:space:]]*schedule[[:space:]]*=' <<<"$retention"
   grep -Fq 'depends_on = [harbor_project.proxy]' "$module"
   ! grep -Fq 'resource "harbor_garbage_collection"' "$module"
-  grep -Fq 'default = ["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"]' "$variables"
   grep -Fq 'projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])' "$members"
 }
 
