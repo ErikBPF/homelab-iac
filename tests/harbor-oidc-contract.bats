@@ -274,7 +274,7 @@ SH
   ! grep -R -Eq 'client_secret[[:space:]]*=[[:space:]]*"[^$]' components/harbor-iam
 }
 
-@test "Harbor fleet readers are derived, pull-only, finite, and write-only" {
+@test "Harbor fleet readers are derived, pull-only, future-safe, and write-only" {
   module=components/harbor-iam/modules/fleet-readers/main.tf
   unit=components/harbor-iam/environments/home/fleet-readers/terragrunt.hcl
 
@@ -285,12 +285,11 @@ SH
   grep -Fq 'disable     = contains(var.disabled_hosts, each.key)' "$module"
   grep -Fq 'secret_wo         = tostring(ephemeral.random_password.reader[each.key].result)' "$module"
   grep -Fq 'secret_wo_version = var.rotation_generation' "$module"
-  grep -Fq 'reader_projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])' "$module"
-  grep -Fq 'for_each = local.reader_projects' "$module"
   grep -Fq 'action   = "pull"' "$module"
   grep -Fq 'resource = "repository"' "$module"
-  grep -Fq 'namespace = permissions.value' "$module"
-  ! grep -Eq 'namespace[[:space:]]*=[[:space:]]*"\*"' "$module"
+  grep -Eq 'namespace[[:space:]]*=[[:space:]]*"\*"' "$module"
+  ! grep -Fq 'reader_projects' "$module"
+  ! grep -Fq 'namespace = permissions.value' "$module"
   grep -Eq 'name[[:space:]]*=[[:space:]]*"fleet/harbor/readers/\$\{each.key\}"' "$module"
   grep -Eq 'data_json_wo[[:space:]]*=[[:space:]]*jsonencode\(\{' "$module"
   grep -Eq 'data_json_wo_version[[:space:]]*=[[:space:]]*var.rotation_generation' "$module"
