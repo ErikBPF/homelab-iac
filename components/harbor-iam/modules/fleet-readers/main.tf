@@ -1,5 +1,5 @@
 locals {
-  reader_projects = toset(["dockerhub", "ghcr", "library", "lscr", "quay"])
+  reader_projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])
 }
 
 ephemeral "random_password" "reader" {

@@ -11,5 +11,5 @@ terraform {
 }
 
 inputs = {
-  projects = toset(["dockerhub", "ghcr", "library", "lscr", "quay"])
+  projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])
 }

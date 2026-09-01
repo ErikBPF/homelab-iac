@@ -1,8 +1,11 @@
 locals {
   proxy_registries = {
-    ghcr = { provider_name = "github", endpoint_url = "https://ghcr.io" }
-    quay = { provider_name = "docker-registry", endpoint_url = "https://quay.io" }
-    lscr = { provider_name = "docker-registry", endpoint_url = "https://lscr.io" }
+    ghcr       = { provider_name = "github", endpoint_url = "https://ghcr.io" }
+    k8s        = { provider_name = "docker-registry", endpoint_url = "https://registry.k8s.io" }
+    langfuse   = { provider_name = "docker-registry", endpoint_url = "https://docker.langfuse.com" }
+    lscr       = { provider_name = "docker-registry", endpoint_url = "https://lscr.io" }
+    quay       = { provider_name = "docker-registry", endpoint_url = "https://quay.io" }
+    risingwave = { provider_name = "docker-registry", endpoint_url = "https://docker.risingwave.com" }
   }
 }
 
@@ -221,7 +224,7 @@ locals {
     for project in data.harbor_projects.all.projects : project.project_id
     if project.name == "dockerhub"
   ])
-  cache_projects = toset(["dockerhub", "ghcr", "lscr", "quay"])
+  cache_projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "lscr", "quay", "risingwave"])
 }
 
 resource "harbor_retention_policy" "cache" {

@@ -78,7 +78,7 @@
   grep -Fq 'oidc_client_secret_wo_version = 1' "$module"
   ! grep -q 'oidc_admin_group' "$module"
   test "$(grep -Fc 'role       = "guest"' "$members")" -eq 1
-  grep -Fq 'projects = toset(["dockerhub", "ghcr", "library", "lscr", "quay"])' \
+  grep -Fq 'projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])' \
     components/harbor-iam/environments/home/project-members/terragrunt.hcl
 }
 
@@ -98,7 +98,7 @@
   done
   grep -Fq 'resource = "member"' "$module"
   grep -Fq 'namespace = permissions.value' "$module"
-  grep -Fq 'default = ["dockerhub", "ghcr", "library", "lscr", "quay"]' \
+  grep -Fq 'default = ["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"]' \
     components/harbor-iam/modules/oidc/variables.tf
   ! grep -Eq 'namespace[[:space:]]*=[[:space:]]*"\*"' "$module"
   ! grep -Eq 'resource[[:space:]]*=[[:space:]]*"(repository|artifact|robot|user-group)"' "$module"
@@ -286,7 +286,7 @@ SH
   grep -Fq 'disable     = contains(var.disabled_hosts, each.key)' "$module"
   grep -Fq 'secret_wo         = tostring(ephemeral.random_password.reader[each.key].result)' "$module"
   grep -Fq 'secret_wo_version = var.rotation_generation' "$module"
-  grep -Fq 'reader_projects = toset(["dockerhub", "ghcr", "library", "lscr", "quay"])' "$module"
+  grep -Fq 'reader_projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])' "$module"
   grep -Fq 'for_each = local.reader_projects' "$module"
   grep -Fq 'action   = "pull"' "$module"
   grep -Fq 'resource = "repository"' "$module"
@@ -303,9 +303,12 @@ SH
   variables=components/harbor-iam/modules/oidc/variables.tf
   members=components/harbor-iam/environments/home/project-members/terragrunt.hcl
 
-  grep -Fq 'ghcr = { provider_name = "github", endpoint_url = "https://ghcr.io" }' "$module"
-  grep -Fq 'quay = { provider_name = "docker-registry", endpoint_url = "https://quay.io" }' "$module"
-  grep -Fq 'lscr = { provider_name = "docker-registry", endpoint_url = "https://lscr.io" }' "$module"
+  grep -Eq 'ghcr[[:space:]]*=[[:space:]]*\{ provider_name = "github", endpoint_url = "https://ghcr.io" \}' "$module"
+  grep -Eq 'quay[[:space:]]*=[[:space:]]*\{ provider_name = "docker-registry", endpoint_url = "https://quay.io" \}' "$module"
+  grep -Eq 'lscr[[:space:]]*=[[:space:]]*\{ provider_name = "docker-registry", endpoint_url = "https://lscr.io" \}' "$module"
+  grep -Eq 'k8s[[:space:]]*=[[:space:]]*\{ provider_name = "docker-registry", endpoint_url = "https://registry.k8s.io" \}' "$module"
+  grep -Eq 'langfuse[[:space:]]*=[[:space:]]*\{ provider_name = "docker-registry", endpoint_url = "https://docker.langfuse.com" \}' "$module"
+  grep -Eq 'risingwave[[:space:]]*=[[:space:]]*\{ provider_name = "docker-registry", endpoint_url = "https://docker.risingwave.com" \}' "$module"
   grep -Fq 'resource "harbor_registry" "proxy"' "$module"
   grep -Fq 'resource "harbor_project" "proxy"' "$module"
   grep -Eq 'registry_id[[:space:]]*=[[:space:]]*harbor_registry.proxy\[each.key\].registry_id' "$module"
@@ -320,8 +323,8 @@ SH
   ! grep -Eq '^[[:space:]]*schedule[[:space:]]*=' <<<"$retention"
   grep -Fq 'depends_on = [harbor_project.proxy]' "$module"
   ! grep -Fq 'resource "harbor_garbage_collection"' "$module"
-  grep -Fq 'default = ["dockerhub", "ghcr", "library", "lscr", "quay"]' "$variables"
-  grep -Fq 'projects = toset(["dockerhub", "ghcr", "library", "lscr", "quay"])' "$members"
+  grep -Fq 'default = ["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"]' "$variables"
+  grep -Fq 'projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])' "$members"
 }
 
 @test "only proven Harbor consumers receive exact-read OpenBao identities" {
