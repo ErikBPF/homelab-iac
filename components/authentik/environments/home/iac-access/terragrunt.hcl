@@ -12,7 +12,7 @@ terraform {
 
 # Admin-only bootstrap. The resulting service token cannot mutate users/groups.
 inputs = {
-  service_account_username = "homelab-iac"
+  service_account_username = "svc-homelab-iac-authentik-config-manager"
   operator_username        = "erik"
   reader_group_name        = "harbor-readers"
   permissions = toset([

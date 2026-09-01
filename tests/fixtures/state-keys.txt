@@ -6,7 +6,9 @@ cloudflare/ratelimit cloudflare/ratelimit/terraform.tfstate
 cloudflare/swag-token cloudflare/swag-token/terraform.tfstate
 cloudflare/tunnel cloudflare/tunnel/terraform.tfstate
 components/authentik/environments/home/iac-access components/authentik/environments/home/iac-access/terraform.tfstate
+components/harbor-iam/environments/home/fleet-readers components/harbor-iam/environments/home/fleet-readers/terraform.tfstate
 components/harbor-iam/environments/home/production components/harbor-iam/environments/home/production/terraform.tfstate
+components/harbor-iam/environments/home/project-members components/harbor-iam/environments/home/project-members/terraform.tfstate
 components/litellm/environments/home/canary components/litellm/environments/home/canary/terraform.tfstate
 components/litellm/environments/home/cognee-key components/litellm/environments/home/cognee-key/terraform.tfstate
 components/litellm/environments/home/ha-harness-key components/litellm/environments/home/ha-harness-key/terraform.tfstate
@@ -14,6 +16,7 @@ components/litellm/environments/home/production components/litellm/environments/
 components/openbao/environments/home/authentik-runtime components/openbao/environments/home/authentik-runtime/terraform.tfstate
 components/openbao/environments/home/cognee-litellm components/openbao/environments/home/cognee-litellm/terraform.tfstate
 components/openbao/environments/home/ha-harness-litellm components/openbao/environments/home/ha-harness-litellm/terraform.tfstate
+components/openbao/environments/home/harbor-project-iam components/openbao/environments/home/harbor-project-iam/terraform.tfstate
 components/openbao/environments/home/runtime-secret-foundation components/openbao/environments/home/runtime-secret-foundation/terraform.tfstate
 github/repos github/repos/terraform.tfstate
 oracle/compute-telstar oracle/compute-telstar/terraform.tfstate

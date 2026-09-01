@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${OPENBAO_HARBOR_PROJECT_IAM_READER_ROLE_ID:?OPENBAO_HARBOR_PROJECT_IAM_READER_ROLE_ID is required}"
+: "${OPENBAO_HARBOR_PROJECT_IAM_READER_SECRET_ID:?OPENBAO_HARBOR_PROJECT_IAM_READER_SECRET_ID is required}"
+[[ $# -gt 0 ]] || { echo "usage: $0 <terragrunt-arguments...>" >&2; exit 64; }
+
+repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+vault_addr=${VAULT_ADDR:-https://openbao.homelab.pastelariadev.com}
+expected_username="robot\$homelab-iac-harbor-project-iam-manager"
+
+login=$(
+  jq -n '{role_id: env.OPENBAO_HARBOR_PROJECT_IAM_READER_ROLE_ID, secret_id: env.OPENBAO_HARBOR_PROJECT_IAM_READER_SECRET_ID}' |
+    curl --fail --silent --show-error \
+      --header 'Content-Type: application/json' --data-binary @- \
+      "$vault_addr/v1/auth/approle/login"
+)
+vault_token=$(jq -er '.auth.client_token' <<<"$login")
+unset OPENBAO_HARBOR_PROJECT_IAM_READER_ROLE_ID OPENBAO_HARBOR_PROJECT_IAM_READER_SECRET_ID
+revoked=false
+
+vault_curl() {
+  curl --fail --silent --show-error \
+    --config <(printf 'header = "X-Vault-Token: %s"\n' "$vault_token") "$@"
+}
+
+cleanup() {
+  if ! $revoked; then
+    vault_curl --request POST "$vault_addr/v1/auth/token/revoke-self" >/dev/null || true
+  fi
+}
+trap cleanup EXIT
+
+payload=$(vault_curl "$vault_addr/v1/secret/data/platform/harbor/project-iam-manager")
+vault_curl --request POST "$vault_addr/v1/auth/token/revoke-self" >/dev/null
+revoked=true
+
+HARBOR_PROJECT_IAM_MANAGER_USERNAME=$(jq -er '.data.data.HARBOR_PROJECT_IAM_MANAGER_USERNAME' <<<"$payload")
+HARBOR_PROJECT_IAM_MANAGER_SECRET=$(jq -er '.data.data.HARBOR_PROJECT_IAM_MANAGER_SECRET' <<<"$payload")
+[[ $HARBOR_PROJECT_IAM_MANAGER_USERNAME == "$expected_username" ]] || {
+  echo "OpenBao returned an unexpected Harbor project IAM identity" >&2
+  exit 1
+}
+[[ ${#HARBOR_PROJECT_IAM_MANAGER_SECRET} -ge 8 &&
+   ${#HARBOR_PROJECT_IAM_MANAGER_SECRET} -le 128 &&
+   $HARBOR_PROJECT_IAM_MANAGER_SECRET =~ [A-Z] &&
+   $HARBOR_PROJECT_IAM_MANAGER_SECRET =~ [a-z] &&
+   $HARBOR_PROJECT_IAM_MANAGER_SECRET =~ [0-9] ]] || {
+  echo "OpenBao returned an invalid Harbor project IAM credential" >&2
+  exit 1
+}
+export HARBOR_PROJECT_IAM_MANAGER_USERNAME HARBOR_PROJECT_IAM_MANAGER_SECRET
+trap - EXIT
+
+cd "$repo_root/components/harbor-iam/environments/home/project-members"
+exec terragrunt "$@"

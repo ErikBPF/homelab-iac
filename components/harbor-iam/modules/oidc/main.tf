@@ -1,3 +1,11 @@
+locals {
+  proxy_registries = {
+    ghcr = { provider_name = "github", endpoint_url = "https://ghcr.io" }
+    quay = { provider_name = "docker-registry", endpoint_url = "https://quay.io" }
+    lscr = { provider_name = "docker-registry", endpoint_url = "https://lscr.io" }
+  }
+}
+
 data "authentik_group" "readers" {
   name          = var.reader_group_name
   include_users = false
@@ -54,7 +62,7 @@ resource "authentik_provider_oauth2" "harbor" {
   allowed_redirect_uris = [{
     matching_mode     = "strict"
     redirect_uri_type = "authorization"
-    url               = "https://harbor.homelab.pastelariadev.com/c/oidc/callback/"
+    url               = "https://harbor.homelab.pastelariadev.com/c/oidc/callback"
   }]
   access_code_validity   = "minutes=1"
   access_token_validity  = "minutes=5"
@@ -115,18 +123,126 @@ resource "harbor_config_auth" "oidc" {
   oidc_logout                   = true
 }
 
+resource "harbor_robot_account" "project_iam_manager" {
+  name              = "homelab-iac-harbor-project-iam-manager"
+  description       = "Terraform day-two Harbor project membership manager"
+  level             = "system"
+  duration          = 365
+  secret_wo         = var.harbor_project_iam_manager_secret_configured ? var.harbor_project_iam_manager_secret : null
+  secret_wo_version = var.harbor_project_iam_manager_secret_configured ? var.harbor_project_iam_manager_secret_version : null
+
+  lifecycle {
+    precondition {
+      condition     = var.harbor_project_iam_manager_existing || var.harbor_project_iam_manager_secret_configured
+      error_message = "Fresh Harbor project-IAM manager creation requires HARBOR_PROJECT_IAM_MANAGER_SECRET; use bin/harbor-iam-bootstrap."
+    }
+    precondition {
+      condition     = var.harbor_project_iam_manager_secret_version == 2
+      error_message = "In-place Harbor project-IAM secret rotation is forbidden; use a blue-green replacement identity."
+    }
+  }
+
+  permissions {
+    kind      = "system"
+    namespace = "/"
+    access {
+      action   = "list"
+      resource = "project"
+    }
+  }
+
+  dynamic "permissions" {
+    for_each = var.harbor_project_iam_manager_projects
+    content {
+      kind      = "project"
+      namespace = permissions.value
+      access {
+        action   = "read"
+        resource = "project"
+      }
+      access {
+        action   = "create"
+        resource = "member"
+      }
+      access {
+        action   = "read"
+        resource = "member"
+      }
+      access {
+        action   = "update"
+        resource = "member"
+      }
+      access {
+        action   = "list"
+        resource = "member"
+      }
+      access {
+        action   = "delete"
+        resource = "member"
+      }
+    }
+  }
+
+  depends_on = [harbor_project.proxy]
+}
+
+resource "harbor_registry" "proxy" {
+  for_each = local.proxy_registries
+
+  name          = each.key
+  provider_name = each.value.provider_name
+  endpoint_url  = each.value.endpoint_url
+  insecure      = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "harbor_project" "proxy" {
+  for_each = local.proxy_registries
+
+  name                           = each.key
+  public                         = true
+  vulnerability_scanning         = true
+  auto_sbom_generation           = true
+  registry_id                    = harbor_registry.proxy[each.key].registry_id
+  proxy_cache_local_on_not_found = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 data "harbor_projects" "all" {}
 
-resource "harbor_project_member_group" "readers" {
-  for_each = var.projects
-
-  project_id = "/projects/${[
+locals {
+  dockerhub_project_id = one([
     for project in data.harbor_projects.all.projects : project.project_id
-    if project.name == each.key
-  ][0]}"
-  group_name = var.reader_group_name
-  role       = "guest"
-  type       = "oidc"
+    if project.name == "dockerhub"
+  ])
+  cache_projects = toset(["dockerhub", "ghcr", "lscr", "quay"])
+}
 
-  depends_on = [harbor_config_auth.oidc]
+resource "harbor_retention_policy" "cache" {
+  for_each = local.cache_projects
+  scope    = each.key == "dockerhub" ? "/projects/${local.dockerhub_project_id}" : harbor_project.proxy[each.key].id
+
+  rule {
+    most_recently_pulled = 3
+    repo_matching        = "**"
+    tag_matching         = "**"
+    untagged_artifacts   = false
+  }
+
+  rule {
+    n_days_since_last_pull = 90
+    repo_matching          = "**"
+    tag_matching           = "**"
+    untagged_artifacts     = false
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
