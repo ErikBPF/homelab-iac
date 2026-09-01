@@ -54,7 +54,7 @@ resource "authentik_provider_oauth2" "harbor" {
   allowed_redirect_uris = [{
     matching_mode     = "strict"
     redirect_uri_type = "authorization"
-    url               = "https://harbor.homelab.pastelariadev.com/c/oidc/callback/"
+    url               = "https://harbor.homelab.pastelariadev.com/c/oidc/callback"
   }]
   access_code_validity   = "minutes=1"
   access_token_validity  = "minutes=5"
@@ -115,18 +115,63 @@ resource "harbor_config_auth" "oidc" {
   oidc_logout                   = true
 }
 
-data "harbor_projects" "all" {}
+resource "harbor_robot_account" "project_iam_manager" {
+  name              = "homelab-iac-harbor-project-iam-manager"
+  description       = "Terraform day-two Harbor project membership manager"
+  level             = "system"
+  duration          = 365
+  secret_wo         = var.harbor_project_iam_manager_secret_configured ? var.harbor_project_iam_manager_secret : null
+  secret_wo_version = var.harbor_project_iam_manager_secret_configured ? var.harbor_project_iam_manager_secret_version : null
 
-resource "harbor_project_member_group" "readers" {
-  for_each = var.projects
+  lifecycle {
+    precondition {
+      condition     = var.harbor_project_iam_manager_existing || var.harbor_project_iam_manager_secret_configured
+      error_message = "Fresh Harbor project-IAM manager creation requires HARBOR_PROJECT_IAM_MANAGER_SECRET; use bin/harbor-iam-bootstrap."
+    }
+    precondition {
+      condition     = var.harbor_project_iam_manager_secret_version == 2
+      error_message = "In-place Harbor project-IAM secret rotation is forbidden; use a blue-green replacement identity."
+    }
+  }
 
-  project_id = "/projects/${[
-    for project in data.harbor_projects.all.projects : project.project_id
-    if project.name == each.key
-  ][0]}"
-  group_name = var.reader_group_name
-  role       = "guest"
-  type       = "oidc"
+  permissions {
+    kind      = "system"
+    namespace = "/"
+    access {
+      action   = "list"
+      resource = "project"
+    }
+  }
 
-  depends_on = [harbor_config_auth.oidc]
+  dynamic "permissions" {
+    for_each = var.harbor_project_iam_manager_projects
+    content {
+      kind      = "project"
+      namespace = permissions.value
+      access {
+        action   = "read"
+        resource = "project"
+      }
+      access {
+        action   = "create"
+        resource = "member"
+      }
+      access {
+        action   = "read"
+        resource = "member"
+      }
+      access {
+        action   = "update"
+        resource = "member"
+      }
+      access {
+        action   = "list"
+        resource = "member"
+      }
+      access {
+        action   = "delete"
+        resource = "member"
+      }
+    }
+  }
 }

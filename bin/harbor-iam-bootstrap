@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+[[ $# -gt 0 ]] || { echo "usage: $0 <terragrunt-arguments...>" >&2; exit 64; }
+
+repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+cd "$repo_root/components/harbor-iam/environments/home/production"
+
+state_list=$(terragrunt state list)
+if grep -Fxq harbor_robot_account.project_iam_manager <<<"$state_list"; then
+  state=$(terragrunt state show harbor_robot_account.project_iam_manager)
+  if [[ -z ${HARBOR_PROJECT_IAM_MANAGER_SECRET:-} && $state == *secret_wo_version* ]]; then
+    echo "robot state still contains secret_wo_version; remove/import the same Harbor ID before secretless use" >&2
+    exit 1
+  fi
+  export HARBOR_PROJECT_IAM_MANAGER_EXISTING=true
+elif [[ -z ${HARBOR_PROJECT_IAM_MANAGER_SECRET:-} ]]; then
+  echo "fresh Harbor project-IAM manager creation requires HARBOR_PROJECT_IAM_MANAGER_SECRET" >&2
+  exit 1
+else
+  export HARBOR_PROJECT_IAM_MANAGER_EXISTING=false
+fi
+
+exec terragrunt "$@"
