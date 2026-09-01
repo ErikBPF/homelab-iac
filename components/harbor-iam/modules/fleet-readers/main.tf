@@ -1,7 +1,3 @@
-locals {
-  reader_projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])
-}
-
 ephemeral "random_password" "reader" {
   for_each         = var.fleet_hosts
   length           = 32
@@ -21,15 +17,12 @@ resource "harbor_robot_account" "reader" {
   secret_wo         = tostring(ephemeral.random_password.reader[each.key].result)
   secret_wo_version = var.rotation_generation
 
-  dynamic "permissions" {
-    for_each = local.reader_projects
-    content {
-      kind      = "project"
-      namespace = permissions.value
-      access {
-        action   = "pull"
-        resource = "repository"
-      }
+  permissions {
+    kind      = "project"
+    namespace = "*"
+    access {
+      action   = "pull"
+      resource = "repository"
     }
   }
 }
