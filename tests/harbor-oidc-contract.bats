@@ -296,6 +296,20 @@ SH
   ! grep -R -q '^output ' components/harbor-iam/modules/fleet-readers
 }
 
+@test "Cognee publisher is library-only and delivered write-only through OpenBao" {
+  module=components/harbor-iam/modules/fleet-readers/main.tf
+  policy=components/openbao/modules/runtime-secret-foundation/main.tf
+
+  grep -Fq 'resource "harbor_robot_account" "cognee_publisher"' "$module"
+  grep -Fq 'name        = "cognee-homelab-publisher"' "$module"
+  grep -Fq 'namespace = "library"' "$module"
+  grep -Fq 'action   = "pull"' "$module"
+  grep -Fq 'action   = "push"' "$module"
+  grep -Fq 'name  = "home/cognee-harbor-publisher"' "$module"
+  grep -Fq 'HARBOR_PUBLISHER_USERNAME = harbor_robot_account.cognee_publisher.full_name' "$module"
+  grep -Fq 'secret/data/home/cognee-harbor-publisher' "$policy"
+}
+
 @test "Harbor cache endpoints, projects, retention, and GC are declarative but unscheduled" {
   module=components/harbor-iam/modules/oidc/main.tf
   members=components/harbor-iam/environments/home/project-members/terragrunt.hcl

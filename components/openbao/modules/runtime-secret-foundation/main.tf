@@ -102,6 +102,8 @@ resource "vault_policy" "harbor_fleet_readers_publisher" {
   policy = join("\n", [
     "path \"secret/data/fleet/harbor/readers/*\" { capabilities = [\"create\", \"update\", \"read\", \"delete\"] }",
     "path \"secret/metadata/fleet/harbor/readers/*\" { capabilities = [\"read\", \"delete\"] }",
+    "path \"secret/data/home/cognee-harbor-publisher\" { capabilities = [\"create\", \"update\", \"read\"] }",
+    "path \"secret/metadata/home/cognee-harbor-publisher\" { capabilities = [\"read\"] }",
   ])
 }
 
