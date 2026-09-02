@@ -329,12 +329,31 @@ SH
   grep -Fq 'resource "harbor_retention_policy" "cache"' "$module"
   grep -Eq 'most_recently_pulled[[:space:]]*=[[:space:]]*3' "$module"
   grep -Eq 'n_days_since_last_pull[[:space:]]*=[[:space:]]*90' "$module"
-  test "$(grep -Ec 'untagged_artifacts[[:space:]]*=[[:space:]]*false' "$module")" -eq 2
   retention=$(sed -n '/resource "harbor_retention_policy" "cache"/,/^}/p' "$module")
+  test "$(grep -Ec 'untagged_artifacts[[:space:]]*=[[:space:]]*false' <<<"$retention")" -eq 2
   ! grep -Eq '^[[:space:]]*schedule[[:space:]]*=' <<<"$retention"
   grep -Fq 'depends_on = [harbor_project.proxy]' "$module"
   ! grep -Fq 'resource "harbor_garbage_collection"' "$module"
   grep -Fq 'projects = toset(["dockerhub", "ghcr", "k8s", "langfuse", "library", "lscr", "quay", "risingwave"])' "$members"
+}
+
+@test "Harbor library project scans, generates SBOMs, retains releases, and protects release tags" {
+  module=components/harbor-iam/modules/oidc/main.tf
+
+  grep -Fq 'resource "harbor_project" "library"' "$module"
+  library=$(sed -n '/resource "harbor_project" "library"/,/^}/p' "$module")
+  grep -Eq 'name[[:space:]]*=[[:space:]]*"library"' <<<"$library"
+  grep -Eq 'vulnerability_scanning[[:space:]]*=[[:space:]]*true' <<<"$library"
+  grep -Eq 'auto_sbom_generation[[:space:]]*=[[:space:]]*true' <<<"$library"
+  grep -Eq 'enable_content_trust_cosign[[:space:]]*=[[:space:]]*false' <<<"$library"
+  grep -Fq 'prevent_destroy = true' <<<"$library"
+
+  grep -Fq 'resource "harbor_retention_policy" "library"' "$module"
+  grep -Fq 'most_recently_pushed = 10' "$module"
+  grep -Fq 'n_days_since_last_push = 90' "$module"
+  grep -Fq 'resource "harbor_immutable_tag_rule" "library_releases"' "$module"
+  grep -Fq 'repo_matching = "cognee-homelab"' "$module"
+  grep -Fq 'tag_matching  = "1.*"' "$module"
 }
 
 @test "only proven Harbor consumers receive exact-read OpenBao identities" {
