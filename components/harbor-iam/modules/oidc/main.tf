@@ -214,6 +214,50 @@ resource "harbor_project" "proxy" {
   }
 }
 
+resource "harbor_project" "library" {
+  name                        = "library"
+  public                      = true
+  vulnerability_scanning      = true
+  auto_sbom_generation        = true
+  enable_content_trust_cosign = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "harbor_retention_policy" "library" {
+  scope = harbor_project.library.id
+
+  rule {
+    most_recently_pushed = 10
+    repo_matching        = "**"
+    tag_matching         = "**"
+    untagged_artifacts   = false
+  }
+
+  rule {
+    n_days_since_last_push = 90
+    repo_matching          = "**"
+    tag_matching           = "**"
+    untagged_artifacts     = false
+  }
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+resource "harbor_immutable_tag_rule" "library_releases" {
+  project_id    = harbor_project.library.id
+  repo_matching = "cognee-homelab"
+  tag_matching  = "1.*"
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
 data "harbor_projects" "all" {}
 
 locals {
