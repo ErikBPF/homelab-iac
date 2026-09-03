@@ -1,10 +1,16 @@
 {
   "hosts": {
+    "apollo": {
+      "ip": "192.168.10.174",
+      "mac": "2a:38:4d:07:de:54",
+      "role": "server",
+      "tailscaleIp": "100.77.14.27"
+    },
     "archinaut": {
       "ip": "192.168.10.225",
       "mac": "b8:27:eb:15:7e:48",
       "role": "server",
-      "tailscaleIp": "100.75.250.107"
+      "tailscaleIp": "100.67.123.113"
     },
     "discovery": {
       "ip": "192.168.10.210",
@@ -43,10 +49,10 @@
       "tailscaleIp": "100.102.248.13"
     },
     "telstar": {
-      "ip": null,
+      "ip": "163.176.138.152",
       "mac": null,
       "role": "server",
-      "tailscaleIp": null
+      "tailscaleIp": "100.95.101.74"
     },
     "vanguard": {
       "ip": "163.176.206.86",
