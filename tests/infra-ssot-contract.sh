@@ -319,11 +319,11 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 14 and
-    (unique | length) == 14 and
+    length == 17 and
+    (unique | length) == 17 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 14 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 17 unique sorted aliases"
 
   jq -e '
     . as $aliases |
@@ -357,6 +357,7 @@ check_s05() {
     .models as $models |
     [
       {alias: "deepseek-v4-flash", source_id: "deepseek-v4-flash"},
+      {alias: "deepseek-v4-pro", source_id: "deepseek-v4-pro"},
       {alias: "glm-5", source_id: "glm-5.2"},
       {alias: "kimi-k2-code", source_id: "kimi-k2.7-code"},
       {alias: "minimax-m2", source_id: "minimax-m2.7"},
@@ -408,7 +409,7 @@ check_s05() {
   [[ -f "$exceptions" ]] \
     || fail "S05 RED: reviewed manual route exception catalog missing"
   jq -e '
-    (keys | sort) == (["mimo", "mimo-pro", "qwen3-max"] | sort) and
+    (keys | sort) == (["glm-5.3-flash", "mimo", "mimo-pro", "qwen3-max", "qwen3.8-flash"] | sort) and
     all(.[];
       (.reason | type == "string" and length > 0) and
       (.reviewed_on | type == "string" and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")))
@@ -416,8 +417,9 @@ check_s05() {
     || fail "S05 RED: manual exceptions must be exact, reasoned, and review-dated"
 
   jq -e --slurpfile aliases "$aliases" '
-    (keys == ["cognee", "hermes", "opencode"]) and
+    (keys == ["cognee", "deepseek-harness", "hermes", "opencode"]) and
     (.cognee == ["bge-m3", "bge-reranker-v2-m3", "qwen-chat"]) and
+    (."deepseek-harness" == ["deepseek-v4-flash", "deepseek-v4-pro", "qwen-chat"]) and
     (.hermes | index("deepseek-v4-flash") != null) and
     (.opencode | index("deepseek-v4-flash") != null) and
     ([to_entries[].value[]] |

@@ -66,6 +66,31 @@
       "privacy_tier": "non-confidential",
       "lifecycle": "production"
     },
+    "deepseek-v4-pro": {
+      "custom_llm_provider": "openai",
+      "base_model": "deepseek-v4-pro",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 1.74,
+      "output_cost_per_million_tokens": 3.84,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "context_limit": 1000000,
+      "output_limit": 384000,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_reasoning": true,
+      "supports_tools": true,
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    },
     "glm-5": {
       "custom_llm_provider": "openai",
       "base_model": "glm-5.2",
@@ -85,6 +110,31 @@
       "output_modalities": [
         "text"
       ],
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    },
+    "glm-5.3-flash": {
+      "custom_llm_provider": "openai",
+      "base_model": "glm-5.3-flash",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.075,
+      "output_cost_per_million_tokens": 0.25,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "context_limit": 1000000,
+      "output_limit": 131072,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_reasoning": true,
+      "supports_tools": true,
       "probe_skip": true,
       "privacy_tier": "non-confidential",
       "lifecycle": "production"
@@ -244,6 +294,31 @@
       "probe_skip": true,
       "privacy_tier": "non-confidential",
       "lifecycle": "manual"
+    },
+    "qwen3.8-flash": {
+      "custom_llm_provider": "openai",
+      "base_model": "qwen3.8-flash",
+      "model_api_key": "os.environ/OPENCODE_GO_KEY",
+      "model_api_base": "https://opencode.ai/zen/go/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.15,
+      "output_cost_per_million_tokens": 0.47,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "context_limit": 1000000,
+      "output_limit": 131072,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_reasoning": true,
+      "supports_tools": true,
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "production"
     },
     "whisper-pt-br": {
       "custom_llm_provider": "openai",

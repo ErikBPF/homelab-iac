@@ -1,4 +1,8 @@
 {
+  "glm-5.3-flash": {
+    "reason": "GLM-5.3 Flash is absent from the reviewed Zen catalog; preserve the deployed OpenCode Go route and reviewed proxy price pending catalog parity.",
+    "reviewed_on": "2026-09-04"
+  },
   "mimo": {
     "reason": "OpenCode Go exposes MiMo V2.5 under an account route not represented by the reviewed Zen catalog; preserve the deployed free-beta route and zero proxy price until catalog parity exists.",
     "reviewed_on": "2026-07-13"
@@ -10,5 +14,9 @@
   "qwen3-max": {
     "reason": "The deployed OpenCode Go qwen3.7-max identifier is absent from the reviewed Zen catalog; preserve its existing spelling and manually reviewed proxy price.",
     "reviewed_on": "2026-07-13"
+  },
+  "qwen3.8-flash": {
+    "reason": "Qwen3.8 Flash is absent from the reviewed Zen catalog; preserve the deployed OpenCode Go route and reviewed proxy price pending catalog parity.",
+    "reviewed_on": "2026-09-04"
   }
 }

@@ -4,25 +4,36 @@
     "bge-reranker-v2-m3",
     "qwen-chat"
   ],
+  "deepseek-harness": [
+    "deepseek-v4-flash",
+    "deepseek-v4-pro",
+    "qwen-chat"
+  ],
   "hermes": [
     "deepseek-v4-flash",
+    "deepseek-v4-pro",
     "glm-5",
-    "kimi-k2-code",
-    "mimo",
-    "mimo-pro",
-    "minimax-m2",
-    "qwen-chat",
-    "qwen3-max"
-  ],
-  "opencode": [
-    "deepseek-v4-flash",
-    "glm-5",
+    "glm-5.3-flash",
     "kimi-k2-code",
     "mimo",
     "mimo-pro",
     "minimax-m2",
     "qwen-chat",
     "qwen3-max",
+    "qwen3.8-flash"
+  ],
+  "opencode": [
+    "deepseek-v4-flash",
+    "deepseek-v4-pro",
+    "glm-5",
+    "glm-5.3-flash",
+    "kimi-k2-code",
+    "mimo",
+    "mimo-pro",
+    "minimax-m2",
+    "qwen-chat",
+    "qwen3-max",
+    "qwen3.8-flash",
     "zen-free",
     "zen-free-pickle"
   ]

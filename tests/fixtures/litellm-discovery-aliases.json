@@ -2,7 +2,9 @@
   "bge-m3",
   "bge-reranker-v2-m3",
   "deepseek-v4-flash",
+  "deepseek-v4-pro",
   "glm-5",
+  "glm-5.3-flash",
   "ha-agent-qwen4b",
   "kimi-k2-code",
   "mimo",
@@ -10,6 +12,7 @@
   "minimax-m2",
   "qwen-chat",
   "qwen3-max",
+  "qwen3.8-flash",
   "whisper-pt-br",
   "zen-free",
   "zen-free-pickle"
