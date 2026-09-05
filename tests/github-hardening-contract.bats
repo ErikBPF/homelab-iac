@@ -16,7 +16,7 @@ expected = {
     "hermes-skills", "home-assistant-config",
     "homelab-gitops", "homelab-iac", "kindle-dash", "klipper-biqu",
     "nanda_colors", "nstech-dev-technical-test", "nstech-mdm-technical-test",
-    "opencode-flake", "renovate-config", "romozinha", "sail", "sail-dev",
+    "ndc", "opencode-flake", "renovate-config", "romozinha", "sail", "sail-dev",
     "servarr", "spicyphus", "terraform-provider-adguardhome",
     "terraform-provider-litellm", "vault",
     "zmk-config-chary",

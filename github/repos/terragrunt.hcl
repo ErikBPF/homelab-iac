@@ -127,6 +127,9 @@ inputs = {
     nstech-mdm-technical-test = {
       protect_main = true
     }
+    ndc = {
+      protect_main = true
+    }
     opencode-flake = {
       protect_main                 = true
       required_checks              = ["check", "package-build"]
