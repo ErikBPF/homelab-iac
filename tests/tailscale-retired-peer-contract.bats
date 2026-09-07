@@ -1,24 +1,21 @@
 #!/usr/bin/env bats
 
-@test "Galaxy S25 can SSH only to Gemini and Endeavour" {
-  repo_root="$(CDPATH= cd -- "$BATS_TEST_DIRNAME/.." && pwd)"
-  policy="$repo_root/tailscale/acl/policy.hujson"
-
-  grep -qF '"gemini":     "100.91.131.59"' "$policy"
-  grep -qF '"galaxy-s25": "100.66.253.15"' "$policy"
-  grep -qF '{"action": "accept", "src": ["galaxy-s25"], "dst": ["gemini:2222", "endeavour:2222"]}' "$policy"
-  grep -qF '{"src": "galaxy-s25", "accept": ["gemini:2222", "endeavour:2222"]}' "$policy"
-  grep -qF '{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "orion:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}' "$policy"
+@test "Gemini has no remaining policy references" {
+  ! grep -qi gemini "$BATS_TEST_DIRNAME/../tailscale/acl/policy.hujson"
 }
 
-@test "Endeavour and Gemini can sync only on Syncthing" {
-  repo_root="$(CDPATH= cd -- "$BATS_TEST_DIRNAME/.." && pwd)"
-  policy="$repo_root/tailscale/acl/policy.hujson"
+@test "mobile SSH targets the active workstations only" {
+  policy="$BATS_TEST_DIRNAME/../tailscale/acl/policy.hujson"
+  grep -qF '{"action": "accept", "src": ["galaxy-s25"], "dst": ["orion:2222", "apollo:2222", "endeavour:2222"]}' "$policy"
+  grep -qF '{"src": "galaxy-s25", "accept": ["orion:2222", "apollo:2222", "endeavour:2222"]}' "$policy"
+  grep -qF '{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}' "$policy"
+}
 
-  grep -qF '{"action": "accept", "src": ["endeavour"], "dst": ["gemini:22000"]}' "$policy"
-  grep -qF '{"action": "accept", "src": ["gemini"], "dst": ["endeavour:22000"]}' "$policy"
-  grep -qF '{"src": "endeavour", "accept": ["gemini:22000"]}' "$policy"
-  grep -qF '{"src": "gemini", "accept": ["endeavour:22000"]}' "$policy"
+@test "primary hosts cross-attach over SSH without fleet admin access" {
+  policy="$BATS_TEST_DIRNAME/../tailscale/acl/policy.hujson"
+  grep -qF '{"action": "accept", "src": ["orion"], "dst": ["apollo:2222"]}' "$policy"
+  grep -qF '{"action": "accept", "src": ["apollo"], "dst": ["orion:2222"]}' "$policy"
+  grep -qF '{"src": "apollo", "deny": ["kepler:2222", "discovery:2222"]}' "$policy"
 }
 
 @test "kepler can reach voyager restic receiver" {
