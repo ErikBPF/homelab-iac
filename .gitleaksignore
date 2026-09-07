@@ -1,0 +1,4 @@
+# Public release-signing key fingerprint; not the private signing key.
+b11a6d913d98ac7596c18f5efea03de548482e2a:components/litellm/provider-source-lock.json:generic-api-key:7
+# Historical integration fixture uses the literal password fixture-only.
+fdf4d80705ac189436c3747948806d019c7c497f:tests/fixtures/adguard-config/main.tf:hashicorp-tf-password:18
