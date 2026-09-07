@@ -5,6 +5,7 @@
 		"laptop":     "100.74.137.124",
 		"endeavour":  "100.107.225.13",
 		"pathfinder": "100.102.248.13",
+		"apollo":     "100.77.14.27",
 		"discovery":  "100.76.140.121",
 		"swag":       "192.168.10.210",
 		"nanokvm":   "100.125.209.99",
@@ -13,7 +14,6 @@
 		"archinaut":  "100.67.123.113",
 		"voyager":    "100.105.38.10",
 		"vanguard":   "100.90.247.79",
-		"gemini":     "100.91.131.59",
 		"galaxy-s25": "100.66.253.15",
 	},
 
@@ -44,11 +44,15 @@
 	"acls": [
 		// 1. Admin devices: OpenSSH (port 2222) into everything.
 		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["*:2222"]},
-		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["gemini:6443"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["apollo:6443"]},
 
-		// Galaxy mobile pilot: OpenSSH only to its two workstation endpoints;
+		// Galaxy mobile pilot: OpenSSH only to the active workstation endpoints;
 		// never fleet-admin access.
-		{"action": "accept", "src": ["galaxy-s25"], "dst": ["gemini:2222", "endeavour:2222"]},
+		{"action": "accept", "src": ["galaxy-s25"], "dst": ["orion:2222", "apollo:2222", "endeavour:2222"]},
+
+		// Primary umbrella hosts may cross-attach, without fleet-wide admin SSH.
+		{"action": "accept", "src": ["orion"], "dst": ["apollo:2222"]},
+		{"action": "accept", "src": ["apollo"], "dst": ["orion:2222"]},
 
 		// Endeavour fallback: direct SWAG access when another overlay shadows the
 		// routed 192.168.10.210/32 path.
@@ -74,11 +78,6 @@
 			"src":    ["laptop", "endeavour", "pathfinder", "kepler", "orion", "discovery"],
 			"dst":    ["laptop:22000", "endeavour:22000", "pathfinder:22000", "kepler:22000", "orion:22000", "discovery:22000"],
 		},
-		// Gemini syncs only with the replacement workstation carrying the laptop
-		// Syncthing identity. Allow either peer to initiate the stateful connection.
-		{"action": "accept", "src": ["endeavour"], "dst": ["gemini:22000"]},
-		{"action": "accept", "src": ["gemini"], "dst": ["endeavour:22000"]},
-
 		// 6. Preserved: NFS / SMB to the kepler NAS from fleet hosts.
 		{
 			"action": "accept",
@@ -113,7 +112,7 @@
 		//    MagicDNS (http://orion:5000, see desktop-nixos common.nix). The LAN
 		//    path works via rule 8's subnet route, but non-admin hosts and the
 		//    MagicDNS name need this explicit grant or the substituter times out.
-		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "kepler"], "dst": ["orion:5000"]},
+		{"action": "accept", "src": ["laptop", "endeavour", "pathfinder", "kepler", "apollo"], "dst": ["orion:5000"]},
 
 		// 10. Lab ESO (kepler) -> the platform OpenBao on discovery :8200 (P3.1b).
 		//    External Secrets in the kepler lab cluster repoints off the disposable
@@ -141,19 +140,6 @@
 		//     tailnet IP (servarr infra stack), gated to vanguard alone here.
 		{"action": "accept", "src": ["vanguard"], "dst": ["discovery:5432"]},
 
-		// 15. gemini dev sandbox -> discovery's Prometheus :9090 (read path). The
-		//     grafatui TUI (`fleet-metrics`) in the dev container queries fleet
-		//     metrics from discovery. gemini is a tag:server node (own tailnet
-		//     identity); a dedicated grant keeps rule 7's Alloy-push semantics
-		//     clean and avoids handing gemini the bundled Loki :3100 it never uses.
-		{"action": "accept", "src": ["gemini"], "dst": ["discovery:9090"]},
-
-		// 16. gemini dev sandbox -> orion host SSH (:2222). The container's RO
-		//     store can't build new derivations, so `nix build`/dev loops run on
-		//     the orion host; this also makes `ssh orion` resolve by MagicDNS from
-		//     inside the container. Scoped to orion alone — the sandbox is not an
-		//     admin device (rule 1), so it gets no fleet-wide :2222.
-		{"action": "accept", "src": ["gemini"], "dst": ["orion:2222"]},
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -161,9 +147,13 @@
 	// `tailscale up --ssh`.
 
 	"tests": [
+		{"src": "orion", "accept": ["apollo:2222"]},
+		{"src": "apollo", "accept": ["orion:2222"]},
+		{"src": "apollo", "deny": ["kepler:2222", "discovery:2222"]},
 		{"src": "laptop", "accept": ["kepler:2222"]},    // admin can SSH
 		{"src": "endeavour", "accept": ["kepler:2222", "kepler:2049", "orion:2222", "orion:4321"]}, // replacement workstation
-		{"src": "endeavour", "accept": ["gemini:6443"]}, // admin reaches pastelariadev API
+		{"src": "endeavour", "accept": ["apollo:6443"]}, // admin reaches Apollo development API
+		{"src": "galaxy-s25", "deny": ["apollo:6443"]}, // non-admin cannot reach Apollo development API
 		{"src": "endeavour", "accept": ["discovery:80", "discovery:443"]}, // admin reaches SWAG directly over Tailscale
 		{"src": "orion", "deny": ["discovery:80", "discovery:443"]}, // non-admin cannot bypass routed SWAG ingress
 		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
@@ -180,19 +170,15 @@
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved
 		{"src": "kepler", "accept": ["orion:22000"]},    // syncthing preserved
 		{"src": "kepler", "accept": ["orion:5000"]},     // fleet pulls orion nix cache
+		{"src": "apollo", "accept": ["orion:5000"]},     // work lab pulls orion nix cache
+		{"src": "galaxy-s25", "deny": ["orion:5000"]},  // no general cache access
 		{"src": "laptop", "accept": ["orion:4321"]},     // workstation reaches sccache cache
 		{"src": "kepler", "accept": ["orion:4321"]},     // servers may share the sccache cache too
 		{"src": "orion", "accept": ["vanguard:53"]},     // fleet reaches vanguard's secondary resolver
 		{"src": "vanguard", "accept": ["discovery:5432"]}, // DR replica streams from discovery Postgres
 		{"src": "orion", "deny": ["discovery:5432"]},      // only vanguard reaches the DB, not other peers
-		{"src": "gemini", "accept": ["discovery:9090"]},   // grafatui reads fleet metrics
-		{"src": "gemini", "deny": ["discovery:3100"]},     // dev sandbox has no Loki grant
-		{"src": "gemini", "accept": ["orion:2222"]},       // build-on-host SSH from the sandbox
-		{"src": "gemini", "deny": ["kepler:2222"]},        // but not admin SSH into the rest of the fleet
-		{"src": "endeavour", "accept": ["gemini:22000"]}, // replacement workstation syncs Gemini
-		{"src": "gemini", "accept": ["endeavour:22000"]}, // Gemini may initiate the same sync
-		{"src": "galaxy-s25", "accept": ["gemini:2222", "endeavour:2222"]}, // mobile reaches only its workstation endpoints
-		{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "orion:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}, // never fleet-admin SSH
+		{"src": "galaxy-s25", "accept": ["orion:2222", "apollo:2222", "endeavour:2222"]}, // mobile reaches only its workstation endpoints
+		{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}, // never fleet-admin SSH
 		{"src": "endeavour", "accept": ["voyager:2222", "vanguard:2222"]}, // admin reaches public hosts through Tailscale
 		{"src": "orion", "deny": ["voyager:2222", "vanguard:2222"]},       // ordinary servers cannot administer them
 		{"src": "laptop", "accept": ["192.168.10.1:443"]}, // admin reaches the UDM via the route
