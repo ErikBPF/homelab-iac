@@ -1,6 +1,6 @@
 # Lint/format gate — mirrors the local devenv git-hooks (tofu fmt, terragrunt
 # hcl format, tflint) so a bad commit fails in CI, not at the next drift run.
-# Format + lint only: no creds, no backend, no provider API calls, and no use
+# Static checks only: no provider creds, backend, provider API calls, or use
 # of untrusted event inputs in run: steps.
 name: ci
 
@@ -17,6 +17,32 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Gitleaks
+        env:
+          GITLEAKS_VERSION: "8.24.3"
+          GITLEAKS_SHA256: "9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c"
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum --check
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+          sudo install "$RUNNER_TEMP/gitleaks" /usr/local/bin/gitleaks
+
+      - name: Verify scanner behavior
+        run: python3 tests/secret-scanning.py
+
+      - name: Scan committed secrets
+        run: gitleaks git --redact --no-banner .
+
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 15
