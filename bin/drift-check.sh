@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Drift detection for the whole homelab-iac repo: plan every Terragrunt unit and
+# Drift detection for the adopted homelab-iac units: plan each selected unit and
 # report if live infra has drifted from code. Exit 0 = clean, 2 = drift, 1 = err.
 #
 # Run from a host with LAN/tailnet reach to the providers (UDM, AdGuard, …) and
@@ -20,18 +20,28 @@ export TF_VAR_state_passphrase="${TF_VAR_state_passphrase:-${UNIFI_STATE_PASSPHR
 # Telstar's capture loop owns this state while it retries OCI capacity. Planning
 # it concurrently races the remote state lock; its service provides the health
 # signal instead.
+# The remaining exclusions retain Discovery's 23-unit monitoring scope while
+# refreshing the paused-HA catalog. Adopt new units only after their runtime
+# credentials and zero-diff plans pass; see docs/2026-09-07-paused-ha-route.md.
 out=$(terragrunt run --all \
   --parallelism 1 \
   --filter '!oracle/compute-telstar' \
   --filter '!components/litellm/environments/home/canary' \
   --filter '!components/authentik/environments/home/iac-access' \
+  --filter '!components/harbor-iam/environments/home/fleet-readers' \
+  --filter '!components/harbor-iam/environments/home/production' \
+  --filter '!components/harbor-iam/environments/home/project-members' \
+  --filter '!components/litellm/environments/home/deepseek-harness-key' \
+  --filter '!components/openbao/environments/home/authentik-runtime' \
+  --filter '!components/openbao/environments/home/deepseek-harness-litellm' \
+  --filter '!components/openbao/environments/home/harbor-project-iam' \
   --filter '!components/openbao/environments/home/runtime-secret-foundation' \
   --non-interactive -- plan -detailed-exitcode -no-color 2>&1)
 code=$?
 
 case "$code" in
   0)
-    echo "homelab-iac: no drift — live infra matches code."
+    echo "homelab-iac: no drift in the adopted unit scope."
     ;;
   2)
     summary=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
