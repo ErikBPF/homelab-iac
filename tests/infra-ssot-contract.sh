@@ -319,11 +319,11 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 17 and
-    (unique | length) == 17 and
+    length == 16 and
+    (unique | length) == 16 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 17 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 16 unique sorted aliases"
 
   jq -e '
     . as $aliases |
@@ -343,7 +343,7 @@ check_s05() {
     (.models | type == "object") and
     ((.models | keys) == $aliases[0]) and
     ([.models[].mode] | unique) == ["audio_transcription", "chat", "embedding", "rerank"] and
-    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription", "chat", "embedding", "rerank"] and
+    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription", "embedding", "rerank"] and
     ([.models[] | select((.context_limit // null) == null)] | length) > 0 and
     ([.models[] | select((.output_limit // null) == null)] | length) > 0 and
     (all(.models[];
