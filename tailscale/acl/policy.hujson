@@ -78,6 +78,9 @@
 			"src":    ["laptop", "endeavour", "pathfinder", "kepler", "orion", "discovery"],
 			"dst":    ["laptop:22000", "endeavour:22000", "pathfinder:22000", "kepler:22000", "orion:22000", "discovery:22000"],
 		},
+		// Primary repo mirrors: Syncthing only between Apollo and Orion.
+		{"action": "accept", "src": ["apollo"], "dst": ["orion:22000"]},
+		{"action": "accept", "src": ["orion"], "dst": ["apollo:22000"]},
 		// 6. Preserved: NFS / SMB to the kepler NAS from fleet hosts.
 		{
 			"action": "accept",
@@ -147,6 +150,9 @@
 	// `tailscale up --ssh`.
 
 	"tests": [
+		{"src": "apollo", "accept": ["orion:22000"], "deny": ["kepler:22000", "endeavour:22000"]},
+		{"src": "orion", "accept": ["apollo:22000"]},
+		{"src": "galaxy-s25", "deny": ["apollo:22000"]},
 		{"src": "orion", "accept": ["apollo:2222"]},
 		{"src": "apollo", "accept": ["orion:2222"]},
 		{"src": "apollo", "deny": ["kepler:2222", "discovery:2222"]},
