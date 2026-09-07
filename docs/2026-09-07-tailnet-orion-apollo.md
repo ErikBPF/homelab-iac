@@ -1,16 +1,20 @@
 # Orion/Apollo Tailnet transition
 
-**Status:** Authenticated validation and wired Orion plan passed; apply pending.
+**Status:** Applied and verified on wired Orion on 2026-09-07; Gemini registration removed.
 User authorized updating the Tailnet after Gemini retirement.
 
-The live policy matches the existing local Apollo API/cache additions. This
-change publishes those additions, removes Gemini's alias/grants/tests, permits
+The pre-apply live policy matched the pending local Apollo API/cache additions.
+This change publishes those additions, removes Gemini's alias/grants/tests, permits
 Galaxy SSH only to Orion/Apollo/Endeavour, and permits SSH between Orion and
 Apollo. Fleet-wide SSH remains restricted to existing admin devices. Apollo's
 Kubernetes API stays admin-only; existing NAS, DNS, observability, SWAG and
 backup boundaries remain unchanged. No Syncthing topology is activated here.
 
-Run from an isolated checkout of this revision on wired Orion; its route to
+Run from an isolated checkout outside synchronized directories on wired Orion.
+The applied checkout was `/var/tmp/tailnet-iac-20260907` at merged revision
+`6e46ab50082440ab5ad761697b72bc3fd5587e55` (PR #103). Syncthing changed the
+runbook in the earlier Documents worktree, so a fresh plan was generated in
+`/var/tmp` before applying; the original dirty worktree was preserved. Its route to
 192.168.10.1 must use `enp4s0` with source 192.168.10.220, not Wi-Fi/Tailscale.
 Load only the required Tailscale OAuth, MinIO backend and state-encryption keys
 from the existing Sops bootstrap source into process environment. When handed
@@ -69,3 +73,20 @@ plan on wired Orion: 0 add, 1 change, 0 destroy. The only change is
 JSON matches the captured live policy before and the committed candidate after.
 All 10 Tailnet Bats contracts and authenticated server-side policy validation pass.
 No provider constraints, lockfiles, backend settings or credential values changed.
+
+## Applied result
+
+The saved plan applied successfully: only `tailscale_acl.this` changed. The API
+policy equals the merged HuJSON structurally; all 38 embedded allow/deny cases
+passed authenticated validation. The subsequent OpenTofu plan returned exit 0
+with no changes. NanoKVM key-expiry configuration remained unchanged.
+
+Gemini's exact device identity and offline timestamp matched the deletion guards;
+its container config/root were absent and service inactive. The API deletion
+removed device `4165363960594091`; every other prior device ID remained present.
+
+Admin SSH to both hosts passed. Tailnet TCP connections in both Orion/Apollo
+SSH directions returned OpenSSH banners, and Apollo fetched Orion's
+`/nix-cache-info` successfully. These transport probes do not assert user-key
+authentication between hosts. Orion inference returned `{"status":"ok"}`;
+neither host had failed system units. Actual Galaxy client login remains untested.
