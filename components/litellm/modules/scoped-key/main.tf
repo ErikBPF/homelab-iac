@@ -1,0 +1,10 @@
+resource "litellm_key" "this" {
+  key_alias             = var.key_alias
+  models                = var.models
+  max_budget            = var.max_budget
+  budget_duration       = var.budget_duration
+  max_parallel_requests = var.max_parallel_requests
+  rpm_limit             = var.rpm_limit
+  tpm_limit             = var.tpm_limit
+  metadata              = var.metadata
+}
