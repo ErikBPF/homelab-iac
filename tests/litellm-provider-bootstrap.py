@@ -60,3 +60,55 @@ except RuntimeError:
 else:
     raise AssertionError("Credential forwarding on redirects must be refused")
 print("PASS: encrypted-only atomic storage, argv hygiene, validation, redirect refusal")
+
+with tempfile.TemporaryDirectory() as directory:
+    target = Path(directory) / ".env.sops"
+    target.write_text("encrypted")
+    with patch.object(module, "read_credentials", return_value="old"), patch.object(module, "save_credentials") as save:
+        def rotate_api(path, token, body=None):
+            if path.startswith("/user/info"):
+                return {"user_info": {"user_id": module.IDENTITY, "user_role": "proxy_admin"}}
+            if path == "/key/generate":
+                return {"key": "new"}
+            if path == "/key/info" and token == "new":
+                return {"info": {"user_id": module.IDENTITY}}
+            if path == "/key/info" and token == "old":
+                raise module.APIError(401)
+            if path == "/key/delete":
+                assert save.called, "Old key must survive until encrypted persistence"
+                assert body == {"keys": ["old"]}
+                return {}
+            raise AssertionError(path)
+        with patch.object(module, "api", side_effect=rotate_api):
+            module.rotate("operator", target)
+        save.assert_called_once_with(target, "new", replace_key="old")
+    with patch.object(module, "read_credentials", return_value="old"), patch.object(module, "save_credentials", side_effect=RuntimeError("cannot persist")):
+        responses = [{"user_info": {"user_id": module.IDENTITY, "user_role": "proxy_admin"}}, {"key": "new"}, {"info": {"user_id": module.IDENTITY}}, {}]
+        with patch.object(module, "api", side_effect=responses) as api:
+            try:
+                module.rotate("operator", target)
+            except RuntimeError:
+                pass
+            else:
+                raise AssertionError("Failed save must fail rotation")
+            assert api.call_args.args == ("/key/delete", "operator", {"keys": ["new"]})
+print("PASS: replacement verified and saved before old-key revocation")
+
+with tempfile.TemporaryDirectory() as directory:
+    target = Path(directory) / ".env.sops"
+    target.write_bytes(b"original")
+    plain = f"KEEP=unchanged\nLITELLM_API_BASE={module.BASE}\nLITELLM_API_KEY=old\n"
+    expected = plain.replace("LITELLM_API_KEY=old", "LITELLM_API_KEY=new")
+    with patch.object(module.subprocess, "check_output", side_effect=[plain.encode(), b"replacement", expected.encode()]):
+        module.save_credentials(target, "new", replace_key="old")
+        assert target.read_bytes() == b"replacement"
+    with patch.object(module.subprocess, "check_output", return_value=expected.encode()) as run:
+        try:
+            module.save_credentials(target, "another", replace_key="old")
+        except RuntimeError:
+            pass
+        else:
+            raise AssertionError("Stale rotation must not overwrite newer credentials")
+        assert run.call_count == 1
+        assert target.read_bytes() == b"replacement"
+print("PASS: rotation preserves other values and refuses a stale stored key")

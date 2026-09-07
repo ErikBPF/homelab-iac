@@ -35,6 +35,9 @@
     if [ ! -f .env ] && [ -f .env.sops ]; then
       sops -d --input-type dotenv --output-type dotenv .env.sops > .env
     fi
+    # Terragrunt dependency output reads bypass per-unit inputs.
+    # Expand only inside the shell; never evaluate the passphrase into Nix.
+    export TF_VAR_state_passphrase="''${UNIFI_STATE_PASSPHRASE:-}"
     # State backend is MinIO (S3). OpenTofu's s3 backend reads AWS_*; our creds
     # live as MINIO_TFSTATE_* in .env. Map them so plan/apply reach the bucket.
     export AWS_ACCESS_KEY_ID="''${MINIO_TFSTATE_ROOT_USER:-}"

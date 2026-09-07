@@ -1,6 +1,6 @@
 # Dedicated LiteLLM provider bootstrap
 
-**Status:** Implemented and tested offline; live creation requires review.
+**Status:** Created and rotated live on 2026-09-07; offline regression checks pass.
 
 Terraform provider credentials are bootstrap material. Store them in this
 repository's encrypted dotenv, never in a workload environment or Terraform
@@ -33,8 +33,22 @@ timeout can leave creation outcome uncertain.
 The new credential is not printed. Review and commit the SOPS diff. Reload
 the operator environment from encrypted dotenv before the authenticated
 DeepSeek key plan. Existing plaintext `.env` files are not silently rewritten.
-A 30-day key requires a reviewed rotation before expiry; this bootstrap command
-intentionally refuses to rotate an existing identity.
+Rotate before the 30-day expiry. Preview with:
+
+```sh
+python3 components/litellm/scripts/bootstrap-provider.py --rotate
+```
+
+After review, pass the operator credential on stdin with `--rotate --apply`.
+Rotation creates a replacement for the same identity, authenticates it, verifies
+and atomically persists SOPS ciphertext, then revokes the previous key and checks
+that it is rejected. Persistence failure removes only the replacement. A failure
+after persistence leaves the new credential saved; inspect old-key revocation
+before retrying. Commit the encrypted change and reload the operator environment.
+
+Terragrunt dependency output reads require `TF_VAR_state_passphrase`. The devenv
+shell maps it from `UNIFI_STATE_PASSPHRASE` at runtime so encrypted dependency
+state can be read without putting the passphrase into Nix evaluation.
 
 No LiteLLM model, inference key, or runtime secret is created by preview.
 The authenticated DeepSeek key plan and runtime handoff remain separate
