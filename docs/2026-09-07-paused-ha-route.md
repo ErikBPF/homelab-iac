@@ -46,6 +46,8 @@ completion succeeds, and `litellm_semantic_ready` becomes `1`. Existing failure
 alerts remain enabled. A passing canary covers that route and the gateway DB;
 the full Servarr catalog probe covers the other promised routes.
 
-Rollback keeps household inference stopped: revert the probe/candidate changes
-if they regress health, but restore the HA alias only after its backend is
-explicitly resumed and verified. Never delete credentials or model data.
+Recovery keeps household inference stopped and HA excluded. Diagnose and fix
+the `qwen-chat`/DB failure, or select another explicitly promised, verified route;
+do not revert the canary to the paused HA backend. Restore the HA alias and
+catalog entry only after its backend is explicitly resumed and verified.
+Never delete credentials or model data.
