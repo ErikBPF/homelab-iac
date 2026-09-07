@@ -1,6 +1,6 @@
 # Paused household HA inference route
 
-**Status:** HA route withdrawn and API verified; Discovery consumer rollout pending.
+**Status:** Implemented — HA withdrawn; Discovery catalog and semantic probe deployed and verified.
 
 Household inference is explicitly suspended after the Kepler/Apollo GPU exchange.
 Withdraw `ha-agent-qwen4b` from the active production model manifest so LiteLLM
@@ -45,6 +45,17 @@ address. It was imported into the now-empty HA address using the original route
 variables, then removed through a second reviewed one-deletion plan. Both
 applies changed no other resources. Final API readback has sixteen aliases,
 no HA alias, and a `qwen-chat` completion returned HTTP 200.
+A final production plan returned exit 0 with no resource changes.
+
+Consumer rollout completed on 2026-09-07: Servarr
+[`e2e3681`](https://github.com/ErikBPF/servarr/pull/290) is pinned on Discovery,
+whose expected catalog contains thirteen routes and no HA alias. Desktop
+[`c8a50a6`](https://github.com/ErikBPF/desktop-nixos/pull/300) deployed successfully;
+the installed service ran and exported `litellm_semantic_ready 1`. Docker,
+OpenBao and Tailscale remained active; the host kernel remained
+`/nix/store/548dydq1qb5r423w10hzzhff4vwd4scf-linux-7.2.2/bzImage`.
+No household inference service was started. This receipt proves the selected
+gateway canary; it does not claim every catalog route was exercised.
 
 Pull the merged Servarr revision on Discovery. Preview the Desktop Discovery
 activation and preserve the live kernel and unrelated services before deploying
