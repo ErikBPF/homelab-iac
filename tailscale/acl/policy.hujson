@@ -79,8 +79,8 @@
 			"dst":    ["laptop:22000", "endeavour:22000", "pathfinder:22000", "kepler:22000", "orion:22000", "discovery:22000"],
 		},
 		// Primary repo mirrors: Syncthing only between Apollo and Orion.
-		{"action": "accept", "src": ["apollo"], "dst": ["orion:22000"]},
-		{"action": "accept", "src": ["orion"], "dst": ["apollo:22000"]},
+		{"action": "accept", "proto": "tcp", "src": ["apollo"], "dst": ["orion:22000"]},
+		{"action": "accept", "proto": "tcp", "src": ["orion"], "dst": ["apollo:22000"]},
 		// 6. Preserved: NFS / SMB to the kepler NAS from fleet hosts.
 		{
 			"action": "accept",
