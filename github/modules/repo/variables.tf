@@ -15,6 +15,7 @@ variable "repos" {
     allow_squash_merge     = optional(bool, true)
     allow_rebase_merge     = optional(bool, false)
     delete_branch_on_merge = optional(bool, true)
+    vulnerability_alerts   = optional(bool) # Unset preserves existing repository policy.
 
     # Actions policy (github_actions_repository_permissions).
     allowed_actions = optional(string, "all") # all | local_only | selected

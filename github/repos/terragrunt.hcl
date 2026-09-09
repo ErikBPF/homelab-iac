@@ -128,7 +128,9 @@ inputs = {
       protect_main = true
     }
     ndc = {
-      protect_main = true
+      protect_main         = true
+      required_checks      = ["harness", "integration", "secrets"]
+      vulnerability_alerts = true
     }
     opencode-flake = {
       protect_main                 = true
