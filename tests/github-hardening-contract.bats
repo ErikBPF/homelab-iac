@@ -35,6 +35,25 @@ PY
   [ "$status" -eq 0 ]
 }
 
+@test "ndc requires its observed correctness and secret scans plus dependency alerts" {
+  run python3 - "$REPO_ROOT" <<'PY'
+import pathlib, re, sys
+
+root = pathlib.Path(sys.argv[1])
+text = (root / "github/repos/terragrunt.hcl").read_text()
+block = re.search(r"^    ndc = \{(?:(?!^    \}).)*^    \}", text, re.M | re.S).group()
+assert re.search(r"protect_main\s*=\s*true", block)
+checks = re.search(r"required_checks\s*=\s*\[([^]]*)\]", block).group(1)
+assert set(re.findall(r'"([^"]+)"', checks)) == {"harness", "integration", "secrets"}
+assert re.search(r"vulnerability_alerts\s*=\s*true", block)
+module = (root / "github/modules/repo/main.tf").read_text()
+assert 'resource "github_repository_vulnerability_alerts" "this"' in module
+assert 'if v.vulnerability_alerts != null' in module
+assert re.search(r"enabled\s*=\s*each.value.vulnerability_alerts", module)
+PY
+  [ "$status" -eq 0 ]
+}
+
 @test "branch protection denies bypass-prone mutations" {
   run python3 - "$REPO_ROOT/github/modules/repo/main.tf" <<'PY'
 import pathlib, re, sys
