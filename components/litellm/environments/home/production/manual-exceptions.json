@@ -1,4 +1,8 @@
 {
+  "deepseek-flash": {
+    "reason": "OpenCode Go lists deepseek-flash (DeepSeek V4.1 Flash), absent from the reviewed Zen catalog. Limits, modalities and pricing reviewed against https://models.dev/api.json; route verified in https://opencode.ai/zen/go/v1/models.",
+    "reviewed_on": "2026-09-10"
+  },
   "glm-5.3-flash": {
     "reason": "GLM-5.3 Flash is absent from the reviewed Zen catalog; preserve the deployed OpenCode Go route and reviewed proxy price pending catalog parity.",
     "reviewed_on": "2026-09-04"

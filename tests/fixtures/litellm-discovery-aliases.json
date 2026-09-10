@@ -1,6 +1,7 @@
 [
   "bge-m3",
   "bge-reranker-v2-m3",
+  "deepseek-flash",
   "deepseek-v4-flash",
   "deepseek-v4-pro",
   "glm-5",

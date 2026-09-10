@@ -23,6 +23,7 @@
     "qwen3.8-flash"
   ],
   "opencode": [
+    "deepseek-flash",
     "deepseek-v4-flash",
     "deepseek-v4-pro",
     "glm-5",
