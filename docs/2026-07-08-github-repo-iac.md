@@ -51,6 +51,21 @@ protection for private repositories; those are explicitly marked unsupported
 while still receiving merge-strategy and Actions-permission hardening.
 `required_checks` are recorded in the map for when it is turned on.
 
+### NDC onboarding (2026-09-09)
+
+`ndc` is imported into the shared state and uses the public-repository defaults.
+Its `main` branch requires a PR, resolved conversations, and up-to-date passing
+`harness`, `integration`, and `secrets` checks, including for administrators.
+The fleet policy requires zero approving reviews; force-push and deletion are
+blocked. Squash-only merging, auto-merge, and merged-branch cleanup are enabled;
+Actions defaults remain read-only with PR creation/approval disabled.
+
+`vulnerability_alerts = true` enables Dependabot alerts through the dedicated
+`github_repository_vulnerability_alerts` resource. Omit this input to leave
+another repository's alert policy unmanaged. Existing secret scanning and push
+protection remain enabled. Applied with an NDC-only plan; other fleet resources
+were outside this rollout.
+
 ## Auth
 
 Provider reads `GITHUB_TOKEN` + `GITHUB_OWNER` from the shell (`.env` via

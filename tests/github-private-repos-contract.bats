@@ -15,5 +15,5 @@
 @test "Actions permissions wait for repository creation" {
   module="$BATS_TEST_DIRNAME/../github/modules/repo/main.tf"
 
-  [ "$(grep -Ec 'repository[[:space:]]*=[[:space:]]*github_repository\.this\[each\.key\]\.name' "$module")" -eq 2 ]
+  [ "$(grep -Ec 'repository[[:space:]]*=[[:space:]]*github_repository\.this\[each\.key\]\.name' "$module")" -eq 3 ]
 }

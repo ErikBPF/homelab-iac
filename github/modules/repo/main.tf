@@ -35,8 +35,8 @@ resource "github_repository" "this" {
   lifecycle {
     prevent_destroy = true
     # Description/topics and the issue/wiki/project/download feature toggles are
-    # managed in the GitHub UI, not here — this component owns only the
-    # merge/auto-merge surface.
+    # managed in the GitHub UI, not here — this component owns merge settings
+    # and explicitly configured vulnerability alerts.
     ignore_changes = [
       description,
       homepage_url,
@@ -47,6 +47,13 @@ resource "github_repository" "this" {
       has_downloads,
     ]
   }
+}
+
+resource "github_repository_vulnerability_alerts" "this" {
+  for_each = { for k, v in var.repos : k => v if v.vulnerability_alerts != null }
+
+  repository = github_repository.this[each.key].name
+  enabled    = each.value.vulnerability_alerts
 }
 
 # Which actions / reusable workflows may run in the repo.
