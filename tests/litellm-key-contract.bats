@@ -32,3 +32,39 @@
   grep -Fq 'path \"secret/data/lab/cognee-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }' "$policy"
   grep -Fq 'path \"secret/metadata/lab/cognee-litellm\" { capabilities = [\"read\"] }' "$policy"
 }
+
+@test "DeepSeek Harness gets a scoped 25 USD LiteLLM key through OpenBao" {
+  key_unit=components/litellm/environments/home/deepseek-harness-key/terragrunt.hcl
+  vault_unit=components/openbao/environments/home/deepseek-harness-litellm/terragrunt.hcl
+  vault_foundation=components/openbao/modules/runtime-secret-foundation/main.tf
+
+  grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25' "$key_unit"
+  grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "qwen-chat"\]' "$key_unit"
+  grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-deepseek-harness-model-inference"' "$key_unit"
+  grep -Eq 'consumer[[:space:]]*=[[:space:]]*"deepseek-harness"' "$key_unit"
+  grep -Fq 'modules//scoped-key' "$key_unit"
+  [ "$(grep -c '^resource "litellm_key"' components/litellm/modules/scoped-key/main.tf)" -eq 1 ]
+  grep -Eq 'max_budget[[:space:]]*=[[:space:]]*var.max_budget' components/litellm/modules/scoped-key/main.tf
+  grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*var.budget_duration' components/litellm/modules/scoped-key/main.tf
+  grep -Fq 'dependency "deepseek_harness_key"' "$vault_unit"
+  grep -Fq 'name          = "home/deepseek-harness-litellm"' "$vault_unit"
+  grep -Fq 'LITELLM_HOMELAB_API_KEY = dependency.deepseek_harness_key.outputs.key' "$vault_unit"
+  grep -Fq 'path \"secret/data/home/deepseek-harness-litellm\"' "$vault_foundation"
+  grep -Fq 'path \"secret/metadata/home/deepseek-harness-litellm\"' "$vault_foundation"
+
+  jq -e '
+    .models as $models |
+    $models["deepseek-v4.1-flash"] as $route |
+    ([$models[] | select(.base_model | startswith("deepseek"))] | length == 1) and
+    ($route.base_model == "deepseek-v4.1-flash") and
+    ($route.model_api_base == "https://opencode.ai/zen/go/v1") and
+    ($route.model_api_key == "os.environ/OPENCODE_GO_KEY") and
+    ($route.context_limit == 1000000) and
+    ($route.output_limit == 384000) and
+    ($route.input_modalities == ["text", "image"]) and
+    $route.supports_vision and $route.supports_reasoning and $route.supports_tools and
+    ($route.input_cost_per_million_tokens == 0.30) and
+    ($route.output_cost_per_million_tokens == 1.20)
+  ' components/litellm/environments/home/production/models.json
+}

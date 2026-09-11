@@ -1,6 +1,6 @@
 {
-  "deepseek-flash": {
-    "reason": "OpenCode Go lists deepseek-flash (DeepSeek V4.1 Flash), absent from the reviewed Zen catalog. Limits, modalities and pricing reviewed against https://models.dev/api.json; route verified in https://opencode.ai/zen/go/v1/models.",
+  "deepseek-v4.1-flash": {
+    "reason": "OpenCode Go lists deepseek-v4.1-flash at https://opencode.ai/zen/go/v1/models and https://opencode.ai/docs/go/. Go metadata at https://models.dev/api.json specifies 1000000 context, 384000 output, text/image input and reasoning/tools. Proxy uses published peak input/output prices (0.30/1.20 USD per million); off-peak is 0.15/0.60. Zen discovery does not include this Go-only route.",
     "reviewed_on": "2026-09-10"
   },
   "glm-5.3-flash": {

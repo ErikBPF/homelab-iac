@@ -5,13 +5,11 @@
     "qwen-chat"
   ],
   "deepseek-harness": [
-    "deepseek-v4-flash",
-    "deepseek-v4-pro",
+    "deepseek-v4.1-flash",
     "qwen-chat"
   ],
   "hermes": [
-    "deepseek-v4-flash",
-    "deepseek-v4-pro",
+    "deepseek-v4.1-flash",
     "glm-5",
     "glm-5.3-flash",
     "kimi-k2-code",
@@ -23,9 +21,7 @@
     "qwen3.8-flash"
   ],
   "opencode": [
-    "deepseek-flash",
-    "deepseek-v4-flash",
-    "deepseek-v4-pro",
+    "deepseek-v4.1-flash",
     "glm-5",
     "glm-5.3-flash",
     "kimi-k2-code",
@@ -35,7 +31,6 @@
     "qwen-chat",
     "qwen3-max",
     "qwen3.8-flash",
-    "zen-free",
     "zen-free-pickle"
   ]
 }
