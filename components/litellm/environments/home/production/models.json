@@ -41,14 +41,14 @@
       "privacy_tier": "confidential",
       "lifecycle": "production"
     },
-    "deepseek-flash": {
+    "deepseek-v4.1-flash": {
       "custom_llm_provider": "openai",
-      "base_model": "deepseek-flash",
+      "base_model": "deepseek-v4.1-flash",
       "model_api_key": "os.environ/OPENCODE_GO_KEY",
       "model_api_base": "https://opencode.ai/zen/go/v1",
       "mode": "chat",
-      "input_cost_per_million_tokens": 0.15,
-      "output_cost_per_million_tokens": 0.6,
+      "input_cost_per_million_tokens": 0.3,
+      "output_cost_per_million_tokens": 1.2,
       "additional_litellm_params": {
         "timeout": "600"
       },
@@ -67,56 +67,6 @@
       "privacy_tier": "non-confidential",
       "lifecycle": "production",
       "supports_vision": true
-    },
-    "deepseek-v4-flash": {
-      "custom_llm_provider": "openai",
-      "base_model": "deepseek-v4-flash",
-      "model_api_key": "os.environ/OPENCODE_GO_KEY",
-      "model_api_base": "https://opencode.ai/zen/go/v1",
-      "mode": "chat",
-      "input_cost_per_million_tokens": 0.14,
-      "output_cost_per_million_tokens": 0.28,
-      "additional_litellm_params": {
-        "timeout": "600"
-      },
-      "context_limit": 1000000,
-      "output_limit": 384000,
-      "input_modalities": [
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "supports_reasoning": true,
-      "supports_tools": true,
-      "probe_skip": true,
-      "privacy_tier": "non-confidential",
-      "lifecycle": "production"
-    },
-    "deepseek-v4-pro": {
-      "custom_llm_provider": "openai",
-      "base_model": "deepseek-v4-pro",
-      "model_api_key": "os.environ/OPENCODE_GO_KEY",
-      "model_api_base": "https://opencode.ai/zen/go/v1",
-      "mode": "chat",
-      "input_cost_per_million_tokens": 1.74,
-      "output_cost_per_million_tokens": 3.84,
-      "additional_litellm_params": {
-        "timeout": "600"
-      },
-      "context_limit": 1000000,
-      "output_limit": 384000,
-      "input_modalities": [
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "supports_reasoning": true,
-      "supports_tools": true,
-      "probe_skip": true,
-      "privacy_tier": "non-confidential",
-      "lifecycle": "production"
     },
     "glm-5": {
       "custom_llm_provider": "openai",
@@ -341,29 +291,6 @@
       ],
       "probe_language": "pt",
       "privacy_tier": "confidential",
-      "lifecycle": "production"
-    },
-    "zen-free": {
-      "custom_llm_provider": "openai",
-      "base_model": "deepseek-v4-flash-free",
-      "model_api_key": "os.environ/OPENCODE_ZEN_KEY",
-      "model_api_base": "https://opencode.ai/zen/v1",
-      "mode": "chat",
-      "input_cost_per_million_tokens": 0,
-      "output_cost_per_million_tokens": 0,
-      "additional_litellm_params": {
-        "timeout": "300"
-      },
-      "context_limit": 200000,
-      "output_limit": 128000,
-      "input_modalities": [
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "probe_skip": true,
-      "privacy_tier": "non-confidential",
       "lifecycle": "production"
     },
     "zen-free-pickle": {
