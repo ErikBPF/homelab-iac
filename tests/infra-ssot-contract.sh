@@ -343,7 +343,9 @@ check_s05() {
     (.models | type == "object") and
     ((.models | keys) == $aliases[0]) and
     ([.models[].mode] | unique) == ["audio_transcription", "chat", "embedding", "rerank"] and
-    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription", "embedding", "rerank"] and
+    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription"]
+    and .models["bge-m3"].model_api_base == "http://100.72.85.73:8085/v1"
+    and .models["bge-reranker-v2-m3"].model_api_base == "http://100.72.85.73:8087" and
     ([.models[] | select((.context_limit // null) == null)] | length) > 0 and
     ([.models[] | select((.output_limit // null) == null)] | length) > 0 and
     (all(.models[];
