@@ -150,6 +150,9 @@
 	// `tailscale up --ssh`.
 
 	"tests": [
+        // Retrieval is reachable through LiteLLM on Discovery, not directly by other peers.
+        {"src": "galaxy-s25", "deny": ["orion:8085", "orion:8087"]},
+        {"src": "kepler", "deny": ["orion:8085", "orion:8087"]},
 		{"src": "apollo", "accept": ["orion:22000"], "deny": ["kepler:22000", "endeavour:22000"]},
 		{"src": "orion", "accept": ["apollo:22000"]},
 		{"src": "galaxy-s25", "deny": ["apollo:22000"]},
@@ -165,7 +168,7 @@
 		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
 		{"src": "orion", "deny": ["kepler:8001"]},       // no direct backend access
 		{"src": "discovery", "accept": ["kepler:6443"]}, // hub reaches k3s
-		{"src": "discovery", "accept": ["orion:8080"]},  // hub reaches host services (LLMs)
+		{"src": "discovery", "accept": ["orion:8080", "orion:8085", "orion:8087"]},  // hub reaches host services (LLMs)
 		{"src": "kepler", "accept": ["discovery:3100"]}, // cluster ships logs to Loki
 		{"src": "voyager", "accept": ["discovery:3100"]}, // public host ships SSH journals
 		{"src": "vanguard", "accept": ["discovery:3100"]}, // public host ships SSH journals
