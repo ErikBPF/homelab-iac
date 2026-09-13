@@ -18,8 +18,9 @@ assert re.findall(r'fixed_ip\s*=\s*"192\.168\.10\.(\d+)"',reservations)==["2","3
 assert "roborock" not in reservations.lower()
 hosts=json.loads(fleet)["hosts"]
 assert {name:hosts[name]["ip"] for name in (
-  "discovery","orion","kepler","pathfinder","archinaut","homeassistant"
+  "apollo","discovery","orion","kepler","pathfinder","archinaut","homeassistant"
 )} == {
+  "apollo":"192.168.10.174",
   "discovery":"192.168.10.210",
   "orion":"192.168.10.220",
   "kepler":"192.168.10.230",

@@ -2,6 +2,9 @@ generate "provider" {
   path      = "provider_gen.tf"
   if_exists = "overwrite"
   contents  = <<-EOT
+    variable "vault_addr" {
+      type = string
+    }
     variable "vault_role_id" {
       type      = string
       sensitive = true
@@ -18,7 +21,7 @@ generate "provider" {
       default   = ""
     }
     provider "vault" {
-      address          = "https://openbao.homelab.pastelariadev.com"
+      address          = var.vault_addr
       skip_child_token = true
       token             = var.vault_token != "" ? var.vault_token : null
       dynamic "auth_login" {
@@ -36,6 +39,7 @@ generate "provider" {
 }
 
 inputs = {
+  vault_addr      = get_env("VAULT_ADDR", "https://openbao.homelab.pastelariadev.com")
   vault_role_id   = get_env("VAULT_ROLE_ID")
   vault_secret_id = get_env("VAULT_SECRET_ID")
   vault_token     = get_env("VAULT_TOKEN", "")

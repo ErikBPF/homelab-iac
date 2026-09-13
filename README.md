@@ -159,7 +159,7 @@ terragrunt apply
 
 Whole environment: `cd unifi/environments/home && terragrunt run --all plan`.
 
-## Phase 1 — import current state (do this first)
+## Importing a newly managed resource
 
 Goal: reflect the *existing* live config into code and reach a clean plan
 (no diff). Nothing is changed.
@@ -175,21 +175,19 @@ terragrunt import 'unifi_<resource>.this["<key>"]' <id>
 terragrunt plan                                      # must show: no changes
 ```
 
-The `network` module is the worked example; the other modules are skeletons whose
-`main.tf`/`variables.tf` get filled from the generated config, then refactored to
-the same typed-map + `for_each` shape.
+Use the existing modules as examples. Check state and the saved plan first;
+do not repeat imports for resources already managed.
 
 ## Notes
 
 - The `filipowm/unifi` provider drives the controller's **internal** API and can
   drift across Network-app upgrades — pin the provider (`default_flags.hcl`) and
   re-`plan` after each controller update before trusting `apply`.
-- State is **local**, under `unifi/.state/` (gitignored), and **encrypted at
-  rest** (OpenTofu AES-GCM + PBKDF2). The passphrase is `UNIFI_STATE_PASSPHRASE`
-  in `.env` — **back it up**; losing it makes state undecryptable. To migrate a
-  fresh/plaintext state, temporarily add an `unencrypted` `fallback` to the
-  `state`/`plan` blocks in `root.hcl`, run `apply -refresh-only`, then remove it.
-- Secrets never touch disk/git: API key, WLAN passphrases, and the state
-  passphrase all flow shell `.env` → Terragrunt input → `TF_VAR_*`.
+- UniFi uses the shared **S3 backend** from `backend.hcl`, with OpenTofu
+  AES-GCM + PBKDF2 encryption configured in `unifi/root.hcl`. Follow
+  [disaster recovery](docs/disaster-recovery.md) for key custody and recovery;
+  do not treat the historical `unifi/.state/` directory as current state.
+- Local `.env` inputs are disk-resident secrets and must remain gitignored.
+  Keep secret values out of command output and version control.
 - **Pre-commit** (devenv `git-hooks`): `tofu fmt`, `terragrunt hcl format`, and
   `tflint` run on commit. Active after `direnv allow` / `devenv shell`.

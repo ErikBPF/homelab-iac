@@ -105,7 +105,9 @@ jobs:
         run: python3 tests/litellm-provider-bootstrap.py
 
       - name: Infrastructure SSOT contract
-        run: bats tests/*.bats
+        run: |
+          bats tests/*.bats
+          python3 -O tests/apollo-personal-route.py
         env:
           GOMODCACHE: ${{ runner.temp }}/go-mod
 
