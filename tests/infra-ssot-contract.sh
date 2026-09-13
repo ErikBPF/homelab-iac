@@ -442,7 +442,7 @@ check_s05() {
   [[ -n "$production_key" && -n "$canary_key" && "$production_key" != "$canary_key" ]] \
     || fail "S05 RED: production and canary units share a state key"
 
-  printf '%s\n' "S05 PASS: exact Discovery production manifest, Kepler retrieval routes, allowlists, and cutoff guard proven offline"
+  printf '%s\n' "S05 PASS: exact Discovery production manifest, Orion retrieval routes, allowlists, and cutoff guard proven offline"
 }
 
 case "$1" in
