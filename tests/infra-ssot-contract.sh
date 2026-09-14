@@ -137,7 +137,7 @@ check_s02() {
     "S02 RED: input price validation is missing"
   assert_file_contains "$variables" 'output_cost_per_million_tokens[[:space:]]*>=[[:space:]]*0' \
     "S02 RED: output price validation is missing"
-  assert_file_contains "$variables" 'contains\(\["chat",[[:space:]]*"completion",[[:space:]]*"embedding"\],[[:space:]]*model\.mode\)' \
+  assert_file_contains "$variables" 'contains\(\["chat",[[:space:]]*"completion",[[:space:]]*"responses",[[:space:]]*"embedding"\],[[:space:]]*model\.mode\)' \
     "S02 RED: model mode closed-set validation is missing"
   assert_file_excludes "$main" 'each\.value\.(privacy_tier|lifecycle)' \
     "S02 RED: governance-only metadata is passed to provider fields"
@@ -342,7 +342,7 @@ check_s05() {
   jq -e --slurpfile aliases "$aliases" '
     (.models | type == "object") and
     ((.models | keys) == $aliases[0]) and
-    ([.models[].mode] | unique) == ["audio_transcription", "chat", "embedding", "rerank"] and
+    ([.models[].mode] | unique) == ["audio_transcription", "chat", "embedding", "rerank", "responses"] and
     ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription"]
     and .models["bge-m3"].model_api_base == "http://100.72.85.73:8085/v1"
     and .models["bge-reranker-v2-m3"].model_api_base == "http://100.72.85.73:8087" and
@@ -376,7 +376,7 @@ check_s05() {
   jq -e '.models["qwen-chat"].max_tokens == 98304' "$manifest" >/dev/null \
     || fail "S05 RED: qwen-chat metadata must match Orion's 98304-token context"
 
-  for mode in completion embedding image_generation chat moderation audio_transcription audio_speech rerank; do
+  for mode in completion embedding image_generation chat responses moderation audio_transcription audio_speech rerank; do
     assert_file_contains "$variables" "\"${mode}\"" \
       "S05 RED: model module does not accept provider mode ${mode}"
   done

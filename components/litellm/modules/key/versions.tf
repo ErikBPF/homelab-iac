@@ -4,7 +4,7 @@ terraform {
   required_providers {
     litellm = {
       source  = "registry.terraform.io/ErikBPF/litellm"
-      version = "1.2.0"
+      version = "1.2.3"
     }
   }
 }
