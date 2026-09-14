@@ -315,6 +315,102 @@
       "probe_skip": true,
       "privacy_tier": "non-confidential",
       "lifecycle": "production"
+    },
+    "codex-gpt-6-astra": {
+      "custom_llm_provider": "chatgpt",
+      "base_model": "gpt-6-astra",
+      "model_api_key": "",
+      "model_api_base": "",
+      "mode": "chat",
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_reasoning": true,
+      "supports_tools": true,
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "manual",
+      "context_limit": 272000,
+      "supports_vision": true
+    },
+    "codex-gpt-5.6-luna": {
+      "custom_llm_provider": "chatgpt",
+      "base_model": "gpt-5.6-luna",
+      "model_api_key": "",
+      "model_api_base": "",
+      "mode": "chat",
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_reasoning": true,
+      "supports_tools": true,
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "manual",
+      "context_limit": 272000,
+      "supports_vision": true
+    },
+    "codex-gpt-5.6-sol": {
+      "custom_llm_provider": "chatgpt",
+      "base_model": "gpt-5.6-sol",
+      "model_api_key": "",
+      "model_api_base": "",
+      "mode": "chat",
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_reasoning": true,
+      "supports_tools": true,
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "manual",
+      "context_limit": 272000,
+      "supports_vision": true
+    },
+    "codex-gpt-5.6-terra": {
+      "custom_llm_provider": "chatgpt",
+      "base_model": "gpt-5.6-terra",
+      "model_api_key": "",
+      "model_api_base": "",
+      "mode": "chat",
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "input_modalities": [
+        "text",
+        "image"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "supports_reasoning": true,
+      "supports_tools": true,
+      "probe_skip": true,
+      "privacy_tier": "non-confidential",
+      "lifecycle": "manual",
+      "context_limit": 272000,
+      "supports_vision": true
     }
   }
 }

@@ -319,11 +319,11 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 14 and
-    (unique | length) == 14 and
+    length == 18 and
+    (unique | length) == 18 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 14 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 18 unique sorted aliases"
 
   jq -e '
     . as $aliases |
@@ -350,7 +350,7 @@ check_s05() {
     ([.models[] | select((.output_limit // null) == null)] | length) > 0 and
     (all(.models[];
       (.model_api_key | type == "string") and
-      (.model_api_key == "sk-no-key-required" or
+      ((.custom_llm_provider == "chatgpt" and .model_api_key == "" and .model_api_base == "") or .model_api_key == "sk-no-key-required" or
        (.model_api_key | test("^os\\.environ/[A-Z][A-Z0-9_]*$")))))
   ' "$manifest" >/dev/null \
     || fail "S05 RED: Discovery manifest aliases, modes, optional limits, or API-key references are invalid"
