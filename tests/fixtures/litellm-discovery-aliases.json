@@ -1,6 +1,10 @@
 [
   "bge-m3",
   "bge-reranker-v2-m3",
+  "codex-gpt-5.6-luna",
+  "codex-gpt-5.6-sol",
+  "codex-gpt-5.6-terra",
+  "codex-gpt-6-astra",
   "deepseek-v4.1-flash",
   "glm-5",
   "glm-5.3-flash",
