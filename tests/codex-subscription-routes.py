@@ -13,7 +13,13 @@ for name in names:
     assert model['custom_llm_provider'] == 'chatgpt'
     assert model['base_model'] == name.removeprefix('codex-')
     assert model['model_api_key'] == model['model_api_base'] == ''
-    assert model['mode'] == 'chat' and model['probe_skip'] is True
+    assert model['context_limit'] == 272000
+    assert model['probe_skip'] is True
+    if name == 'codex-gpt-6-astra':
+        assert model['mode'] == 'responses'
+        assert json.loads(model['additional_litellm_params']['allowed_openai_params']) == ['reasoning_effort']
+    else:
+        assert model['mode'] == 'chat'
 before = ['qwen-chat', 'apollo-qwen38-27b']
 added = proposed(before, 'grant')
 assert added == before + names

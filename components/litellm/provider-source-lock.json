@@ -1,8 +1,8 @@
 {
   "source_repository": "https://github.com/ErikBPF/terraform-provider-litellm",
-  "commit": "6837ca9a731a40146ae00cfc0f23f34eabed6cec",
-  "version": "1.2.0",
-  "artifact_sha256": "62b36faa6bc28efb6907ad8c0b6beec81f265d193a5638f1aea4a5e789eb3b58",
-  "release_url": "https://github.com/ErikBPF/terraform-provider-litellm/releases/tag/v1.2.0",
+  "commit": "4f9cd962d9d4770c8325f7611a457c0e8f2abb34",
+  "version": "1.2.3",
+  "artifact_sha256": "67ef75dff18467b21c7cfa4238c775f49b4ce45b142009f9ea885fc69ef72fe8",
+  "release_url": "https://github.com/ErikBPF/terraform-provider-litellm/releases/tag/v1.2.3",
   "signing_key_fingerprint": "817A482B5313F28EC8E12613B025710D7A6FBE7F"
 }

@@ -1,5 +1,15 @@
 # Personal Codex subscription routes
 
+Astra requires `mode: responses` and an explicit `reasoning_effort` allowlist.
+LiteLLM 1.100.1 lacks its ChatGPT model metadata: chat mode chooses the wrong
+endpoint, while incomplete metadata can disable the streaming required by
+Codex. Router registration from the model information restores the native
+Responses path. Provider 1.2.3 adds this mode to its validation schema.
+The other three model routes remain unchanged.
+The four output limits preserve the gateway's existing advertised value of
+128000 tokens; OpenCode retains its separate 32768-token output reservation.
+These are configured metadata, not a measured subscription output maximum.
+
 The user requested the saved device login be activated on the private home
 LiteLLM gateway and exposed to the personal OpenCode profile. Four explicit
 `codex-<upstream-model>` aliases use the native `chatgpt` provider: GPT-6 Astra,

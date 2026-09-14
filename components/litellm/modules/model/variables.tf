@@ -59,7 +59,7 @@ variable "models" {
   validation {
     condition = alltrue([
       for model in values(var.models) :
-      contains(["chat", "completion", "embedding"], model.mode) || contains([
+      contains(["chat", "completion", "responses", "embedding"], model.mode) || contains([
         "image_generation",
         "moderation",
         "audio_transcription",
@@ -67,7 +67,7 @@ variable "models" {
         "rerank",
       ], model.mode)
     ])
-    error_message = "mode must be one of the eight modes supported by the pinned LiteLLM provider."
+    error_message = "mode must be supported by the pinned LiteLLM provider."
   }
 
   validation {
@@ -99,7 +99,7 @@ variable "models" {
   validation {
     condition = alltrue([
       for model in values(var.models) :
-      !contains(["chat", "completion"], model.mode) ||
+      !contains(["chat", "completion", "responses"], model.mode) ||
       (contains(model.input_modalities, "text") && contains(model.output_modalities, "text"))
     ])
     error_message = "Conversational models must accept and produce text."
