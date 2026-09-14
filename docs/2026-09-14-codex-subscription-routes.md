@@ -5,6 +5,19 @@ LiteLLM 1.100.1 lacks its ChatGPT model metadata: chat mode chooses the wrong
 endpoint, while incomplete metadata can disable the streaming required by
 Codex. Router registration from the model information restores the native
 Responses path. Provider 1.2.3 adds this mode to its validation schema.
+Provider 1.2.4 also emits the bare model name alongside the explicit provider.
+Combining a prefixed model with an explicit provider registered Astra metadata
+under `chatgpt/chatgpt/gpt-6-astra`, while inference looked up the single-prefix
+key and incorrectly used the chat endpoint. The corrected representation is
+`model: gpt-6-astra` with `custom_llm_provider: chatgpt`.
+
+Existing Astra requires a saved Terraform plan with
+`-replace='litellm_model.this["codex-gpt-6-astra"]'` to rewrite its stored
+representation. Readback normalizes model names, so an ordinary plan cannot
+detect this representation change. Replacement retains the public alias and
+personal key grants. The legacy `/model/update` endpoint also ignores model
+metadata; verify the stored mode after metadata changes rather than relying
+only on a successful apply.
 The other three model routes remain unchanged.
 The four output limits preserve the gateway's existing advertised value of
 128000 tokens; OpenCode retains its separate 32768-token output reservation.
