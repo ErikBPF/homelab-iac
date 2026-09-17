@@ -106,3 +106,17 @@ Repo settings drift is now caught by the same `bin/drift-check.sh` sweep that
 covers the other components. To onboard another repo: add a key to the `repos`
 map (defaults encode the fleet norm), re-enable imports for that key, plan,
 apply.
+
+### aster onboarding (2026-09-17)
+
+`aster` (the git-backed SQL notebook platform) is a new private repository, so
+it uses the least-privilege private preset — auto-merge off, read-only workflow
+token, no PR approval, `protect_main = false` because GitHub Free does not
+support branch protection on private repositories. There was no live repository
+to import, so no import block was needed: a **targeted**
+`terragrunt apply -target='github_repository.this["aster"]'` (plus the two
+permission resources) created the three resources and nothing else. The
+untargeted plan carried unrelated drift in `agentmemory`, `sail`, `sail-dev`,
+`zmk-config-chary`, `desktop-nixos` and `homelab-iac` itself and was deliberately
+not applied. `tests/github-hardening-contract.bats` gained `aster` in its
+catalogue and its private-repo count moved 16 → 17; all seven tests pass.
