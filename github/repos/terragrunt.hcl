@@ -35,6 +35,13 @@ inputs = {
       visibility   = "private"
       protect_main = false # GitHub Free does not support private branch protection.
     }
+    aster = {
+      visibility                   = "private"
+      allow_auto_merge             = false
+      protect_main                 = false # GitHub Free does not support private branch protection.
+      default_workflow_permissions = "read"
+      can_approve_pull_requests    = false
+    }
     buzz-flake = {
       protect_main = true
     }
