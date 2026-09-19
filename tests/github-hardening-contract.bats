@@ -16,7 +16,7 @@ expected = {
     "hermes-skills", "home-assistant-config",
     "homelab-gitops", "homelab-iac", "kindle-dash", "klipper-biqu",
     "nanda_colors", "nstech-dev-technical-test", "nstech-mdm-technical-test",
-    "ndc", "opencode-flake", "renovate-config", "romozinha", "sail", "sail-dev",
+    "ndc", "opencode-flake", "opencode-tui", "renovate-config", "romozinha", "sail", "sail-dev",
     "servarr", "spicyphus", "terraform-provider-adguardhome",
     "terraform-provider-litellm", "vault",
     "zmk-config-chary",
@@ -30,7 +30,7 @@ private = {name for name in expected if re.search(
 for name in expected:
     block = re.search(rf"^    {re.escape(name)} = \{{(?:(?!^    \}}).)*^    \}}", repos, re.M | re.S).group()
     assert f"protect_main = {'false' if name in private else 'true'}" in re.sub(r"\s+", " ", block), name
-assert len(private) == 17
+assert len(private) == 18
 PY
   [ "$status" -eq 0 ]
 }
