@@ -146,11 +146,8 @@ inputs = {
       can_approve_pull_requests    = true
     }
     opencode-tui = {
-      visibility                   = "private"
-      allow_auto_merge             = false
-      protect_main                 = false # GitHub Free does not support private branch protection.
-      default_workflow_permissions = "read"
-      can_approve_pull_requests    = false
+      protect_main    = true
+      required_checks = ["ci", "secrets"]
     }
     renovate-config = {
       visibility                   = "private"
