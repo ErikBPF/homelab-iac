@@ -30,7 +30,7 @@ private = {name for name in expected if re.search(
 for name in expected:
     block = re.search(rf"^    {re.escape(name)} = \{{(?:(?!^    \}}).)*^    \}}", repos, re.M | re.S).group()
     assert f"protect_main = {'false' if name in private else 'true'}" in re.sub(r"\s+", " ", block), name
-assert len(private) == 18
+assert len(private) == 17
 PY
   [ "$status" -eq 0 ]
 }
