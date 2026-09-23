@@ -208,9 +208,30 @@
     },
     "qwen-chat": {
       "custom_llm_provider": "openai",
-      "base_model": "qwen-chat",
+      "base_model": "qwen38-27b-nvfp4",
       "model_api_key": "sk-no-key-required",
-      "model_api_base": "http://orion:8080/v1",
+      "model_api_base": "http://100.77.14.27:11542/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.25,
+      "output_cost_per_million_tokens": 0.75,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "max_tokens": 98304,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "privacy_tier": "confidential",
+      "lifecycle": "production"
+    },
+    "qwen-jev": {
+      "custom_llm_provider": "openai",
+      "base_model": "qwen-jev",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://100.77.14.27:11560/v1",
       "mode": "chat",
       "input_cost_per_million_tokens": 0.25,
       "output_cost_per_million_tokens": 0.75,
