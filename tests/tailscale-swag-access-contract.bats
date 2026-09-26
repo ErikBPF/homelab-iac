@@ -17,7 +17,7 @@
   grep -qF 'resource "tailscale_dns_split_nameservers" "this"' "$module"
   grep -qF 'for_each = var.split_nameservers' "$module"
   grep -qF 'type        = map(set(string))' "$variables"
-  grep -qF '"k8s.pastelariadev.com" = ["100.76.140.121"]' "$unit"
+  grep -qF '"k8s.pastelariadev.com" = ["100.103.52.100"]' "$unit"
 }
 
 @test "Orion Wazuh canary can read its enrollment secret" {
