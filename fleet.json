@@ -16,7 +16,7 @@
       "ip": "192.168.10.210",
       "mac": "64:51:06:1a:f8:1a",
       "role": "server",
-      "tailscaleIp": "100.76.140.121"
+      "tailscaleIp": "100.103.52.100"
     },
     "endeavour": {
       "ip": null,
