@@ -7,7 +7,7 @@ terraform {
 }
 
 # Imported from the live tailnet. 192.168.10.210 is the homelab resolver
-# (discovery LAN / AdGuard); 100.76.140.121 is discovery's tailnet IP.
+# (discovery LAN / AdGuard); 100.103.52.100 is discovery's tailnet IP.
 #
 # vanguard R1 (desktop-nixos docs/proposals/2026-07-10-vanguard-second-oracle-node.md):
 # 100.90.247.79 is vanguard's secondary CoreDNS resolver (services.fleetDns),
@@ -16,14 +16,14 @@ terraform {
 # grants everyone vanguard:53 (rule 2) so this fallback is actually reachable.
 inputs = {
   nameservers = [
-    "192.168.10.210", "100.76.140.121",
+    "192.168.10.210", "100.103.52.100",
     "100.90.247.79",
     "1.1.1.1", "8.8.8.8"
   ]
   # Resolve the private Kubernetes zone through AdGuard's tailnet listener;
   # answers still target SWAG/API ingress at 192.168.10.210.
   split_nameservers = {
-    "k8s.pastelariadev.com" = ["100.76.140.121"]
+    "k8s.pastelariadev.com" = ["100.103.52.100"]
   }
   magic_dns    = true
   search_paths = []
