@@ -120,3 +120,16 @@ untargeted plan carried unrelated drift in `agentmemory`, `sail`, `sail-dev`,
 `zmk-config-chary`, `desktop-nixos` and `homelab-iac` itself and was deliberately
 not applied. `tests/github-hardening-contract.bats` gained `aster` in its
 catalogue and its private-repo count moved 16 → 17; all seven tests pass.
+
+### aster-smoke onboarding (2026-09-23)
+
+`aster-smoke` is the disposable private repository reserved as the live GitHub
+fixture for Aster's team Git Sync acceptance (`just github-sync-validation`).
+It uses the same least-privilege private preset as `aster` — auto-merge off,
+read-only workflow token, no PR approval, `protect_main = false`. It has no
+committed content; the plan requires a separate scoped App installation and
+runtime secret before any live push, so provisioning the repository itself
+grants no Aster authority. Create it with a targeted
+`terragrunt apply -target='github_repository.this["aster-smoke"]'` plus the two
+permission resources. `tests/github-hardening-contract.bats` gained
+`aster-smoke` in its catalogue and its private-repo count moved 17 → 18.
