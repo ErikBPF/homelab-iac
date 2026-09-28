@@ -84,7 +84,8 @@ inputs = {
       protect_main = true
       required_checks = [
         "lint", "flake-lock", "k3s-smoke", "eval (pathfinder)",
-        "eval (laptop)", "eval (orion)", "eval (discovery)", "eval (kepler)",
+        "eval (endeavour)", "eval (orion)", "eval (discovery)",
+        "eval (kepler)", "eval (apollo)",
       ]
     }
     hermes-flake = {
