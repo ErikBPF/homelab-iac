@@ -23,6 +23,7 @@ resource "github_repository" "this" {
 
   name       = each.key
   visibility = each.value.visibility
+  archived   = each.value.archived
 
   allow_auto_merge       = each.value.protect_main && each.value.allow_auto_merge
   allow_merge_commit     = each.value.allow_merge_commit

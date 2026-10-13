@@ -154,6 +154,7 @@ inputs = {
       can_approve_pull_requests    = true
     }
     opencode-tui = {
+      archived        = true
       protect_main    = true
       required_checks = ["ci", "secrets"]
     }
