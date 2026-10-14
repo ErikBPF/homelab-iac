@@ -16,3 +16,13 @@ variable "rotation_generation" {
   type    = number
   default = 1
 }
+
+variable "ha_harness_publisher_rotation_generation" {
+  type    = number
+  default = 1
+}
+
+variable "ha_harness_publisher_disabled" {
+  type    = bool
+  default = false
+}
