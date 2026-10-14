@@ -82,6 +82,7 @@ jobs:
       - uses: opentofu/setup-opentofu@9d84900f3238fab8cd84ce47d658d25dd008be2f # v1
         with:
           tofu_version: "1.12.1"
+          tofu_wrapper: false
 
       - name: Install terragrunt
         env:
@@ -109,6 +110,7 @@ jobs:
           bats tests/*.bats
           python3 -O tests/apollo-personal-route.py
           python3 tests/tailscale-discovery-routes-contract.py
+          bash tests/tailscale-identity.sh
         env:
           GOMODCACHE: ${{ runner.temp }}/go-mod
 
