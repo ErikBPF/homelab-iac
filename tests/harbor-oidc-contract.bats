@@ -369,3 +369,97 @@ SH
   grep -Eq 'token_max_ttl[[:space:]]*=[[:space:]]*300' "$module"
   grep -Eq '^components/harbor-iam/environments/home/fleet-readers ' tests/fixtures/state-keys.txt
 }
+
+@test "HA private project is owned alongside its publisher with create ordering" {
+  module=components/harbor-iam/modules/fleet-readers/main.tf
+  project=$(sed -n '/^resource "harbor_project" "ha_harness" {/,/^}/p' "$module")
+  robot=$(sed -n '/^resource "harbor_robot_account" "ha_harness_publisher" {/,/^}/p' "$module")
+
+  grep -Fq 'resource "harbor_project" "ha_harness" {' <<<"$project"
+  grep -Eq 'name[[:space:]]*=[[:space:]]*"ha-harness"' <<<"$project"
+  grep -Eq 'public[[:space:]]*=[[:space:]]*false' <<<"$project"
+  grep -Eq 'vulnerability_scanning[[:space:]]*=[[:space:]]*true' <<<"$project"
+  grep -Eq 'auto_sbom_generation[[:space:]]*=[[:space:]]*true' <<<"$project"
+  grep -Eq 'enable_content_trust_cosign[[:space:]]*=[[:space:]]*false' <<<"$project"
+  grep -Fq 'prevent_destroy = true' <<<"$project"
+  test "$(grep -Ec 'namespace[[:space:]]*=' <<<"$robot")" -eq 1
+  grep -Eq 'namespace[[:space:]]*=[[:space:]]*harbor_project\.ha_harness\.name$' <<<"$robot"
+  grep -Fq 'source = "${get_repo_root()}/components/harbor-iam/modules/fleet-readers"' \
+    components/harbor-iam/environments/home/fleet-readers/terragrunt.hcl
+}
+
+@test "HA publisher has only project pull and push with independent lifecycle controls" {
+  module=components/harbor-iam/modules/fleet-readers/main.tf
+  variables=components/harbor-iam/modules/fleet-readers/variables.tf
+  robot=$(sed -n '/^resource "harbor_robot_account" "ha_harness_publisher" {/,/^}/p' "$module")
+  disabled=$(sed -n '/^variable "ha_harness_publisher_disabled" {/,/^}/p' "$variables")
+  generation=$(sed -n '/^variable "ha_harness_publisher_rotation_generation" {/,/^}/p' "$variables")
+
+  grep -Fq 'resource "harbor_robot_account" "ha_harness_publisher" {' <<<"$robot"
+  grep -Eq 'name[[:space:]]*=[[:space:]]*"svc-ha-harness-harbor-image-publisher"' <<<"$robot"
+  grep -Eq 'level[[:space:]]*=[[:space:]]*"project"' <<<"$robot"
+  grep -Eq 'duration[[:space:]]*=[[:space:]]*365$' <<<"$robot"
+  grep -Eq 'disable[[:space:]]*=[[:space:]]*var\.ha_harness_publisher_disabled$' <<<"$robot"
+  test "$(grep -Ec 'kind[[:space:]]*=' <<<"$robot")" -eq 1
+  grep -Eq 'kind[[:space:]]*=[[:space:]]*"project"' <<<"$robot"
+  test "$(grep -Ec 'action[[:space:]]*=' <<<"$robot")" -eq 2
+  grep -Eq 'action[[:space:]]*=[[:space:]]*"pull"' <<<"$robot"
+  grep -Eq 'action[[:space:]]*=[[:space:]]*"push"' <<<"$robot"
+  test "$(grep -Ec 'resource[[:space:]]*=[[:space:]]*"repository"' <<<"$robot")" -eq 2
+  grep -Eq 'type[[:space:]]*=[[:space:]]*bool$' <<<"$disabled"
+  grep -Eq 'default[[:space:]]*=[[:space:]]*false$' <<<"$disabled"
+  grep -Eq 'type[[:space:]]*=[[:space:]]*number$' <<<"$generation"
+  grep -Eq 'default[[:space:]]*=[[:space:]]*1$' <<<"$generation"
+}
+
+@test "HA publisher secret is ephemeral and write-only with provider-qualified username" {
+  module=components/harbor-iam/modules/fleet-readers/main.tf
+  password=$(sed -n '/^ephemeral "random_password" "ha_harness_publisher" {/,/^}/p' "$module")
+  robot=$(sed -n '/^resource "harbor_robot_account" "ha_harness_publisher" {/,/^}/p' "$module")
+  secret=$(sed -n '/^resource "vault_kv_secret_v2" "ha_harness_publisher" {/,/^}/p' "$module")
+
+  grep -Fq 'ephemeral "random_password" "ha_harness_publisher" {' <<<"$password"
+  grep -Eq 'length[[:space:]]*=[[:space:]]*32$' <<<"$password"
+  grep -Eq 'special[[:space:]]*=[[:space:]]*true$' <<<"$password"
+  grep -Eq 'override_special[[:space:]]*=[[:space:]]*"_-"$' <<<"$password"
+  grep -Eq 'secret_wo[[:space:]]*=[[:space:]]*tostring\(ephemeral\.random_password\.ha_harness_publisher\.result\)' <<<"$robot"
+  grep -Eq 'secret_wo_version[[:space:]]*=[[:space:]]*var\.ha_harness_publisher_rotation_generation$' <<<"$robot"
+  grep -Eq 'mount[[:space:]]*=[[:space:]]*"secret"' <<<"$secret"
+  grep -Eq 'name[[:space:]]*=[[:space:]]*"home/ha-harness-harbor-publisher"' <<<"$secret"
+  grep -Eq 'data_json_wo[[:space:]]*=[[:space:]]*jsonencode\(\{' <<<"$secret"
+  test "$(grep -Ec '^[[:space:]]*HARBOR_' <<<"$secret")" -eq 2
+  grep -Eq 'HARBOR_PUBLISHER_USERNAME[[:space:]]*=[[:space:]]*harbor_robot_account\.ha_harness_publisher\.full_name$' <<<"$secret"
+  grep -Eq 'HARBOR_PUBLISHER_SECRET[[:space:]]*=[[:space:]]*tostring\(ephemeral\.random_password\.ha_harness_publisher\.result\)' <<<"$secret"
+  grep -Eq 'data_json_wo_version[[:space:]]*=[[:space:]]*var\.ha_harness_publisher_rotation_generation$' <<<"$secret"
+  ! grep -Eq '^[[:space:]]*(secret|data_json)[[:space:]]*=' <<<"$robot$secret"
+  ! grep -Fq 'resource "random_password" "ha_harness_publisher"' "$module"
+  ! grep -Rq '^output ' components/harbor-iam/modules/fleet-readers
+}
+
+@test "HA publisher extends only exact writer paths and preserves shared identities" {
+  module=components/harbor-iam/modules/fleet-readers/main.tf
+  foundation=components/openbao/modules/runtime-secret-foundation/main.tf
+  writer=$(sed -n '/^resource "vault_policy" "harbor_fleet_readers_publisher" {/,/^}/p' "$foundation")
+  reader=$(sed -n '/^resource "harbor_robot_account" "reader" {/,/^}/p' "$module")
+  cognee=$(sed -n '/^resource "harbor_robot_account" "cognee_publisher" {/,/^}/p' "$module")
+  cognee_secret=$(sed -n '/^resource "vault_kv_secret_v2" "cognee_publisher" {/,/^}/p' "$module")
+  role=$(sed -n '/^resource "vault_approle_auth_backend_role" "harbor_fleet_readers_publisher" {/,/^}/p' "$foundation")
+
+  grep -Fq '"path \"secret/data/home/ha-harness-harbor-publisher\" { capabilities = [\"create\", \"update\", \"read\"] }"' <<<"$writer"
+  grep -Fq '"path \"secret/metadata/home/ha-harness-harbor-publisher\" { capabilities = [\"read\"] }"' <<<"$writer"
+  test "$(grep -Fc 'ha-harness-harbor-publisher' "$foundation")" -eq 2
+  test "$(grep -Fc '"path ' <<<"$writer")" -eq 6
+  grep -Fq '"path \"secret/data/fleet/harbor/readers/*\" { capabilities = [\"create\", \"update\", \"read\", \"delete\"] }"' <<<"$writer"
+  grep -Fq '"path \"secret/metadata/fleet/harbor/readers/*\" { capabilities = [\"read\", \"delete\"] }"' <<<"$writer"
+  grep -Fq '"path \"secret/data/home/cognee-harbor-publisher\" { capabilities = [\"create\", \"update\", \"read\"] }"' <<<"$writer"
+  grep -Fq '"path \"secret/metadata/home/cognee-harbor-publisher\" { capabilities = [\"read\"] }"' <<<"$writer"
+  grep -Eq 'namespace[[:space:]]*=[[:space:]]*"\*"' <<<"$reader"
+  test "$(grep -Ec 'action[[:space:]]*=' <<<"$reader")" -eq 1
+  grep -Eq 'action[[:space:]]*=[[:space:]]*"pull"' <<<"$reader"
+  grep -Eq 'secret_wo_version[[:space:]]*=[[:space:]]*var\.rotation_generation$' <<<"$reader"
+  grep -Eq 'namespace[[:space:]]*=[[:space:]]*"library"' <<<"$cognee"
+  grep -Eq 'secret_wo_version[[:space:]]*=[[:space:]]*var\.rotation_generation$' <<<"$cognee"
+  grep -Eq 'data_json_wo_version[[:space:]]*=[[:space:]]*var\.rotation_generation$' <<<"$cognee_secret"
+  grep -Fq 'token_policies = [vault_policy.harbor_fleet_readers_publisher.name]' <<<"$role"
+  test "$(grep -Fc 'secret_id_ttl  = 7776000' "$foundation")" -eq 4
+}
