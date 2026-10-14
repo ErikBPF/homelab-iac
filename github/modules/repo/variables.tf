@@ -10,6 +10,7 @@ variable "repos" {
   type = map(object({
     # Repo settings (github_repository).
     visibility             = optional(string, "public")
+    archived               = optional(bool, false)
     allow_auto_merge       = optional(bool, true) # `gh pr merge --auto` needs this
     allow_merge_commit     = optional(bool, false)
     allow_squash_merge     = optional(bool, true)

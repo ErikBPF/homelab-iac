@@ -54,6 +54,28 @@ PY
   [ "$status" -eq 0 ]
 }
 
+@test "opencode-tui remains managed with declarative archival" {
+  run python3 - "$REPO_ROOT" <<'PY'
+import pathlib, re, sys
+
+root = pathlib.Path(sys.argv[1])
+text = (root / "github/repos/terragrunt.hcl").read_text()
+block = re.search(r"^    opencode-tui = \{(?:(?!^    \}).)*^    \}", text, re.M | re.S).group()
+assert re.search(r"archived\s*=\s*true", block), "opencode-tui must be archived"
+assert re.search(r"protect_main\s*=\s*true", block)
+assert re.search(r'required_checks\s*=\s*\["ci", "secrets"\]', block)
+variables = (root / "github/modules/repo/variables.tf").read_text()
+assert re.search(r"archived\s*=\s*optional\(bool, false\)", variables)
+module = (root / "github/modules/repo/main.tf").read_text()
+resource = re.search(r'resource "github_repository" "this" \{(?:(?!^}).)*^}', module, re.M | re.S).group()
+assert re.search(r"for_each\s*=\s*var.repos", resource)
+assert re.search(r"archived\s*=\s*each.value.archived", resource)
+assert re.search(r"prevent_destroy\s*=\s*true", resource)
+assert re.search(r"archive_on_destroy\s*=\s*true", resource)
+PY
+  [ "$status" -eq 0 ]
+}
+
 @test "branch protection denies bypass-prone mutations" {
   run python3 - "$REPO_ROOT/github/modules/repo/main.tf" <<'PY'
 import pathlib, re, sys
