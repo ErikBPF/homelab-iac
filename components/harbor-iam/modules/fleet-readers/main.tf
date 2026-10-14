@@ -77,3 +77,55 @@ resource "vault_kv_secret_v2" "cognee_publisher" {
   })
   data_json_wo_version = var.rotation_generation
 }
+
+resource "harbor_project" "ha_harness" {
+  name                        = "ha-harness"
+  public                      = false
+  vulnerability_scanning      = true
+  auto_sbom_generation        = true
+  enable_content_trust_cosign = false
+
+  lifecycle {
+    prevent_destroy = true
+  }
+}
+
+ephemeral "random_password" "ha_harness_publisher" {
+  length           = 32
+  special          = true
+  override_special = "_-"
+}
+
+resource "harbor_robot_account" "ha_harness_publisher" {
+  name        = "svc-ha-harness-harbor-image-publisher"
+  description = "Private HA harness image publisher"
+  level       = "project"
+  duration    = 365
+  disable     = var.ha_harness_publisher_disabled
+
+  secret_wo         = tostring(ephemeral.random_password.ha_harness_publisher.result)
+  secret_wo_version = var.ha_harness_publisher_rotation_generation
+
+  permissions {
+    kind      = "project"
+    namespace = harbor_project.ha_harness.name
+    access {
+      action   = "pull"
+      resource = "repository"
+    }
+    access {
+      action   = "push"
+      resource = "repository"
+    }
+  }
+}
+
+resource "vault_kv_secret_v2" "ha_harness_publisher" {
+  mount = "secret"
+  name  = "home/ha-harness-harbor-publisher"
+  data_json_wo = jsonencode({
+    HARBOR_PUBLISHER_USERNAME = harbor_robot_account.ha_harness_publisher.full_name
+    HARBOR_PUBLISHER_SECRET   = tostring(ephemeral.random_password.ha_harness_publisher.result)
+  })
+  data_json_wo_version = var.ha_harness_publisher_rotation_generation
+}

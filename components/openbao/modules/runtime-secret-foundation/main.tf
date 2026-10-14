@@ -106,6 +106,8 @@ resource "vault_policy" "harbor_fleet_readers_publisher" {
     "path \"secret/metadata/fleet/harbor/readers/*\" { capabilities = [\"read\", \"delete\"] }",
     "path \"secret/data/home/cognee-harbor-publisher\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/home/cognee-harbor-publisher\" { capabilities = [\"read\"] }",
+    "path \"secret/data/home/ha-harness-harbor-publisher\" { capabilities = [\"create\", \"update\", \"read\"] }",
+    "path \"secret/metadata/home/ha-harness-harbor-publisher\" { capabilities = [\"read\"] }",
   ])
 }
 
