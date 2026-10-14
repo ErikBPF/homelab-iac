@@ -108,6 +108,7 @@ jobs:
         run: |
           bats tests/*.bats
           python3 -O tests/apollo-personal-route.py
+          python3 tests/tailscale-discovery-routes-contract.py
         env:
           GOMODCACHE: ${{ runner.temp }}/go-mod
 
