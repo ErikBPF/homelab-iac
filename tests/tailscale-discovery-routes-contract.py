@@ -12,7 +12,8 @@ resource = re.search(
 )
 assert resource, "Discovery subnet-route approval resource is missing"
 body = resource.group(1)
-assert re.search(r'device_id\s*=\s*"nBNPLvBqRK11CNTRL"', body), "Wrong Discovery node"
+assert re.search(r'discovery_node_id\s*=\s*"nBNPLvBqRK11CNTRL"', source), "Wrong Discovery node pin"
+assert re.search(r"device_id\s*=\s*local\.discovery_node_id", body), "Approval must use the pin, not live selection"
 routes = re.search(r"routes\s*=\s*\[([^]]+)\]", body)
 assert routes, "Discovery routes are missing"
 assert re.findall(r'"([^"]+)"', routes.group(1)) == [
@@ -21,4 +22,17 @@ assert re.findall(r'"([^"]+)"', routes.group(1)) == [
     "192.168.10.4/32",
     "192.168.10.210/32",
 ], "Approval must contain only Discovery's four advertised host routes"
+assert 'data "tailscale_devices" "discovery"' in source, "Discovery lookup must retain duplicate matches"
+assert re.search(r'name\s*=\s*"hostname"\s+values\s*=\s*\["discovery"\]', source), "Discovery lookup must match hostname exactly"
+assert "precondition {" in body, "Identity mismatch must block route approval"
+for guard in [
+    "length(data.tailscale_devices.discovery.devices) == 1",
+    "alltrue([",
+    "for device in data.tailscale_devices.discovery.devices :",
+    "device.node_id == local.discovery_node_id",
+    "device.authorized",
+    'contains(device.tags, "tag:server")',
+    'contains(device.addresses, "100.103.52.100")',
+]:
+    assert guard in body, f"Discovery identity guard is missing: {guard}"
 print("PASS: Discovery-only subnet-route approval contract")
