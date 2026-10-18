@@ -143,6 +143,14 @@
 		//     tailnet IP (servarr infra stack), gated to vanguard alone here.
 		{"action": "accept", "src": ["vanguard"], "dst": ["discovery:5432"]},
 
+		// 15. Galaxy mobile Plex: the app talks to Plex on :32400, which is not
+		//     published through SWAG. With Tailscale up the phone routes the LAN
+		//     address 192.168.10.210 (host alias `swag`) through discovery's
+		//     subnet route, so BOTH the routed address and the tailnet IP need
+		//     the grant or the app hangs instead of falling back to relay.
+		//     Plex only — no wider discovery access for the phone.
+		{"action": "accept", "src": ["galaxy-s25"], "dst": ["discovery:32400", "swag:32400"]},
+
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -187,6 +195,9 @@
 		{"src": "vanguard", "accept": ["discovery:5432"]}, // DR replica streams from discovery Postgres
 		{"src": "orion", "deny": ["discovery:5432"]},      // only vanguard reaches the DB, not other peers
 		{"src": "galaxy-s25", "accept": ["orion:2222", "apollo:2222", "endeavour:2222"]}, // mobile reaches only its workstation endpoints
+		{"src": "galaxy-s25", "accept": ["discovery:32400", "swag:32400"]}, // mobile reaches Plex, routed or direct
+		{"src": "galaxy-s25", "deny": ["discovery:8200", "discovery:5432", "discovery:2222"]}, // Plex grant is not broader discovery access
+		{"src": "orion", "deny": ["discovery:32400"]},  // Plex grant stays phone-scoped
 		{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}, // never fleet-admin SSH
 		{"src": "endeavour", "accept": ["voyager:2222", "vanguard:2222"]}, // admin reaches public hosts through Tailscale
 		{"src": "orion", "deny": ["voyager:2222", "vanguard:2222"]},       // ordinary servers cannot administer them
