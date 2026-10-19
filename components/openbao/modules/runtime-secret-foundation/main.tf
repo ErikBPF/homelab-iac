@@ -66,6 +66,24 @@ resource "vault_policy" "harbor_project_iam_publisher" {
   EOT
 }
 
+resource "vault_policy" "aster_authentik_reader_publisher" {
+  name   = "svc-homelab-iac-openbao-aster-authentik-reader-publisher"
+  policy = <<-EOT
+    path "secret/data/platform/aster/authentik-reader" {
+      capabilities = ["create", "update", "read"]
+    }
+  EOT
+}
+
+resource "vault_policy" "aster_authentik_reader_consumer" {
+  name   = "svc-homelab-gitops-openbao-aster-authentik-reader"
+  policy = <<-EOT
+    path "secret/data/platform/aster/authentik-reader" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
 resource "vault_policy" "harbor_project_iam_reader" {
   name   = "svc-homelab-iac-openbao-harbor-project-iam-reader"
   policy = <<-EOT
@@ -182,6 +200,28 @@ resource "vault_approle_auth_backend_role" "harbor_project_iam_publisher" {
   token_ttl      = 300
   token_max_ttl  = 300
   secret_id_ttl  = 7776000
+  token_type     = "default"
+}
+
+resource "vault_approle_auth_backend_role" "aster_authentik_reader_publisher" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-homelab-iac-openbao-aster-authentik-reader-publisher"
+  bind_secret_id = true
+  token_policies = [vault_policy.aster_authentik_reader_publisher.name]
+  token_ttl      = 300
+  token_max_ttl  = 300
+  # One-time token handoff; issue a fresh SecretID for later rotations.
+  secret_id_ttl = 86400
+  token_type    = "default"
+}
+
+resource "vault_approle_auth_backend_role" "aster_authentik_reader_consumer" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-homelab-gitops-openbao-aster-authentik-reader"
+  bind_secret_id = true
+  token_policies = [vault_policy.aster_authentik_reader_consumer.name]
+  token_ttl      = 1200
+  token_max_ttl  = 3600
   token_type     = "default"
 }
 
