@@ -5,6 +5,7 @@ cloudflare/dns cloudflare/dns/terraform.tfstate
 cloudflare/ratelimit cloudflare/ratelimit/terraform.tfstate
 cloudflare/swag-token cloudflare/swag-token/terraform.tfstate
 cloudflare/tunnel cloudflare/tunnel/terraform.tfstate
+components/authentik/environments/home/aster-identity-reader components/authentik/environments/home/aster-identity-reader/terraform.tfstate
 components/authentik/environments/home/iac-access components/authentik/environments/home/iac-access/terraform.tfstate
 components/harbor-iam/environments/home/fleet-readers components/harbor-iam/environments/home/fleet-readers/terraform.tfstate
 components/harbor-iam/environments/home/production components/harbor-iam/environments/home/production/terraform.tfstate
@@ -14,6 +15,7 @@ components/litellm/environments/home/cognee-key components/litellm/environments/
 components/litellm/environments/home/deepseek-harness-key components/litellm/environments/home/deepseek-harness-key/terraform.tfstate
 components/litellm/environments/home/ha-harness-key components/litellm/environments/home/ha-harness-key/terraform.tfstate
 components/litellm/environments/home/production components/litellm/environments/home/production/terraform.tfstate
+components/openbao/environments/home/aster-authentik-reader components/openbao/environments/home/aster-authentik-reader/terraform.tfstate
 components/openbao/environments/home/authentik-runtime components/openbao/environments/home/authentik-runtime/terraform.tfstate
 components/openbao/environments/home/cognee-litellm components/openbao/environments/home/cognee-litellm/terraform.tfstate
 components/openbao/environments/home/deepseek-harness-litellm components/openbao/environments/home/deepseek-harness-litellm/terraform.tfstate

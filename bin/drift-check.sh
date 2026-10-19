@@ -27,11 +27,13 @@ out=$(terragrunt run --all \
   --parallelism 1 \
   --filter '!oracle/compute-telstar' \
   --filter '!components/litellm/environments/home/canary' \
+  --filter '!components/authentik/environments/home/aster-identity-reader' \
   --filter '!components/authentik/environments/home/iac-access' \
   --filter '!components/harbor-iam/environments/home/fleet-readers' \
   --filter '!components/harbor-iam/environments/home/production' \
   --filter '!components/harbor-iam/environments/home/project-members' \
   --filter '!components/litellm/environments/home/deepseek-harness-key' \
+  --filter '!components/openbao/environments/home/aster-authentik-reader' \
   --filter '!components/openbao/environments/home/authentik-runtime' \
   --filter '!components/openbao/environments/home/deepseek-harness-litellm' \
   --filter '!components/openbao/environments/home/harbor-project-iam' \
