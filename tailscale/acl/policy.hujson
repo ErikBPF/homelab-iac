@@ -126,6 +126,10 @@
 		// Orion's single Wazuh canary reads only its enrollment password from
 		// OpenBao. Broader fleet enrollment gets a dedicated AppRole first.
 		{"action": "accept", "src": ["orion"], "dst": ["discovery:8200"]},
+		// The workstation resolves dev credentials (GitHub CLI token) through
+		// SecretSpec directly against the tailnet listener. The LAN/SWAG vhost
+		// stays for human UI use; machines do not depend on DNS or TLS there.
+		{"action": "accept", "src": ["endeavour"], "dst": ["discovery:8200"]},
 
 		// 11. Kepler sends its config backup to voyager's append-only Restic
 		//     receiver. No other voyager service is exposed to Kepler.
@@ -182,6 +186,7 @@
 		{"src": "vanguard", "accept": ["discovery:3100"]}, // public host ships SSH journals
 		{"src": "kepler", "accept": ["discovery:8200"]}, // lab ESO reads OpenBao
 		{"src": "orion", "accept": ["discovery:8200"]}, // Wazuh canary reads enrollment secret
+		{"src": "endeavour", "accept": ["discovery:8200"]}, // workstation resolves dev secrets
 		{"src": "kepler", "accept": ["voyager:8000"]},   // offsite Restic backup
 		{"src": "orion", "accept": ["discovery:9090"]},  // host Alloy ships metrics
 		{"src": "orion", "accept": ["kepler:2049"]},     // NFS preserved

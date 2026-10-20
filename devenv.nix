@@ -24,6 +24,7 @@
     pkgs.curl
     pkgs.sops
     pkgs.age
+    pkgs.secretspec
     pkgs.bats
     pkgs.shellcheck
     pkgs.go
@@ -42,6 +43,14 @@
     # live as MINIO_TFSTATE_* in .env. Map them so plan/apply reach the bucket.
     export AWS_ACCESS_KEY_ID="''${MINIO_TFSTATE_ROOT_USER:-}"
     export AWS_SECRET_ACCESS_KEY="''${MINIO_TFSTATE_ROOT_PASSWORD:-}"
+    # One canonical home for the GitHub token: OpenBao secret/iac/github,
+    # resolved through SecretSpec with this repo's AppRole. Nothing is read
+    # from .env.sops for it. If OpenBao is unreachable the variable stays unset
+    # so the shell still works for break-glass recovery.
+    if [ -n "''${VAULT_ROLE_ID:-}" ] && [ -n "''${VAULT_SECRET_ID:-}" ]; then
+      GITHUB_TOKEN="$(secretspec get GITHUB_TOKEN --file secretspec.toml --profile iac 2>/dev/null || true)"
+      export GITHUB_TOKEN
+    fi
     echo "homelab-iac devenv"
     tofu version | head -1
     terragrunt --version | head -1
