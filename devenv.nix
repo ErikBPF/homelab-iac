@@ -48,8 +48,11 @@
     # from .env.sops for it. If OpenBao is unreachable the variable stays unset
     # so the shell still works for break-glass recovery.
     if [ -n "''${VAULT_ROLE_ID:-}" ] && [ -n "''${VAULT_SECRET_ID:-}" ]; then
-      GITHUB_TOKEN="$(secretspec get GITHUB_TOKEN --file secretspec.toml --profile iac --reason "iac devshell" 2>/dev/null || true)"
-      export GITHUB_TOKEN
+      if GITHUB_TOKEN="$(secretspec get GITHUB_TOKEN --file secretspec.toml --profile iac --reason "iac devshell")"; then
+        export GITHUB_TOKEN
+      else
+        echo "homelab-iac: GITHUB_TOKEN unavailable from OpenBao; GitHub component applies will fail (break-glass only)" >&2
+      fi
     fi
     echo "homelab-iac devenv"
     tofu version | head -1
