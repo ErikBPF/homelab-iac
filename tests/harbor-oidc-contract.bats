@@ -206,7 +206,24 @@ SH
   grep -Eq 'token_ttl[[:space:]]*=[[:space:]]*300' <<<"$reader_role"
   grep -Eq 'token_max_ttl[[:space:]]*=[[:space:]]*300' <<<"$reader_role"
   grep -Eq 'secret_id_ttl[[:space:]]*=[[:space:]]*7776000' <<<"$reader_role"
-  test "$(grep -Fc 'secret_id_ttl  = 7776000' "$module")" -eq 4
+  test "$(grep -Fc 'secret_id_ttl  = 7776000' "$module")" -eq 5
+}
+
+@test "GitHub token reader is read-only and scoped to one KV path" {
+  module=components/openbao/modules/runtime-secret-foundation/main.tf
+  policy=$(sed -n '/resource "vault_policy" "github_token_reader"/,/^}/p' "$module")
+  role=$(sed -n '/resource "vault_approle_auth_backend_role" "github_token_reader"/,/^}/p' "$module")
+
+  grep -Fq 'resource "vault_policy" "github_token_reader"' "$module"
+  grep -Fq 'name   = "svc-desktop-nixos-endeavour-github-token-reader"' <<<"$policy"
+  test "$(grep -Fc 'path "secret/data/iac/github"' <<<"$policy")" -eq 1
+  test "$(grep -Fc 'capabilities = ["read"]' <<<"$policy")" -eq 1
+  ! grep -Eq 'create|update|delete|list|\*' <<<"$policy"
+  grep -Fq 'role_name      = "svc-desktop-nixos-endeavour-github-token-reader"' <<<"$role"
+  grep -Fq 'token_policies = [vault_policy.github_token_reader.name]' <<<"$role"
+  grep -Eq 'token_ttl[[:space:]]*=[[:space:]]*300' <<<"$role"
+  grep -Eq 'token_max_ttl[[:space:]]*=[[:space:]]*300' <<<"$role"
+  grep -Eq 'secret_id_ttl[[:space:]]*=[[:space:]]*7776000' <<<"$role"
 }
 
 @test "Harbor day-two wrapper resolves only its robot credential through AppRole" {
@@ -461,5 +478,5 @@ SH
   grep -Eq 'secret_wo_version[[:space:]]*=[[:space:]]*var\.rotation_generation$' <<<"$cognee"
   grep -Eq 'data_json_wo_version[[:space:]]*=[[:space:]]*var\.rotation_generation$' <<<"$cognee_secret"
   grep -Fq 'token_policies = [vault_policy.harbor_fleet_readers_publisher.name]' <<<"$role"
-  test "$(grep -Fc 'secret_id_ttl  = 7776000' "$foundation")" -eq 4
+  test "$(grep -Fc 'secret_id_ttl  = 7776000' "$foundation")" -eq 5
 }

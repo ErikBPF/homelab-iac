@@ -51,6 +51,7 @@ resource "vault_policy" "iac_writer" {
     "path \"secret/metadata/lab/cognee-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/platform/authentik\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/platform/authentik\" { capabilities = [\"read\"] }",
+    "path \"secret/data/iac/github\" { capabilities = [\"read\"] }",
   ])
 }
 
@@ -134,6 +135,18 @@ resource "vault_policy" "harbor_fleet_reader" {
   name     = "svc-desktop-nixos-${each.key}-harbor-reader"
   policy   = <<-EOT
     path "secret/data/fleet/harbor/readers/${each.key}" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
+# The workstation shell (SecretSpec) and the iac provider both resolve the
+# GitHub token from one OpenBao entry. Read-only: the value is written and
+# rotated out of band, never from a repo or a Terraform variable.
+resource "vault_policy" "github_token_reader" {
+  name   = "svc-desktop-nixos-endeavour-github-token-reader"
+  policy = <<-EOT
+    path "secret/data/iac/github" {
       capabilities = ["read"]
     }
   EOT
@@ -242,6 +255,17 @@ resource "vault_approle_auth_backend_role" "harbor_fleet_reader" {
   role_name      = "svc-desktop-nixos-${each.key}-harbor-reader"
   bind_secret_id = true
   token_policies = [vault_policy.harbor_fleet_reader[each.key].name]
+  token_ttl      = 300
+  token_max_ttl  = 300
+  secret_id_ttl  = 7776000
+  token_type     = "default"
+}
+
+resource "vault_approle_auth_backend_role" "github_token_reader" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-desktop-nixos-endeavour-github-token-reader"
+  bind_secret_id = true
+  token_policies = [vault_policy.github_token_reader.name]
   token_ttl      = 300
   token_max_ttl  = 300
   secret_id_ttl  = 7776000
