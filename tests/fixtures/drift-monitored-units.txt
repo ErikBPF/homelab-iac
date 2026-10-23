@@ -5,6 +5,7 @@ cloudflare/dns
 cloudflare/ratelimit
 cloudflare/swag-token
 cloudflare/tunnel
+components/litellm/environments/home/aster-key
 components/litellm/environments/home/cognee-key
 components/litellm/environments/home/ha-harness-key
 components/litellm/environments/home/production

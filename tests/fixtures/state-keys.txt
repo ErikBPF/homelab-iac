@@ -9,6 +9,7 @@ components/authentik/environments/home/iac-access components/authentik/environme
 components/harbor-iam/environments/home/fleet-readers components/harbor-iam/environments/home/fleet-readers/terraform.tfstate
 components/harbor-iam/environments/home/production components/harbor-iam/environments/home/production/terraform.tfstate
 components/harbor-iam/environments/home/project-members components/harbor-iam/environments/home/project-members/terraform.tfstate
+components/litellm/environments/home/aster-key components/litellm/environments/home/aster-key/terraform.tfstate
 components/litellm/environments/home/canary components/litellm/environments/home/canary/terraform.tfstate
 components/litellm/environments/home/cognee-key components/litellm/environments/home/cognee-key/terraform.tfstate
 components/litellm/environments/home/deepseek-harness-key components/litellm/environments/home/deepseek-harness-key/terraform.tfstate
