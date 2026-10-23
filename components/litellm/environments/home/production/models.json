@@ -68,29 +68,6 @@
       "lifecycle": "production",
       "supports_vision": true
     },
-    "glm-5": {
-      "custom_llm_provider": "openai",
-      "base_model": "glm-5.2",
-      "model_api_key": "os.environ/OPENCODE_GO_KEY",
-      "model_api_base": "https://opencode.ai/zen/go/v1",
-      "mode": "chat",
-      "input_cost_per_million_tokens": 1.4,
-      "output_cost_per_million_tokens": 4.4,
-      "additional_litellm_params": {
-        "timeout": "600"
-      },
-      "context_limit": 1000000,
-      "output_limit": 131072,
-      "input_modalities": [
-        "text"
-      ],
-      "output_modalities": [
-        "text"
-      ],
-      "probe_skip": true,
-      "privacy_tier": "non-confidential",
-      "lifecycle": "production"
-    },
     "glm-5.3-flash": {
       "custom_llm_provider": "openai",
       "base_model": "glm-5.3-flash",

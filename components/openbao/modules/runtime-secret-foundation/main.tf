@@ -51,6 +51,7 @@ resource "vault_policy" "iac_writer" {
     "path \"secret/metadata/lab/cognee-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/platform/authentik\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/platform/authentik\" { capabilities = [\"read\"] }",
+    "path \"secret/data/iac/github\" { capabilities = [\"read\"] }",
   ])
 }
 
@@ -61,6 +62,24 @@ resource "vault_policy" "harbor_project_iam_publisher" {
       capabilities = ["create", "update", "read"]
     }
     path "secret/metadata/platform/harbor/project-iam-manager" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
+resource "vault_policy" "aster_authentik_reader_publisher" {
+  name   = "svc-homelab-iac-openbao-aster-authentik-reader-publisher"
+  policy = <<-EOT
+    path "secret/data/platform/aster/authentik-reader" {
+      capabilities = ["create", "update", "read"]
+    }
+  EOT
+}
+
+resource "vault_policy" "aster_authentik_reader_consumer" {
+  name   = "svc-homelab-gitops-openbao-aster-authentik-reader"
+  policy = <<-EOT
+    path "secret/data/platform/aster/authentik-reader" {
       capabilities = ["read"]
     }
   EOT
@@ -106,6 +125,8 @@ resource "vault_policy" "harbor_fleet_readers_publisher" {
     "path \"secret/metadata/fleet/harbor/readers/*\" { capabilities = [\"read\", \"delete\"] }",
     "path \"secret/data/home/cognee-harbor-publisher\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/home/cognee-harbor-publisher\" { capabilities = [\"read\"] }",
+    "path \"secret/data/home/ha-harness-harbor-publisher\" { capabilities = [\"create\", \"update\", \"read\"] }",
+    "path \"secret/metadata/home/ha-harness-harbor-publisher\" { capabilities = [\"read\"] }",
   ])
 }
 
@@ -114,6 +135,18 @@ resource "vault_policy" "harbor_fleet_reader" {
   name     = "svc-desktop-nixos-${each.key}-harbor-reader"
   policy   = <<-EOT
     path "secret/data/fleet/harbor/readers/${each.key}" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
+# The workstation shell (SecretSpec) and the iac provider both resolve the
+# GitHub token from one OpenBao entry. Read-only: the value is written and
+# rotated out of band, never from a repo or a Terraform variable.
+resource "vault_policy" "github_token_reader" {
+  name   = "svc-desktop-nixos-endeavour-github-token-reader"
+  policy = <<-EOT
+    path "secret/data/iac/github" {
       capabilities = ["read"]
     }
   EOT
@@ -183,6 +216,28 @@ resource "vault_approle_auth_backend_role" "harbor_project_iam_publisher" {
   token_type     = "default"
 }
 
+resource "vault_approle_auth_backend_role" "aster_authentik_reader_publisher" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-homelab-iac-openbao-aster-authentik-reader-publisher"
+  bind_secret_id = true
+  token_policies = [vault_policy.aster_authentik_reader_publisher.name]
+  token_ttl      = 300
+  token_max_ttl  = 300
+  # One-time token handoff; issue a fresh SecretID for later rotations.
+  secret_id_ttl = 86400
+  token_type    = "default"
+}
+
+resource "vault_approle_auth_backend_role" "aster_authentik_reader_consumer" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-homelab-gitops-openbao-aster-authentik-reader"
+  bind_secret_id = true
+  token_policies = [vault_policy.aster_authentik_reader_consumer.name]
+  token_ttl      = 1200
+  token_max_ttl  = 3600
+  token_type     = "default"
+}
+
 resource "vault_approle_auth_backend_role" "harbor_fleet_readers_publisher" {
   backend        = vault_auth_backend.approle.path
   role_name      = "svc-homelab-iac-openbao-harbor-fleet-readers-publisher"
@@ -200,6 +255,17 @@ resource "vault_approle_auth_backend_role" "harbor_fleet_reader" {
   role_name      = "svc-desktop-nixos-${each.key}-harbor-reader"
   bind_secret_id = true
   token_policies = [vault_policy.harbor_fleet_reader[each.key].name]
+  token_ttl      = 300
+  token_max_ttl  = 300
+  secret_id_ttl  = 7776000
+  token_type     = "default"
+}
+
+resource "vault_approle_auth_backend_role" "github_token_reader" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-desktop-nixos-endeavour-github-token-reader"
+  bind_secret_id = true
+  token_policies = [vault_policy.github_token_reader.name]
   token_ttl      = 300
   token_max_ttl  = 300
   secret_id_ttl  = 7776000

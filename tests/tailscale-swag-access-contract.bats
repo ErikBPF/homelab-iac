@@ -17,7 +17,13 @@
   grep -qF 'resource "tailscale_dns_split_nameservers" "this"' "$module"
   grep -qF 'for_each = var.split_nameservers' "$module"
   grep -qF 'type        = map(set(string))' "$variables"
-  grep -qF '"k8s.pastelariadev.com" = ["100.103.52.100"]' "$unit"
+  grep -qE '"k8s[.]pastelariadev[.]com"[[:space:]]*=[[:space:]]*\["100[.]103[.]52[.]100"\]' "$unit"
+}
+
+@test "homelab split DNS adopts the existing LAN resolver rule" {
+  grep -qE '"homelab[.]pastelariadev[.]com"[[:space:]]*=[[:space:]]*\["192[.]168[.]10[.]210"\]' tailscale/dns/terragrunt.hcl
+  grep -qF 'to = tailscale_dns_split_nameservers.this["homelab.pastelariadev.com"]' tailscale/modules/dns/main.tf
+  grep -qF 'id = "homelab.pastelariadev.com"' tailscale/modules/dns/main.tf
 }
 
 @test "Orion Wazuh canary can read its enrollment secret" {

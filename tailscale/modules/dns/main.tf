@@ -16,3 +16,9 @@ resource "tailscale_dns_split_nameservers" "this" {
   domain      = each.key
   nameservers = each.value
 }
+
+# Adopt the existing split rule without changing its resolver or other zones.
+import {
+  to = tailscale_dns_split_nameservers.this["homelab.pastelariadev.com"]
+  id = "homelab.pastelariadev.com"
+}

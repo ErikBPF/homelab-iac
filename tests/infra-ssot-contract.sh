@@ -319,11 +319,11 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 19 and
-    (unique | length) == 19 and
+    length == 18 and
+    (unique | length) == 18 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 19 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 18 unique sorted aliases"
 
   jq -e '
     . as $aliases |
@@ -358,7 +358,6 @@ check_s05() {
   jq -e --slurpfile catalog "$catalog" '
     .models as $models |
     [
-      {alias: "glm-5", source_id: "glm-5.2"},
       {alias: "kimi-k2-code", source_id: "kimi-k2.7-code"},
       {alias: "minimax-m2", source_id: "minimax-m2.7"},
       {alias: "zen-free-pickle", source_id: "big-pickle"}
