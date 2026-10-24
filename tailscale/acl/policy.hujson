@@ -155,6 +155,12 @@
 		//     Plex only — no wider discovery access for the phone.
 		{"action": "accept", "src": ["galaxy-s25"], "dst": ["discovery:32400", "swag:32400"]},
 
+		// 16. Jellyfin deliberately has no direct-port grant. It is fully
+		//     proxied by SWAG on :443 (rule 3), so the phone and every other
+		//     tailnet device use https://jellyfin.<domain>. Keep :8096 closed:
+		//     the compose stack publishes only 7359/1900 UDP for LAN discovery.
+		//     The tests below assert the direct port stays unreachable.
+
 	],
 
 	// Hosts use OpenSSH on :2222 (governed by the acls above); Tailscale SSH is
@@ -203,6 +209,8 @@
 		{"src": "galaxy-s25", "accept": ["discovery:32400", "swag:32400"]}, // mobile reaches Plex, routed or direct
 		{"src": "galaxy-s25", "deny": ["discovery:8200", "discovery:5432", "discovery:2222"]}, // Plex grant is not broader discovery access
 		{"src": "orion", "deny": ["discovery:32400"]},  // Plex grant stays phone-scoped
+		{"src": "galaxy-s25", "deny": ["discovery:8096", "swag:8096"]}, // Jellyfin is SWAG-only; no direct port
+		{"src": "orion", "deny": ["discovery:8096"]},   // no direct Jellyfin port for ordinary servers
 		{"src": "galaxy-s25", "deny": ["laptop:2222", "pathfinder:2222", "discovery:2222", "kepler:2222", "archinaut:2222", "voyager:2222", "vanguard:2222"]}, // never fleet-admin SSH
 		{"src": "endeavour", "accept": ["voyager:2222", "vanguard:2222"]}, // admin reaches public hosts through Tailscale
 		{"src": "orion", "deny": ["voyager:2222", "vanguard:2222"]},       // ordinary servers cannot administer them
