@@ -190,8 +190,8 @@
       "model_api_key": "sk-no-key-required",
       "model_api_base": "http://100.77.14.27:11542/v1",
       "mode": "chat",
-      "input_cost_per_million_tokens": 0.20,
-      "output_cost_per_million_tokens": 2.50,
+      "input_cost_per_million_tokens": 0.15,
+      "output_cost_per_million_tokens": 0.47,
       "additional_litellm_params": {
         "timeout": "600"
       },
@@ -238,8 +238,8 @@
       "model_api_key": "sk-no-key-required",
       "model_api_base": "http://100.77.14.27:11542/v1",
       "mode": "chat",
-      "input_cost_per_million_tokens": 0.20,
-      "output_cost_per_million_tokens": 2.50,
+      "input_cost_per_million_tokens": 0.15,
+      "output_cost_per_million_tokens": 0.47,
       "additional_litellm_params": {
         "timeout": "600"
       },
