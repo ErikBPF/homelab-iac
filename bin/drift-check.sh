@@ -46,14 +46,24 @@ case "$code" in
     echo "homelab-iac: no drift in the adopted unit scope."
     ;;
   2)
-    summary=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
-      | grep -am 40 -E 'Plan:|will be (updated|created|destroyed)|# ')
-    summary="${summary:0:1500}"
-    echo "homelab-iac: DRIFT DETECTED"
-    printf '%s\n' "$summary"
+    # Keep the changed attributes. Matching only "will be updated" headers and
+    # "# …" lines reported a plan with the diff stripped out, so every alert
+    # ended in a request to re-run the plan by hand.
+    detail=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
+      | sed -nE 's/^.*tofu: //p' \
+      | grep -aE '^(Plan:|No changes|  *(~|\+|-|#) )' \
+      | grep -avE '^  *# \(' || true)
+    units=$(printf '%s\n' "$out" | grep -aoE 'STDOUT \[[^]]+\]' \
+      | sed -E 's/^STDOUT \[(.*)\]$/\1/' | sort -u | paste -sd ' ' -)
+    echo "homelab-iac: DRIFT DETECTED in: ${units:-unknown}"
+    printf '%s\n' "$detail"
+    summary="${detail:0:1500}"
+    if [ "${#detail}" -gt 1500 ]; then
+      summary+=$'\n… trimmed; full diff: journalctl -u homelab-iac-drift'
+    fi
     if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
       curl -fsS -m 10 -H "Content-Type: application/json" \
-        --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg summary "$summary" --arg c "🟠 **homelab-iac drift** — Tailscale/UniFi/Cloudflare/AdGuard config drifted from code. Run a plan." '{content:("<@"+$user+">\n"+$c+"\n\n"+$summary),allowed_mentions:{users:[$user]}}')" \
+        --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg summary "$summary" --arg c "🟠 **homelab-iac drift** — ${units:-unknown} drifted from code." '{content:("<@"+$user+">\n"+$c+"\n\n"+$summary),allowed_mentions:{users:[$user]}}')" \
         "$DISCORD_WEBHOOK_URL" >/dev/null || true
     fi
     exit 2

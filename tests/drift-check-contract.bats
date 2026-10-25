@@ -56,16 +56,22 @@ PY
   [ "$status" -eq 0 ]
 }
 
-@test "drift alert includes bounded plan evidence for Cleytin" {
-  run grep -F -- "grep -am 40 -E 'Plan:|will be (updated|created|destroyed)|# '" bin/drift-check.sh
-  [ "$status" -eq 0 ]
+@test "drift alert keeps the changed attribute lines and names the units" {
+  cat > "$BATS_TEST_TMPDIR/terragrunt" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' \
+  '19:57:07.953 STDOUT [github/repos] tofu:   # github_repository.this["aster"] will be updated in-place' \
+  '19:57:07.953 STDOUT [github/repos] tofu:       ~ visibility = "public" -> "private"' \
+  '19:57:07.953 STDOUT [github/repos] tofu:         # (34 unchanged attributes hidden)' \
+  '19:57:07.953 STDOUT [github/repos] tofu: Plan: 0 to add, 2 to change, 0 to destroy.'
+exit 2
+SH
+  chmod 700 "$BATS_TEST_TMPDIR/terragrunt"
 
-  run grep -F -- 'summary="${summary:0:1500}"' bin/drift-check.sh
-  [ "$status" -eq 0 ]
+  run env PATH="$BATS_TEST_TMPDIR:$PATH" bash bin/drift-check.sh
 
-  run grep -F -- '--arg summary "$summary"' bin/drift-check.sh
-  [ "$status" -eq 0 ]
-
-  run grep -F -- '"\n\n"+$summary' bin/drift-check.sh
-  [ "$status" -eq 0 ]
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"DRIFT DETECTED in: github/repos"* ]]
+  [[ "$output" == *'~ visibility = "public" -> "private"'* ]]
+  [[ "$output" != *"unchanged attributes hidden"* ]]
 }
