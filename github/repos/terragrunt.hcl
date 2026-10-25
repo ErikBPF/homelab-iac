@@ -113,8 +113,8 @@ inputs = {
       protect_main = false
     }
     homelab-gitops = {
-      visibility   = "private"
-      protect_main = false
+      visibility   = "public"
+      protect_main = true
     }
     homelab-iac = {
       protect_main    = true
