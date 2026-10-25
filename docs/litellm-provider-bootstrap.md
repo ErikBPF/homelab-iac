@@ -6,6 +6,11 @@ Terraform provider credentials are bootstrap material. Store them in this
 repository's encrypted dotenv, never in a workload environment or Terraform
 state. The provider supports `LITELLM_API_BASE` and `LITELLM_API_KEY` natively.
 
+The operator mirror is `secret/data/iac/litellm-provider`. The read-only
+AppRole `svc-homelab-iac-openbao-litellm-provider` reads that path; the
+encrypted dotenv remains the rotation source, so update the mirror after each
+rotation.
+
 Preview the exact request without network access:
 
 ```sh
