@@ -213,7 +213,7 @@ resource "vault_approle_auth_backend_role" "litellm_provider" {
   token_policies = [vault_policy.litellm_provider.name]
   token_ttl      = 1800
   token_max_ttl  = 3600
-  secret_id_ttl  = 7776000
+  secret_id_ttl  = 2592000
   token_type     = "default"
 }
 
