@@ -36,9 +36,9 @@ inputs = {
       protect_main = false # GitHub Free does not support private branch protection.
     }
     aster = {
-      visibility                   = "private"
+      visibility                   = "public" # Apache-2.0, published.
       allow_auto_merge             = false
-      protect_main                 = false # GitHub Free does not support private branch protection.
+      protect_main                 = true
       default_workflow_permissions = "read"
       can_approve_pull_requests    = false
     }
