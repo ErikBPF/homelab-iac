@@ -57,92 +57,110 @@ plan_dir=$(mktemp -d "${TMPDIR:-/tmp}/homelab-iac-plan.XXXXXX") || exit 1
 trap 'rm -rf "$plan_dir"' EXIT
 plan_file() { printf '%s/%s.tfplan' "$plan_dir" "$(printf '%s' "$1" | tr '/' '_')"; }
 
-detail=""
-changed=""
-while IFS= read -r unit; do
-  [ -n "$unit" ] || continue
-  out=$(unit_scope "$unit" -- plan -detailed-exitcode -no-color -out="$(plan_file "$unit")" 2>&1)
-  code=$?
-  case "$code" in
-    0) continue ;;
-    2) changed+="$unit " ;;
-    *)
-      printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' | tail -20
-      alert "🔴 **merged-main plan failed** in $unit (exit $code) — nothing applied."
-      exit 1
-      ;;
-  esac
-  # Attribute this unit's evidence so the guards can name their units.
-  detail+=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
-    | sed -nE 's/^.*STDOUT \[([^]]+)\] tofu: (.*)$/\1\t\2/p' \
-    | awk -F'\t' '$2 ~ /^(Plan:|  *(~|\+|-|#) )/ && $2 !~ /^ *# \(/')$'\n'
-done <"$UNITS_FILE"
+# Plan, guard, apply — repeated because units can read another unit's
+# dependency outputs. With a single plan pass, a dependent (e.g. the OpenBao
+# copy of a LiteLLM key) plans against its dependency's pre-apply state and is
+# never re-planned. Two applies plus a verifying plan pass is the bound.
+applied=""
+pass=1
+while :; do
+  detail=""
+  changed=""
+  while IFS= read -r unit; do
+    [ -n "$unit" ] || continue
+    out=$(unit_scope "$unit" -- plan -detailed-exitcode -no-color -out="$(plan_file "$unit")" 2>&1)
+    code=$?
+    case "$code" in
+      0) continue ;;
+      2) changed+="$unit " ;;
+      *)
+        printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' | tail -20
+        alert "🔴 **merged-main plan failed** in $unit (exit $code) — nothing applied."
+        exit 1
+        ;;
+    esac
+    # Attribute this unit's evidence so the guards can name their units.
+    detail+=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
+      | sed -nE 's/^.*STDOUT \[([^]]+)\] tofu: (.*)$/\1\t\2/p' \
+      | awk -F'\t' '$2 ~ /^(Plan:|  *(~|\+|-|#) )/ && $2 !~ /^ *# \(/')$'\n'
+  done <"$UNITS_FILE"
 
-if [ -n "$changed" ]; then
-  changed="${changed% }"
-fi
-
-if [ -z "$changed" ]; then
-  echo "homelab-iac apply: no changes at $(git rev-parse --short HEAD)"
-  exit 0
-fi
-
-# Fail closed: the plan carried changes, so empty evidence means the terragrunt
-# log shape changed and both guards would pass on nothing.
-if [ -z "${detail//[[:space:]]/}" ]; then
-  alert "🛑 **merged-main apply refused** — plan reported changes but no unit could be attributed. Nothing applied."
-  exit 3
-fi
-
-# Fail closed per unit: the guards below only see $detail, so a changed unit
-# with no attributable evidence would be applied unchecked (including a
-# denylisted or destructive one). Refuse before any guard runs.
-missing=""
-for unit in $changed; do
-  if ! printf '%s\n' "$detail" | cut -f1 | grep -qxF "$unit"; then
-    missing+="$unit "
+  if [ -n "$changed" ]; then
+    changed="${changed% }"
   fi
-done
-if [ -n "$missing" ]; then
-  alert "🛑 **merged-main apply refused** — no plan evidence for: $missing. Nothing applied."
-  exit 3
-fi
 
-# Read the destroy count from the summary line wherever it sits: an
-# import-bearing plan prints "Plan: 1 to import, 0 to add, 0 to change, 3 to
-# destroy." and positional fields would read the wrong number.
-destroys=$(printf '%s\n' "$detail" \
-  | awk -F'\t' '$2 ~ /^Plan: / {
-      if (match($2, /[0-9]+ to destroy/)) {
-        n = substr($2, RSTART, RLENGTH)
-        sub(/ to destroy/, "", n)
-        if (n + 0 > 0) print $1
-      }
-    }' | paste -sd ' ' -)
-if [ -n "$destroys" ]; then
-  alert "🛑 **merged-main apply refused** — plan would destroy resources in: $destroys. Nothing applied."
-  exit 3
-fi
-
-denied=""
-for unit in $DENYLIST; do
-  if printf '%s\n' "$detail" | cut -f1 | grep -qxF "$unit"; then
-    denied+="$unit "
+  if [ -z "$changed" ]; then
+    if [ "$pass" -eq 1 ]; then
+      echo "homelab-iac apply: no changes at $(git rev-parse --short HEAD)"
+    else
+      alert "🟢 **merged-main applied** ${applied}at $(git rev-parse --short HEAD)"
+    fi
+    exit 0
   fi
-done
-if [ -n "$denied" ]; then
-  alert "🛑 **merged-main apply refused** — human-only units drifted: $denied. Apply those by hand."
-  exit 3
-fi
 
-for unit in $changed; do
-  out=$(unit_scope "$unit" -- apply -no-color "$(plan_file "$unit")" 2>&1)
-  code=$?
-  if [ "$code" -ne 0 ]; then
-    printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' | tail -20
-    alert "🔴 **merged-main apply failed** in $unit (exit $code). Retry is manual."
+  if [ "$pass" -gt 2 ]; then
+    alert "🛑 **merged-main did not converge** after two applies — still changing: $changed. Nothing further applied."
     exit 1
   fi
-done
 
-alert "🟢 **merged-main applied** ${changed} at $(git rev-parse --short HEAD)"
+  # Fail closed: the plan carried changes, so empty evidence means the terragrunt
+  # log shape changed and both guards would pass on nothing.
+  if [ -z "${detail//[[:space:]]/}" ]; then
+    alert "🛑 **merged-main apply refused** — plan reported changes but no unit could be attributed. Nothing applied."
+    exit 3
+  fi
+
+  # Fail closed per unit: the guards below only see $detail, so a changed unit
+  # with no attributable evidence would be applied unchecked (including a
+  # denylisted or destructive one). Refuse before any guard runs.
+  missing=""
+  for unit in $changed; do
+    if ! printf '%s\n' "$detail" | cut -f1 | grep -qxF "$unit"; then
+      missing+="$unit "
+    fi
+  done
+  if [ -n "$missing" ]; then
+    alert "🛑 **merged-main apply refused** — no plan evidence for: $missing. Nothing applied."
+    exit 3
+  fi
+
+  # Read the destroy count from the summary line wherever it sits: an
+  # import-bearing plan prints "Plan: 1 to import, 0 to add, 0 to change, 3 to
+  # destroy." and positional fields would read the wrong number.
+  destroys=$(printf '%s\n' "$detail" \
+    | awk -F'\t' '$2 ~ /^Plan: / {
+        if (match($2, /[0-9]+ to destroy/)) {
+          n = substr($2, RSTART, RLENGTH)
+          sub(/ to destroy/, "", n)
+          if (n + 0 > 0) print $1
+        }
+      }' | paste -sd ' ' -)
+  if [ -n "$destroys" ]; then
+    alert "🛑 **merged-main apply refused** — plan would destroy resources in: $destroys. Nothing applied."
+    exit 3
+  fi
+
+  denied=""
+  for unit in $DENYLIST; do
+    if printf '%s\n' "$detail" | cut -f1 | grep -qxF "$unit"; then
+      denied+="$unit "
+    fi
+  done
+  if [ -n "$denied" ]; then
+    alert "🛑 **merged-main apply refused** — human-only units drifted: $denied. Apply those by hand."
+    exit 3
+  fi
+
+  for unit in $changed; do
+    out=$(unit_scope "$unit" -- apply -no-color "$(plan_file "$unit")" 2>&1)
+    code=$?
+    if [ "$code" -ne 0 ]; then
+      printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' | tail -20
+      alert "🔴 **merged-main apply failed** in $unit (exit $code). Retry is manual."
+      exit 1
+    fi
+  done
+
+  applied+="$changed "
+  pass=$((pass + 1))
+done

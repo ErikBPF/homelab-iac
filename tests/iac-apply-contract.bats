@@ -16,6 +16,10 @@ case " $* " in
       echo "No changes. Your infrastructure matches the configuration."
       exit 0
     fi
+    if [ -e "$APPLY_MARKER" ] && [ "${NEVER_CONVERGE:-0}" != "1" ]; then
+      echo "No changes. Your infrastructure matches the configuration."
+      exit 0
+    fi
     printf '%s\n' "$PLAN_OUT"
     exit "${PLAN_RC:-2}"
     ;;
@@ -46,7 +50,7 @@ run_apply() {
     DISCORD_WEBHOOK_URL="https://example.invalid/hook" \
     IAC_APPLY_DENYLIST="${IAC_APPLY_DENYLIST-tailscale/acl}" \
     PLAN_OUT="$PLAN_OUT" PLAN_RC="${PLAN_RC:-2}" APPLY_RC="${APPLY_RC:-0}" \
-    DRIFT_UNIT="${DRIFT_UNIT:-}" \
+    DRIFT_UNIT="${DRIFT_UNIT:-}" NEVER_CONVERGE="${NEVER_CONVERGE:-0}" \
     bash "$REPO_ROOT/bin/iac-apply.sh"
 }
 
@@ -129,6 +133,14 @@ run_apply() {
   [ "$status" -eq 3 ]
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
   jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'no plan evidence for'
+}
+
+@test "drift that does not converge is reported instead of marked applied" {
+  DRIFT_UNIT=github/repos NEVER_CONVERGE=1 run_apply
+
+  [ "$status" -eq 1 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'did not converge'
 }
 
 @test "an empty denylist disables the guard" {
