@@ -94,6 +94,20 @@ if [ -z "${detail//[[:space:]]/}" ]; then
   exit 3
 fi
 
+# Fail closed per unit: the guards below only see $detail, so a changed unit
+# with no attributable evidence would be applied unchecked (including a
+# denylisted or destructive one). Refuse before any guard runs.
+missing=""
+for unit in $changed; do
+  if ! printf '%s\n' "$detail" | cut -f1 | grep -qxF "$unit"; then
+    missing+="$unit "
+  fi
+done
+if [ -n "$missing" ]; then
+  alert "🛑 **merged-main apply refused** — no plan evidence for: $missing. Nothing applied."
+  exit 3
+fi
+
 # Read the destroy count from the summary line wherever it sits: an
 # import-bearing plan prints "Plan: 1 to import, 0 to add, 0 to change, 3 to
 # destroy." and positional fields would read the wrong number.

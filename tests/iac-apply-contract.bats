@@ -7,6 +7,15 @@ setup() {
 #!/usr/bin/env bash
 case " $* " in
   *" plan "*)
+    unit=""; prev=""
+    for arg in "$@"; do
+      [ "$prev" = "--filter" ] && unit="$arg"
+      prev="$arg"
+    done
+    if [ -n "${DRIFT_UNIT:-}" ] && [ "$unit" != "$DRIFT_UNIT" ]; then
+      echo "No changes. Your infrastructure matches the configuration."
+      exit 0
+    fi
     printf '%s\n' "$PLAN_OUT"
     exit "${PLAN_RC:-2}"
     ;;
@@ -37,6 +46,7 @@ run_apply() {
     DISCORD_WEBHOOK_URL="https://example.invalid/hook" \
     IAC_APPLY_DENYLIST="${IAC_APPLY_DENYLIST-tailscale/acl}" \
     PLAN_OUT="$PLAN_OUT" PLAN_RC="${PLAN_RC:-2}" APPLY_RC="${APPLY_RC:-0}" \
+    DRIFT_UNIT="${DRIFT_UNIT:-}" \
     bash "$REPO_ROOT/bin/iac-apply.sh"
 }
 
@@ -49,7 +59,7 @@ run_apply() {
 }
 
 @test "non-destructive drift is applied and reported" {
-  run_apply
+  DRIFT_UNIT=github/repos run_apply
 
   [ "$status" -eq 0 ]
   [ -e "$BATS_TEST_TMPDIR/applied" ]
@@ -58,7 +68,7 @@ run_apply() {
 }
 
 @test "a plan with destroys is refused without applying" {
-  PLAN_OUT='19:57:07.953 STDOUT [tailscale/dns] tofu: Plan: 0 to add, 1 to change, 1 to destroy.' run_apply
+  DRIFT_UNIT=tailscale/dns PLAN_OUT='19:57:07.953 STDOUT [tailscale/dns] tofu: Plan: 0 to add, 1 to change, 1 to destroy.' run_apply
 
   [ "$status" -eq 3 ]
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
@@ -66,7 +76,7 @@ run_apply() {
 }
 
 @test "denylisted units are never applied automatically" {
-  PLAN_OUT='19:57:07.953 STDOUT [tailscale/acl] tofu:   ~ acl = <<-EOT
+  DRIFT_UNIT=tailscale/acl PLAN_OUT='19:57:07.953 STDOUT [tailscale/acl] tofu:   ~ acl = <<-EOT
 19:57:07.953 STDOUT [tailscale/acl] tofu: Plan: 0 to add, 1 to change, 0 to destroy.' run_apply
 
   [ "$status" -eq 3 ]
@@ -75,7 +85,7 @@ run_apply() {
 }
 
 @test "a failed plan stops without applying" {
-  PLAN_RC=1 run_apply
+  DRIFT_UNIT=github/repos PLAN_RC=1 run_apply
 
   [ "$status" -eq 1 ]
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
@@ -83,14 +93,14 @@ run_apply() {
 }
 
 @test "a failed apply reports and does not claim success" {
-  APPLY_RC=1 run_apply
+  DRIFT_UNIT=github/repos APPLY_RC=1 run_apply
 
   [ "$status" -eq 1 ]
   jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'merged-main apply failed'
 }
 
 @test "destroy counts ending in zero are still refused" {
-  PLAN_OUT='19:57:07.953 STDOUT [github/repos] tofu: Plan: 1 to add, 0 to change, 10 to destroy.' run_apply
+  DRIFT_UNIT=github/repos PLAN_OUT='19:57:07.953 STDOUT [github/repos] tofu: Plan: 1 to add, 0 to change, 10 to destroy.' run_apply
 
   [ "$status" -eq 3 ]
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
@@ -98,7 +108,7 @@ run_apply() {
 }
 
 @test "destroy counts are parsed from an import-bearing plan line" {
-  PLAN_OUT='19:57:07.953 STDOUT [github/repos] tofu: Plan: 1 to import, 0 to add, 0 to change, 3 to destroy.' run_apply
+  DRIFT_UNIT=github/repos PLAN_OUT='19:57:07.953 STDOUT [github/repos] tofu: Plan: 1 to import, 0 to add, 0 to change, 3 to destroy.' run_apply
 
   [ "$status" -eq 3 ]
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
@@ -106,15 +116,23 @@ run_apply() {
 }
 
 @test "an unattributable plan is refused instead of applied blind" {
-  PLAN_OUT='19:57:07.953 STDOUT [tailscale/dns] terraform: Plan: 0 to add, 1 to change, 1 to destroy.' run_apply
+  DRIFT_UNIT=tailscale/dns PLAN_OUT='19:57:07.953 STDOUT [tailscale/dns] terraform: Plan: 0 to add, 1 to change, 1 to destroy.' run_apply
 
   [ "$status" -eq 3 ]
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
   jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'no unit could be attributed'
 }
 
+@test "a changed unit without plan evidence is refused" {
+  PLAN_OUT='19:57:07.953 STDOUT [github/repos] tofu: Plan: 0 to add, 2 to change, 0 to destroy.' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'no plan evidence for'
+}
+
 @test "an empty denylist disables the guard" {
-  IAC_APPLY_DENYLIST= PLAN_OUT='19:57:07.953 STDOUT [tailscale/acl] tofu:   ~ acl = <<-EOT
+  DRIFT_UNIT=tailscale/acl IAC_APPLY_DENYLIST= PLAN_OUT='19:57:07.953 STDOUT [tailscale/acl] tofu:   ~ acl = <<-EOT
 19:57:07.953 STDOUT [tailscale/acl] tofu: Plan: 0 to add, 1 to change, 0 to destroy.' run_apply
 
   [ "$status" -eq 0 ]
