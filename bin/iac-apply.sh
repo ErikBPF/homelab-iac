@@ -12,7 +12,7 @@
 #   - a failed plan or apply stops and alerts; there is no blind retry.
 set -uo pipefail
 CLEYTIN_USER_ID=1532710143517659356
-DENYLIST="${IAC_APPLY_DENYLIST:-tailscale/acl}"
+DENYLIST="${IAC_APPLY_DENYLIST-tailscale/acl}"
 
 cd "$(dirname "$0")/.." || exit 1
 export TG_TF_PATH="${TG_TF_PATH:-tofu}"
@@ -74,8 +74,24 @@ detail=$(printf '%s\n' "$plan_out" | sed -E 's/\x1b\[[0-9;]*m//g' \
   | awk -F'\t' '$2 ~ /^(Plan:|  *(~|\+|-|#) )/ && $2 !~ /^ *# \(/' || true)
 changed=$(printf '%s\n' "$detail" | cut -f1 | awk '!seen[$0]++' | paste -sd ' ' -)
 
+# Fail closed: exit 2 means the plan carries changes. If none of them could be
+# attributed to a unit, the terragrunt log shape changed and the guards below
+# would all pass on empty data — so refuse instead of applying blind.
+if [ -z "$detail" ]; then
+  printf '%s\n' "$plan_out" | sed -E 's/\x1b\[[0-9;]*m//g' | tail -20
+  alert "🛑 **merged-main apply refused** — plan reported changes but no unit could be attributed. Nothing applied."
+  exit 3
+fi
+
+# Parse the destroy count numerically: matching the substring "0 to destroy"
+# treats "10 to destroy" as safe.
 destroys=$(printf '%s\n' "$detail" \
-  | awk -F'\t' '$2 ~ /^Plan: / && $2 !~ /0 to destroy/ { print $1 }' | paste -sd ' ' -)
+  | awk -F'\t' '$2 ~ /^Plan: / {
+      split($2, parts, ", ")
+      n = parts[3]
+      sub(/ to destroy.*/, "", n)
+      if (n + 0 > 0) print $1
+    }' | paste -sd ' ' -)
 if [ -n "$destroys" ]; then
   alert "🛑 **merged-main apply refused** — plan would destroy resources in: $destroys. Nothing applied."
   exit 3

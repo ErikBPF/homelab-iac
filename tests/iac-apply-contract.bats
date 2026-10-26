@@ -35,6 +35,7 @@ run_apply() {
     APPLY_MARKER="$BATS_TEST_TMPDIR/applied" \
     DISCORD_PAYLOAD="$BATS_TEST_TMPDIR/payload.json" \
     DISCORD_WEBHOOK_URL="https://example.invalid/hook" \
+    IAC_APPLY_DENYLIST="${IAC_APPLY_DENYLIST-tailscale/acl}" \
     PLAN_OUT="$PLAN_OUT" PLAN_RC="${PLAN_RC:-2}" APPLY_RC="${APPLY_RC:-0}" \
     bash "$REPO_ROOT/bin/iac-apply.sh"
 }
@@ -86,6 +87,30 @@ run_apply() {
 
   [ "$status" -eq 1 ]
   jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'merged-main apply failed'
+}
+
+@test "destroy counts ending in zero are still refused" {
+  PLAN_OUT='19:57:07.953 STDOUT [github/repos] tofu: Plan: 1 to add, 0 to change, 10 to destroy.' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'would destroy resources in: github/repos'
+}
+
+@test "an unattributable plan is refused instead of applied blind" {
+  PLAN_OUT='19:57:07.953 STDOUT [tailscale/dns] terraform: Plan: 0 to add, 1 to change, 1 to destroy.' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'no unit could be attributed'
+}
+
+@test "an empty denylist disables the guard" {
+  IAC_APPLY_DENYLIST= PLAN_OUT='19:57:07.953 STDOUT [tailscale/acl] tofu:   ~ acl = <<-EOT
+19:57:07.953 STDOUT [tailscale/acl] tofu: Plan: 0 to add, 1 to change, 0 to destroy.' run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
 }
 
 @test "apply scope matches the drift-check exclusions" {
