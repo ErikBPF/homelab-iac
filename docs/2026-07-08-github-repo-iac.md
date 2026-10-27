@@ -133,3 +133,12 @@ grants no Aster authority. Create it with a targeted
 `terragrunt apply -target='github_repository.this["aster-smoke"]'` plus the two
 permission resources. `tests/github-hardening-contract.bats` gained
 `aster-smoke` in its catalogue and its private-repo count moved 17 → 18.
+
+### Amendment (2026-10-26): `aster` and `homelab-gitops` are public
+
+`aster` is published under Apache-2.0, not a private repository. Its entry is
+now `visibility = "public"` with `protect_main = true` (public repositories get
+branch protection on the Free plan); the least-privilege Actions overrides stay.
+`homelab-gitops` is public for the same reason. Both live repositories were
+already public, so this is code-only: the plan no longer carries a visibility
+flip, and the private-repo count in `tests/github-hardening-contract.bats` is 16.

@@ -55,6 +55,18 @@ resource "vault_policy" "iac_writer" {
   ])
 }
 
+resource "vault_policy" "litellm_provider" {
+  name   = "svc-homelab-iac-openbao-litellm-provider"
+  policy = <<-EOT
+    path "secret/data/iac/litellm-provider" {
+      capabilities = ["read"]
+    }
+    path "secret/metadata/iac/litellm-provider" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
 resource "vault_policy" "harbor_project_iam_publisher" {
   name   = "svc-homelab-iac-openbao-harbor-project-iam-publisher"
   policy = <<-EOT
@@ -191,6 +203,17 @@ resource "vault_approle_auth_backend_role" "iac_writer" {
   token_policies = ["homelab-iac-ha-harness"]
   token_ttl      = 3600
   token_max_ttl  = 14400
+  token_type     = "default"
+}
+
+resource "vault_approle_auth_backend_role" "litellm_provider" {
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-homelab-iac-openbao-litellm-provider"
+  bind_secret_id = true
+  token_policies = [vault_policy.litellm_provider.name]
+  token_ttl      = 1800
+  token_max_ttl  = 3600
+  secret_id_ttl  = 2592000
   token_type     = "default"
 }
 
