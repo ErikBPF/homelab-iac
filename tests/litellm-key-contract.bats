@@ -70,3 +70,8 @@
     ($route.output_cost_per_million_tokens == 1.20)
   ' components/litellm/environments/home/production/models.json
 }
+
+@test "HA harness key can call qwen-chat and qwen-pqnld" {
+  key_unit=components/litellm/environments/home/ha-harness-key/terragrunt.hcl
+  grep -Fq 'models                = ["ha-agent-qwen4b", "qwen-chat", "qwen-pqnld"]' "$key_unit"
+}
