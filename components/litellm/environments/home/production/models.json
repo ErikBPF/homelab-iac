@@ -274,6 +274,27 @@
       "privacy_tier": "confidential",
       "lifecycle": "production"
     },
+    "qwen-pqnld": {
+      "custom_llm_provider": "openai",
+      "base_model": "qwen-pqnld",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://100.77.14.27:11560/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0.25,
+      "output_cost_per_million_tokens": 0.75,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "max_tokens": 98304,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "privacy_tier": "confidential",
+      "lifecycle": "production"
+    },
     "qwen3-max": {
       "custom_llm_provider": "openai",
       "base_model": "qwen3.7-max",

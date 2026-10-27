@@ -71,6 +71,11 @@
   ' components/litellm/environments/home/production/models.json
 }
 
+@test "HA harness key can call qwen-chat and qwen-pqnld" {
+  key_unit=components/litellm/environments/home/ha-harness-key/terragrunt.hcl
+  grep -Fq 'models                = ["ha-agent-qwen4b", "qwen-chat", "qwen-pqnld"]' "$key_unit"
+}
+
 @test "Aster helper key is restricted to DeepSeek through OpenCode Go" {
   unit=components/litellm/environments/home/aster-key/terragrunt.hcl
   grep -Fq 'modules//scoped-key' "$unit"
