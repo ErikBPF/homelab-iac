@@ -56,16 +56,80 @@ PY
   [ "$status" -eq 0 ]
 }
 
-@test "drift alert includes bounded plan evidence for Cleytin" {
-  run grep -F -- "grep -am 40 -E 'Plan:|will be (updated|created|destroyed)|# '" bin/drift-check.sh
-  [ "$status" -eq 0 ]
+@test "drift alert keeps the changed attribute lines and names the units" {
+  cat > "$BATS_TEST_TMPDIR/terragrunt" <<'SH'
+#!/usr/bin/env bash
+printf '%s\n' \
+  '19:57:07.953 STDOUT [tailscale/dns] tofu: No changes. Your infrastructure matches the configuration.' \
+  '19:57:07.953 STDOUT [github/repos] tofu:   # github_repository.this["aster"] will be updated in-place' \
+  '19:57:07.953 STDOUT [github/repos] tofu:       ~ visibility = "public" -> "private"' \
+  '19:57:07.953 STDOUT [github/repos] tofu:         # (34 unchanged attributes hidden)' \
+  '19:57:07.953 STDOUT [github/repos] tofu: Plan: 0 to add, 2 to change, 0 to destroy.'
+exit 2
+SH
+  chmod 700 "$BATS_TEST_TMPDIR/terragrunt"
 
-  run grep -F -- 'summary="${summary:0:1500}"' bin/drift-check.sh
-  [ "$status" -eq 0 ]
+  run env PATH="$BATS_TEST_TMPDIR:$PATH" bash bin/drift-check.sh
 
-  run grep -F -- '--arg summary "$summary"' bin/drift-check.sh
-  [ "$status" -eq 0 ]
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"DRIFT DETECTED in: github/repos"* ]]
+  [[ "$output" == *'~ visibility = "public" -> "private"'* ]]
+  [[ "$output" != *"unchanged attributes hidden"* ]]
+  [[ "$output" != *"tailscale/dns"* ]]
+  [[ "$output" != *"No changes"* ]]
+}
 
-  run grep -F -- '"\n\n"+$summary' bin/drift-check.sh
-  [ "$status" -eq 0 ]
+@test "drift alert survives clean units ahead of a late drifting unit" {
+  cat > "$BATS_TEST_TMPDIR/terragrunt" <<'SH'
+#!/usr/bin/env bash
+for unit in adguard/config adguard/filtering cloudflare/access cloudflare/dns cloudflare/tunnel; do
+  printf '%s\n' "19:57:07.953 STDOUT [$unit] tofu: No changes. Your infrastructure matches the configuration."
+done
+for attr in one two three four five six seven eight; do
+  printf '%s\n' "19:57:07.953 STDOUT [unifi/environments/home/wlan] tofu:       ~ $attr = \"a\" -> \"b\""
+done
+printf '%s\n' '19:57:07.953 STDOUT [unifi/environments/home/wlan] tofu: Plan: 0 to add, 8 to change, 0 to destroy.'
+exit 2
+SH
+  chmod 700 "$BATS_TEST_TMPDIR/terragrunt"
+
+  run env PATH="$BATS_TEST_TMPDIR:$PATH" bash bin/drift-check.sh
+
+  [ "$status" -eq 2 ]
+  [[ "$output" == *"DRIFT DETECTED in: unifi/environments/home/wlan"* ]]
+  [[ "$output" == *'eight = "a" -> "b"'* ]]
+  [[ "$output" == *"Plan: 0 to add, 8 to change, 0 to destroy."* ]]
+}
+
+@test "drift alert payload stays inside Discord's content limit for the full scope" {
+  cat > "$BATS_TEST_TMPDIR/terragrunt" <<'SH'
+#!/usr/bin/env bash
+fixture="tests/fixtures/drift-monitored-units.txt"
+while read -r unit; do
+  printf '%s\n' "19:57:07.953 STDOUT [$unit] tofu:   # resource.this[\"x\"] will be updated in-place"
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    printf '%s\n' "19:57:07.953 STDOUT [$unit] tofu:       ~ attribute_$i = \"aaaaaaaaaa\" -> \"bbbbbbbbbb\""
+  done
+  printf '%s\n' "19:57:07.953 STDOUT [$unit] tofu: Plan: 0 to add, 10 to change, 0 to destroy."
+done < "$fixture"
+exit 2
+SH
+  cat > "$BATS_TEST_TMPDIR/curl" <<'SH'
+#!/usr/bin/env bash
+while [ $# -gt 0 ]; do
+  if [ "$1" = "--data" ]; then shift; printf '%s' "$1" > "$DISCORD_PAYLOAD"; fi
+  shift
+done
+SH
+  chmod 700 "$BATS_TEST_TMPDIR/terragrunt" "$BATS_TEST_TMPDIR/curl"
+
+  disc_payload="$BATS_TEST_TMPDIR/payload.json"
+  run env PATH="$BATS_TEST_TMPDIR:$PATH" DISCORD_PAYLOAD="$disc_payload" \
+    DISCORD_WEBHOOK_URL="https://example.invalid/webhook" bash bin/drift-check.sh
+
+  [ "$status" -eq 2 ]
+  content_bytes=$(jq -r .content "$disc_payload" | wc -c)
+  [ "$content_bytes" -lt 2000 ]
+  jq -r .content "$disc_payload" | grep -q 'homelab-iac drift'
+  jq -r .content "$disc_payload" | grep -q '\[adguard/config\]'
 }

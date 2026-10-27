@@ -46,14 +46,28 @@ case "$code" in
     echo "homelab-iac: no drift in the adopted unit scope."
     ;;
   2)
-    summary=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
-      | grep -am 40 -E 'Plan:|will be (updated|created|destroyed)|# ')
-    summary="${summary:0:1500}"
-    echo "homelab-iac: DRIFT DETECTED"
-    printf '%s\n' "$summary"
+    # Attribute terragrunt's per-unit lines to their unit, then keep only the
+    # evidence: changed attributes and the per-unit Plan line. Clean units
+    # ("No changes") are dropped so they neither pad the alert nor its budget.
+    detail=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
+      | sed -nE 's/^.*STDOUT \[([^]]+)\] tofu: (.*)$/\1\t\2/p' \
+      | awk -F'\t' '$2 ~ /^(Plan:|  *(~|\+|-|#) )/ && $2 !~ /^ *# \(/ { print "[" $1 "] " $2 }' || true)
+    # Only units that produced diff lines: a clean unit cannot name itself in
+    # the header, and an unbounded list blows Discord's 2000-char content cap.
+    units=$(printf '%s\n' "$detail" | sed -nE 's/^\[([^]]+)\] .*/\1/p' \
+      | awk '!seen[$0]++')
+    unit_count=$(printf '%s\n' "$units" | grep -c . || true)
+    units_display=$(printf '%s\n' "$units" | head -8 | paste -sd ' ' -)
+    [ "${unit_count:-0}" -gt 8 ] && units_display+=" +$((unit_count - 8)) more"
+    echo "homelab-iac: DRIFT DETECTED in: ${units_display:-unknown}"
+    printf '%s\n' "$detail"
+    summary="${detail:0:1400}"
+    if [ "${#detail}" -gt 1400 ]; then
+      summary+=$'\n… trimmed; full diff: journalctl -u homelab-iac-drift'
+    fi
     if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
       curl -fsS -m 10 -H "Content-Type: application/json" \
-        --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg summary "$summary" --arg c "🟠 **homelab-iac drift** — Tailscale/UniFi/Cloudflare/AdGuard config drifted from code. Run a plan." '{content:("<@"+$user+">\n"+$c+"\n\n"+$summary),allowed_mentions:{users:[$user]}}')" \
+        --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg summary "$summary" --arg c "🟠 **homelab-iac drift** — ${units_display:-unknown} drifted from code." '{content:("<@"+$user+">\n"+$c+"\n\n"+$summary),allowed_mentions:{users:[$user]}}')" \
         "$DISCORD_WEBHOOK_URL" >/dev/null || true
     fi
     exit 2
