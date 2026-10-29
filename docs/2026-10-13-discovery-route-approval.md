@@ -82,3 +82,35 @@ rather than be targeted around. Rollback means
 changing this resource's routes to an empty list and applying a reviewed plan;
 this removes approvals and restores the broken roaming path. Do not destroy the
 device, alter shared ACL grants, disable locking, or force-unlock state.
+
+## 2026-10-29 follow-up: exclusive source ownership
+
+The recovery and deployment receipt above describes 2026-10-13. A later source
+review found that the ACL policy also auto-approved the same four routes for a
+user account. The accepted follow-up decision is “Discovery-only approval”;
+deployment remains separate. The policy now removes those automatic approvals
+and leaves the pinned Discovery resource, all access rules and policy test cases
+unchanged. The existing source contract also rejects nonempty route
+auto-approvals that overlap any protected route, including broader prefixes.
+Unrelated route auto-approvals remain permitted.
+
+[Tailscale's auto-approver reference](https://tailscale.com/docs/reference/syntax/policy-file#auto-approvers)
+states that a route permission includes its subnets and that automatic approval
+is evaluated when an advertisement first arrives. This source change neither
+inventories nor revokes approvals already present on other devices, including
+manual approvals. It does not establish exclusive live ownership or current
+routing behavior. A separately authorized deployment must inspect existing
+approved routes and reconcile any overlapping approval on another device before
+claiming that outcome.
+
+The source contract first failed with `Route auto-approval overlaps Discovery's
+managed routes`, then passed after removing the policy entries. Validation uses
+`python3 tests/tailscale-discovery-routes-contract.py`. Fifteen private copied-policy
+checks cover exact and broader approvals, unrelated IPv4/IPv6 routes, empty
+approvers, HuJSON comments and trailing commas, duplicate keys, and invalid CIDRs.
+All matched their expected outcomes; all 12 existing `tests/tailscale-*.bats`
+checks and `git diff --check` also passed. These are source checks, not Tailscale
+policy-engine or routing tests. No provider, state, API, or deployment operation
+was used for this follow-up. Reverting the policy removal would restore
+account-wide automatic approval and requires revisiting the accepted ownership
+decision; it is not the recovery rollback described above.

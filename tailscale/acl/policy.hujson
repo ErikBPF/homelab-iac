@@ -17,21 +17,8 @@
 		"galaxy-s25": "100.66.253.15",
 	},
 
-	// Auto-approve discovery's advertised routes (the node is owned by this
-	// account), so they take effect on apply without a manual approval click.
-	// Narrowed from 192.168.10.0/24 to /32s: a broad subnet route poisons
-	// on-LAN hosts that also run --accept-routes (orion/kepler) — they pull
-	// their own subnet into Tailscale's table 52 and blackhole the LAN. Only
-	// the LAN-only devices that genuinely need tailnet reach are approved:
-	// swag ingress (.210), UDM (.1), swOS switch (.2).
-	"autoApprovers": {
-		"routes": {
-			"192.168.10.210/32": ["erikbogado@gmail.com"],
-			"192.168.10.1/32":   ["erikbogado@gmail.com"],
-			"192.168.10.2/32":   ["erikbogado@gmail.com"],
-			"192.168.10.4/32": ["erikbogado@gmail.com"],
-		},
-	},
+	// Discovery route approval is owned by tailscale_device_subnet_routes.discovery.
+	// Keep its host routes and covering prefixes out of route auto-approvers.
 
 	// Tag ownership. tag:server lets the fleet enroll via a non-expiring OAuth
 	// client secret (scope auth_keys, tag:server) instead of a 90-day auth key —
