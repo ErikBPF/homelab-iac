@@ -480,3 +480,110 @@ SH
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
   jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'failed to parse plan evidence'
 }
+
+drift_plan() {
+  sed "s|^|19:57:07.953 STDOUT [${2:-github/repos}] tofu: |" \
+    "$REPO_ROOT/tests/fixtures/iac-drift/$1.txt"
+}
+
+@test "native out-of-band deletion applies its create-only saved plan" {
+  PLAN_OUT=$(drift_plan recreate)
+  DRIFT_UNIT=github/repos run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'merged-main applied'
+}
+
+@test "native drift cannot hide planned destruction or replacement" {
+  for fixture in planned-destroy planned-replace; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+    PLAN_OUT=$(drift_plan "$fixture")
+    DRIFT_UNIT=github/repos run_apply
+
+    [ "$status" -eq 3 ]
+    [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+    jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'would destroy resources'
+  done
+}
+
+@test "observed drift cannot suppress a destroy-create replacement record" {
+  PLAN_OUT=$(drift_plan recreate | sed 's|  - resource "local_file" "missing" {|  -/+ resource "local_file" "missing" {|')
+  DRIFT_UNIT=github/repos run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'would destroy resources'
+}
+
+@test "observed drift cannot suppress a create-destroy replacement record" {
+  PLAN_OUT=$(drift_plan recreate | sed 's|  - resource "local_file" "missing" {|  +/- resource "local_file" "missing" {|')
+  DRIFT_UNIT=github/repos run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'would destroy resources'
+}
+
+@test "native create-only drift still respects the denylist" {
+  PLAN_OUT=$(drift_plan recreate tailscale/acl)
+  DRIFT_UNIT=tailscale/acl run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'human-only units drifted'
+}
+
+@test "drift suppression requires exact ordered unit-bound section markers" {
+  local native malformed
+  native=$(drift_plan recreate)
+  for malformed in \
+    "$(printf '%s\n' "$native" | sed '/tofu: OpenTofu will perform the following actions:/d')" \
+    "$(printf '%s\n' "$native" | sed '/tofu: OpenTofu will perform the following actions:/p')" \
+    "$(printf '%s\n' "$native" | sed '/tofu: OpenTofu will perform the following actions:/s/\[github\/repos\]/[tailscale\/dns]/')" \
+    "$(printf '%s\n' "$native" | sed 's/tofu: OpenTofu will perform/tofu:         OpenTofu will perform/')" \
+    "$(printf '%s\n' "$native" | sed 's/tofu: Note: Objects have changed outside of OpenTofu$/&\tunsupported/')" \
+    "$(printf '%s\n' "$native" | sed 's/tofu: OpenTofu will perform the following actions:$/&\tunsupported/')" \
+    "$(printf '%s\n' "$native" | sed '/tofu: Note: Objects have changed outside of OpenTofu/p')" \
+    "$(printf '%s\n' "$native" | sed '/tofu: Note: Objects have changed outside of OpenTofu/d')" \
+    "19:57:07.953 STDOUT [github/repos] tofu: OpenTofu will perform the following actions:"$'\n'"$native"; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+    PLAN_OUT=$malformed DRIFT_UNIT=github/repos run_apply
+    [ "$status" -eq 3 ]
+    [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  done
+}
+
+@test "planned actions after drift cannot contradict a zero-destroy summary" {
+  local native action
+  native=$(drift_plan recreate)
+  for action in '-' '-/+' '+/-'; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+    PLAN_OUT=$(printf '%s\n' "$native" | sed "s|  + resource \"local_file\" \"missing\" {|$action resource \"local_file\" \"missing\" {|")
+    DRIFT_UNIT=github/repos run_apply
+    [ "$status" -eq 3 ]
+    [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+    jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'would destroy resources'
+  done
+}
+
+@test "planned headings after drift cannot contradict a zero-destroy summary" {
+  local native heading
+  native=$(drift_plan recreate)
+  for heading in 'will be destroyed' 'must be replaced'; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+    PLAN_OUT=$(printf '%s\n' "$native" | sed "s/  # local_file.missing will be created/  # local_file.missing $heading/")
+    DRIFT_UNIT=github/repos run_apply
+    [ "$status" -eq 3 ]
+    [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+    jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'would destroy resources'
+  done
+}
+
+@test "native output heredocs keep drift and action markers as literal text" {
+  PLAN_OUT=$(drift_plan output-literals)
+  DRIFT_UNIT=github/repos run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+}

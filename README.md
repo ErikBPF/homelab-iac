@@ -164,6 +164,9 @@ not structurally inspect saved-plan JSON or authenticate provider output.
 Missing, ambiguous or unsupported evidence and parser failures stop before any
 apply; destroy/replacement actions cannot be overridden by a zero-destroy
 summary. Output-only changes still respect the human-only unit denylist.
+Observed deletions in a native drift note do not count as planned destruction;
+that exception requires one exact, ordered, unit-bound note/action boundary.
+Incomplete or ambiguous drift sections stop before apply.
 Inspect the saved revision and correct the evidence/parser before
 retrying. Do not relax the guards to recover from a changed log format.
 

@@ -87,7 +87,25 @@ while :; do
         $2 ~ /^(Plan:|You can apply this plan|state, without changing)/ { output_unit = "" }
         # Native output values are indented deeper than resource headings/actions.
         $1 == output_unit && $2 ~ /^    / { next }
+        NF == 2 && $2 == "Note: Objects have changed outside of OpenTofu" {
+          if (drift_unit != "" || planned_markers) invalid = 1
+          drift_unit = $1
+          drift_open = 1
+          print; next
+        }
+        NF == 2 && $2 ~ /^OpenTofu (will perform the following actions:|planned the following actions, but then encountered a problem:)$/ {
+          planned_markers++
+          if (drift_unit != "") {
+            if ($1 != drift_unit || !drift_open || planned_markers != 1) invalid = 1
+            drift_open = 0
+          }
+          print; next
+        }
+        drift_open && $2 ~ /^(Plan:|Changes to Outputs:)/ { invalid = 1 }
+        # Only native deletion records belong to the observed drift exception.
+        drift_open && $1 == drift_unit && NF == 2 && $2 ~ /^  - resource / { next }
         $2 ~ /^(Plan:|Changes to Outputs:|You can apply this plan|state, without changing| *(~|\+|-|-\/\+|\+\/-|<=|#) )/ && $2 !~ /^ *# \(/
+        END { exit (drift_open || invalid) }
       '); then
       alert "🛑 **merged-main apply refused** — failed to parse plan evidence for: $unit. Nothing applied."
       exit 3
