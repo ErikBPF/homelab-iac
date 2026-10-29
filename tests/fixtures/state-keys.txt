@@ -1,6 +1,7 @@
 adguard/config adguard/config/terraform.tfstate
 adguard/filtering adguard/filtering/terraform.tfstate
 cloudflare/access cloudflare/access/terraform.tfstate
+cloudflare/certmanager-token cloudflare/certmanager-token/terraform.tfstate
 cloudflare/dns cloudflare/dns/terraform.tfstate
 cloudflare/ratelimit cloudflare/ratelimit/terraform.tfstate
 cloudflare/swag-token cloudflare/swag-token/terraform.tfstate

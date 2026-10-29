@@ -1,6 +1,7 @@
 adguard/config
 adguard/filtering
 cloudflare/access
+cloudflare/certmanager-token
 cloudflare/dns
 cloudflare/ratelimit
 cloudflare/swag-token
