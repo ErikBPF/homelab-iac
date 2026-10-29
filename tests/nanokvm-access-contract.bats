@@ -16,7 +16,7 @@ setup() {
   policy="$REPO_ROOT/tailscale/acl/policy.hujson"
 
   grep -qF '"nanokvm":   "100.125.209.99"' "$policy"
-  grep -qF '"192.168.10.4/32": ["erikbogado@gmail.com"]' "$policy"
+  python3 "$REPO_ROOT/tests/tailscale-discovery-routes-contract.py"
   grep -qF '{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["nanokvm:22,443"]}' "$policy"
   grep -qF '{"src": "laptop", "accept": ["nanokvm:22", "nanokvm:443"]}' "$policy"
   grep -qF '{"src": "orion", "deny": ["nanokvm:22", "nanokvm:443"]}' "$policy"
