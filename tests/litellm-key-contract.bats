@@ -70,3 +70,17 @@
     ($route.output_cost_per_million_tokens == 1.20)
   ' components/litellm/environments/home/production/models.json
 }
+
+@test "HA harness key can call qwen-chat and qwen-pqnld" {
+  key_unit=components/litellm/environments/home/ha-harness-key/terragrunt.hcl
+  grep -Fq 'models                = ["ha-agent-qwen4b", "qwen-chat", "qwen-pqnld"]' "$key_unit"
+}
+
+@test "Aster helper key is restricted to DeepSeek through OpenCode Go" {
+  unit=components/litellm/environments/home/aster-key/terragrunt.hcl
+  grep -Fq 'modules//scoped-key' "$unit"
+  grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-aster-model-inference"' "$unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash"\]' "$unit"
+  grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$unit"
+  grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$unit"
+}

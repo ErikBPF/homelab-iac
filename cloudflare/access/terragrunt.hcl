@@ -46,7 +46,7 @@ inputs = {
       create_service_token       = true
       service_token_name         = "cosmo-notes"
       # Interactive (browser) access for the admin, alongside the device token.
-      allowed_emails = ["erik.bogado@nstech.com.br"]
+      allowed_emails = ["erikbogado@gmail.com"]
     }
 
     # EXISTING app (id 5f2a19bc…) — reproduced from the live config so `import`

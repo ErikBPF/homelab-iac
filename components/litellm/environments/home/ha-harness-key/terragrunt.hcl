@@ -12,7 +12,7 @@ terraform {
 
 inputs = {
   key_alias             = "ha-harness"
-  models                = ["ha-agent-qwen4b"]
+  models                = ["ha-agent-qwen4b", "qwen-chat", "qwen-pqnld"]
   max_parallel_requests = 2
   rpm_limit             = 30
   tpm_limit             = 120000

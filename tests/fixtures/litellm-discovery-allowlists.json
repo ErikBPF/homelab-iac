@@ -17,7 +17,9 @@
     "minimax-m2",
     "qwen-chat",
     "qwen3-max",
-    "qwen3.8-flash"
+    "qwen3.8-27b",
+    "qwen3.8-flash",
+    "qwen3.8-flash-next"
   ],
   "opencode": [
     "deepseek-v4.1-flash",
@@ -28,7 +30,9 @@
     "minimax-m2",
     "qwen-chat",
     "qwen3-max",
+    "qwen3.8-27b",
     "qwen3.8-flash",
+    "qwen3.8-flash-next",
     "zen-free-pickle"
   ]
 }
