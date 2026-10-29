@@ -1,0 +1,13 @@
+
+Changes to Outputs:
+  ~ log = <<-EOT
+      - old
+      + Changes to Outputs:
+      + You can apply this plan to save these new output values to the OpenTofu
+      + state, without changing any real infrastructure.
+      +   - resource "example" "fake" {
+      + Plan: 0 to add, 0 to change, 1 to destroy.
+    EOT
+
+You can apply this plan to save these new output values to the OpenTofu
+state, without changing any real infrastructure.

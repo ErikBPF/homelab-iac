@@ -1,0 +1,10 @@
+
+Changes to Outputs:
+  ~ log = <<-EOT
+        - resource "example" "literal" {
+      - old
+      + new
+    EOT
+
+You can apply this plan to save these new output values to the OpenTofu
+state, without changing any real infrastructure.

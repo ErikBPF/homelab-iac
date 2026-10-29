@@ -305,3 +305,178 @@ SH
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
   jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'failed to parse destruction evidence'
 }
+
+output_only_plan() {
+  sed "s|^|19:57:07.953 STDOUT [${2:-oracle/console-history-vanguard}] tofu: |" \
+    "$REPO_ROOT/tests/fixtures/iac-output-only/$1.txt"
+}
+
+@test "native plain output-only changes apply the saved plan" {
+  PLAN_OUT=$(output_only_plan plain)
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'merged-main applied'
+}
+
+@test "native data-source output-only changes apply the saved plan" {
+  PLAN_OUT=$(output_only_plan data-source)
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+}
+
+@test "native heredoc output-only changes apply the saved plan" {
+  PLAN_OUT=$(output_only_plan heredoc)
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+}
+
+@test "native output strings do not impersonate envelope or resource lines" {
+  PLAN_OUT=$(output_only_plan fake-text)
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+}
+
+@test "native unchanged heredoc comments remain output text" {
+  PLAN_OUT=$(output_only_plan unchanged-comment)
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+}
+
+@test "native unchanged heredoc resource text remains output text" {
+  PLAN_OUT=$(output_only_plan unchanged-resource)
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+}
+
+@test "output-only evidence cannot bypass the denylist" {
+  PLAN_OUT=$(output_only_plan plain tailscale/acl)
+  DRIFT_UNIT=tailscale/acl run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'human-only units drifted'
+}
+
+@test "foreign output-only envelopes are refused" {
+  PLAN_OUT=$(output_only_plan plain github/repos)
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'foreign plan evidence'
+}
+
+@test "incomplete malformed duplicated or reordered output-only envelopes are refused" {
+  local native prefix malformed
+  native=$(output_only_plan plain)
+  prefix='19:57:07.953 STDOUT [oracle/console-history-vanguard] tofu: '
+  for malformed in \
+    "$(printf '%s\n' "$native" | sed '/tofu: Changes to Outputs:/d')" \
+    "$(printf '%s\n' "$native" | sed '/tofu: You can apply this plan/d')" \
+    "$(printf '%s\n' "$native" | sed '/tofu: state, without changing/d')" \
+    "$(printf '%s\n' "$native" | sed '/tofu:   ~ log/d')" \
+    "$(printf '%s\n' "$native" | sed 's/tofu: Changes to Outputs:/tofu: Changes to Outputs: unsupported/')" \
+    "$native"$'\n'"${prefix}Changes to Outputs:" \
+    "$native"$'\n'"${prefix}You can apply this plan to save these new output values to the OpenTofu" \
+    "$native"$'\n'"${prefix}state, without changing any real infrastructure." \
+    "$(printf '%s\n' "$native" | sed 's/state, without changing any real infrastructure./state, without changing any real infrastructure. unsupported/')" \
+    "$(printf '%s\n' "$native" | sed 's/Changes to Outputs:/Changes to Outputs:\tunsupported/')" \
+    "$(printf '%s\n' "$native" | tac)"; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+    PLAN_OUT=$malformed DRIFT_UNIT=oracle/console-history-vanguard run_apply
+    [ "$status" -eq 3 ]
+    [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  done
+}
+
+@test "output-only envelopes cannot substitute for resource plan summaries" {
+  local native prefix evidence
+  native=$(output_only_plan plain)
+  prefix='19:57:07.953 STDOUT [oracle/console-history-vanguard] tofu: '
+  for evidence in \
+    '  # example.fixture will be destroyed' \
+    '  # example.fixture will be updated in-place' \
+    '  - resource "example" "fixture" {' \
+    '  -/+ resource "example" "fixture" {' \
+    '  +/- resource "example" "fixture" {' \
+    '  + resource "example" "fixture" {' \
+    '  ~ resource "example" "fixture" {' \
+    ' <= data "example" "fixture" {' \
+    'Plan: incomplete'; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+    PLAN_OUT="${prefix}${evidence}"$'\n'"$native" DRIFT_UNIT=oracle/console-history-vanguard run_apply
+    [ "$status" -eq 3 ]
+    [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  done
+}
+
+@test "native resource lines inside or after an output envelope still refuse" {
+  local native prefix evidence position
+  native=$(output_only_plan plain)
+  prefix='19:57:07.953 STDOUT [oracle/console-history-vanguard] tofu: '
+  for evidence in \
+    '  # example.fixture will be destroyed' \
+    '  # example.fixture will be updated in-place' \
+    '  - resource "example" "fixture" {' \
+    '-/+ resource "example" "fixture" {' \
+    '+/- resource "example" "fixture" {' \
+    '  + resource "example" "fixture" {' \
+    '  ~ resource "example" "fixture" {' \
+    ' <= data "example" "fixture" {'; do
+    for position in inside after; do
+      rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+      if [ "$position" = inside ]; then
+        PLAN_OUT=$(printf '%s\n' "$native" | sed "/tofu: Changes to Outputs:/a\\${prefix}${evidence}")
+      else
+        PLAN_OUT="$native"$'\n'"${prefix}${evidence}"
+      fi
+      DRIFT_UNIT=oracle/console-history-vanguard run_apply
+      [ "$status" -eq 3 ] || {
+        printf 'Accepted %s-envelope resource evidence: %s\n' "$position" "$evidence" >&2
+        return 1
+      }
+      [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+    done
+  done
+}
+
+@test "output strings cannot supply a missing unindented envelope" {
+  local native
+  native=$(output_only_plan fake-text)
+  PLAN_OUT=$(printf '%s\n' "$native" | sed '/tofu: Changes to Outputs:/d; /tofu: You can apply this plan/d; /tofu: state, without changing/d')
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+}
+
+@test "output-only plans still fail closed on evidence parser errors" {
+  local real_sed
+  PLAN_OUT=$(output_only_plan plain)
+  real_sed=$(command -v sed)
+  cat > "$STUB/sed" <<SH
+#!/usr/bin/env bash
+"$real_sed" "\$@"
+code=\$?
+[ "\${1:-}" = '-nE' ] && exit 42
+exit "\$code"
+SH
+  chmod 700 "$STUB/sed"
+  DRIFT_UNIT=oracle/console-history-vanguard run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'failed to parse plan evidence'
+}

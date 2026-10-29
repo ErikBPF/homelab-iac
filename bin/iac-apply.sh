@@ -82,7 +82,13 @@ while :; do
     # Bind evidence to the invocation that produced it before pooling units.
     if ! unit_detail=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
       | sed -nE 's/^.*STDOUT \[([^]]+)\] tofu: (.*)$/\1\t\2/p' \
-      | awk -F'\t' '$2 ~ /^(Plan:|  *(~|\+|-|-\/\+|\+\/-|#) )/ && $2 !~ /^ *# \(/'); then
+      | awk -F'\t' '
+        NF == 2 && $2 == "Changes to Outputs:" { output_unit = $1 }
+        $2 ~ /^(Plan:|You can apply this plan|state, without changing)/ { output_unit = "" }
+        # Native output values are indented deeper than resource headings/actions.
+        $1 == output_unit && $2 ~ /^    / { next }
+        $2 ~ /^(Plan:|Changes to Outputs:|You can apply this plan|state, without changing| *(~|\+|-|-\/\+|\+\/-|<=|#) )/ && $2 !~ /^ *# \(/
+      '); then
       alert "🛑 **merged-main apply refused** — failed to parse plan evidence for: $unit. Nothing applied."
       exit 3
     fi
@@ -135,9 +141,9 @@ while :; do
     exit 3
   fi
 
-  # Resource lines establish attribution, but cannot prove zero destruction.
-  # Require one complete summary per changed unit; unknown or repeated output
-  # must stop rather than bypass the destroy guard below.
+  # Resource plans need a complete count summary. OpenTofu 1.12.1 output-only
+  # plans instead have an unindented header and two-line no-infrastructure
+  # footer; require that whole envelope, with no resource actions or headings.
   invalid=""
   for unit in $changed; do
     if ! printf '%s\n' "$detail" | awk -F'\t' -v unit="$unit" '
@@ -145,7 +151,33 @@ while :; do
         count++
         if (NF != 2 || $2 !~ /^Plan: ([0-9]+ to import, )?[0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.$/) invalid = 1
       }
-      END { exit(count != 1 || invalid) }
+      $1 == unit {
+        if ($2 ~ /^Changes to Outputs:/) {
+          headers++
+          if (NF != 2 || $2 != "Changes to Outputs:" || stage != 0) output_invalid = 1
+          stage = 1
+        }
+        if ($2 ~ /^  [~+-] [^[:space:]=]+ +=/) {
+          outputs++
+          if (stage != 1) output_invalid = 1
+        }
+        if ($2 ~ /^You can apply this plan/) {
+          starts++
+          if (NF != 2 || $2 != "You can apply this plan to save these new output values to the OpenTofu" || stage != 1) output_invalid = 1
+          stage = 2
+        }
+        if ($2 ~ /^state, without changing/) {
+          ends++
+          if (NF != 2 || $2 != "state, without changing any real infrastructure." || stage != 2) output_invalid = 1
+          stage = 3
+        }
+        if ($2 ~ /^ *# / || $2 ~ /^ *(~|\+|-|-\/\+|\+\/-|<=) (resource|data) "/) resources = 1
+      }
+      END {
+        summary_ok = count == 1 && !invalid
+        output_ok = count == 0 && headers == 1 && starts == 1 && ends == 1 && outputs > 0 && !output_invalid && !resources
+        exit !(summary_ok || output_ok)
+      }
     '; then
       invalid+="$unit "
     fi
