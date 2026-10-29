@@ -79,10 +79,21 @@ while :; do
         exit 1
         ;;
     esac
-    # Attribute this unit's evidence so the guards can name their units.
-    detail+=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
+    # Bind evidence to the invocation that produced it before pooling units.
+    if ! unit_detail=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
       | sed -nE 's/^.*STDOUT \[([^]]+)\] tofu: (.*)$/\1\t\2/p' \
-      | awk -F'\t' '$2 ~ /^(Plan:|  *(~|\+|-|#) )/ && $2 !~ /^ *# \(/')$'\n'
+      | awk -F'\t' '$2 ~ /^(Plan:|  *(~|\+|-|-\/\+|\+\/-|#) )/ && $2 !~ /^ *# \(/'); then
+      alert "🛑 **merged-main apply refused** — failed to parse plan evidence for: $unit. Nothing applied."
+      exit 3
+    fi
+    if ! printf '%s\n' "$unit_detail" | awk -F'\t' -v unit="$unit" '
+      NF && $1 != unit { foreign = 1 }
+      END { exit foreign }
+    '; then
+      alert "🛑 **merged-main apply refused** — foreign plan evidence while planning: $unit. Nothing applied."
+      exit 3
+    fi
+    detail+="$unit_detail"$'\n'
   done <"$UNITS_FILE"
 
   if [ -n "$changed" ]; then
@@ -124,17 +135,44 @@ while :; do
     exit 3
   fi
 
+  # Resource lines establish attribution, but cannot prove zero destruction.
+  # Require one complete summary per changed unit; unknown or repeated output
+  # must stop rather than bypass the destroy guard below.
+  invalid=""
+  for unit in $changed; do
+    if ! printf '%s\n' "$detail" | awk -F'\t' -v unit="$unit" '
+      $1 == unit && $2 ~ /^Plan:/ {
+        count++
+        if (NF != 2 || $2 !~ /^Plan: ([0-9]+ to import, )?[0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.$/) invalid = 1
+      }
+      END { exit(count != 1 || invalid) }
+    '; then
+      invalid+="$unit "
+    fi
+  done
+  if [ -n "$invalid" ]; then
+    alert "🛑 **merged-main apply refused** — missing, ambiguous or unsupported plan summary for: $invalid. Nothing applied."
+    exit 3
+  fi
+
   # Read the destroy count from the summary line wherever it sits: an
   # import-bearing plan prints "Plan: 1 to import, 0 to add, 0 to change, 3 to
-  # destroy." and positional fields would read the wrong number.
-  destroys=$(printf '%s\n' "$detail" \
-    | awk -F'\t' '$2 ~ /^Plan: / {
+  # destroy." and positional fields would read the wrong number. Explicit
+  # destroy/replacement actions also refuse a contradictory zero summary.
+  if ! destroys=$(printf '%s\n' "$detail" \
+    | awk -F'\t' '
+      $2 ~ /^ *(-|-\/\+|\+\/-) resource / ||
+      $2 ~ /^ *# .* (will be destroyed|must be replaced)([ (]|$)/ { print $1; next }
+      $2 ~ /^Plan: / {
         if (match($2, /[0-9]+ to destroy/)) {
           n = substr($2, RSTART, RLENGTH)
           sub(/ to destroy/, "", n)
           if (n + 0 > 0) print $1
         }
-      }' | paste -sd ' ' -)
+      }' | paste -sd ' ' -); then
+    alert "🛑 **merged-main apply refused** — failed to parse destruction evidence. Nothing applied."
+    exit 3
+  fi
   if [ -n "$destroys" ]; then
     alert "🛑 **merged-main apply refused** — plan would destroy resources in: $destroys. Nothing applied."
     exit 3

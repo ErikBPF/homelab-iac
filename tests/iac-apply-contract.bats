@@ -127,12 +127,12 @@ run_apply() {
   jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'no unit could be attributed'
 }
 
-@test "a changed unit without plan evidence is refused" {
+@test "another unit cannot supply the changed unit's plan evidence" {
   PLAN_OUT='19:57:07.953 STDOUT [github/repos] tofu: Plan: 0 to add, 2 to change, 0 to destroy.' run_apply
 
   [ "$status" -eq 3 ]
   [ ! -e "$BATS_TEST_TMPDIR/applied" ]
-  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'no plan evidence for'
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'foreign plan evidence'
 }
 
 @test "drift that does not converge is reported instead of marked applied" {
@@ -155,4 +155,153 @@ run_apply() {
   run grep -F 'tests/fixtures/drift-monitored-units.txt' bin/iac-apply.sh
 
   [ "$status" -eq 0 ]
+}
+
+@test "attributed resource lines without a destroy summary are refused" {
+  DRIFT_UNIT=cloudflare/swag-token PLAN_OUT='19:57:07.953 STDOUT [cloudflare/swag-token] tofu:   # cloudflare_api_token.this will be destroyed
+19:57:07.953 STDOUT [cloudflare/swag-token] tofu:   - resource "cloudflare_api_token" "this" {' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'plan summary'
+}
+
+@test "a changed unit with a malformed destroy count is refused" {
+  DRIFT_UNIT=cloudflare/swag-token PLAN_OUT='19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 0 to add, 1 to change, unknown to destroy.' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'plan summary'
+}
+
+@test "duplicate plan summaries are refused as ambiguous evidence" {
+  DRIFT_UNIT=cloudflare/swag-token PLAN_OUT='19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 0 to add, 1 to change, 0 to destroy.
+19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 0 to add, 1 to change, 0 to destroy.' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'plan summary'
+}
+
+@test "a valid summary cannot hide a second incomplete summary" {
+  DRIFT_UNIT=cloudflare/swag-token PLAN_OUT='19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 0 to add, 1 to change, 0 to destroy.
+19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: incomplete' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'plan summary'
+}
+
+@test "unrecognized summary suffixes are refused instead of guessed" {
+  DRIFT_UNIT=cloudflare/swag-token PLAN_OUT='19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 0 to add, 1 to change, 0 to destroy. incomplete' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'plan summary'
+}
+
+@test "a non-destructive import-bearing plan remains applicable" {
+  DRIFT_UNIT=cloudflare/swag-token PLAN_OUT='19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 1 to import, 0 to add, 1 to change, 0 to destroy.' run_apply
+
+  [ "$status" -eq 0 ]
+  [ -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'merged-main applied'
+}
+
+@test "destructive resource actions cannot contradict a zero-destroy summary" {
+  for action in '-' '-/+' '+/-'; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+    DRIFT_UNIT=cloudflare/swag-token PLAN_OUT="19:57:07.953 STDOUT [cloudflare/swag-token] tofu:   $action resource \"cloudflare_api_token\" \"this\" {
+19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 0 to add, 1 to change, 0 to destroy." run_apply
+
+    [ "$status" -eq 3 ]
+    [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+    jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'would destroy resources'
+  done
+}
+
+@test "destructive resource headings cannot contradict a zero-destroy summary" {
+  for heading in 'will be destroyed' 'must be replaced'; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$BATS_TEST_TMPDIR/payload.json"
+    DRIFT_UNIT=cloudflare/swag-token PLAN_OUT="19:57:07.953 STDOUT [cloudflare/swag-token] tofu:   # cloudflare_api_token.this $heading
+19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 0 to add, 1 to change, 0 to destroy." run_apply
+
+    [ "$status" -eq 3 ]
+    [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+    jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'would destroy resources'
+  done
+}
+
+@test "a tab cannot hide unsupported trailing summary evidence" {
+  DRIFT_UNIT=cloudflare/swag-token PLAN_OUT=$'19:57:07.953 STDOUT [cloudflare/swag-token] tofu: Plan: 0 to add, 1 to change, 0 to destroy.\tunsupported trailing evidence' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'plan summary'
+}
+
+@test "two changed calls cannot swap attributed unit identities" {
+  cat > "$STUB/terragrunt" <<'SH'
+#!/usr/bin/env bash
+case " $* " in
+  *" plan "*)
+    [ -e "$APPLY_MARKER" ] && exit 0
+    unit=""; prev=""
+    for arg in "$@"; do
+      [ "$prev" = "--filter" ] && unit="$arg"
+      prev="$arg"
+    done
+    case "$unit" in
+      cloudflare/swag-token) label=github/repos ;;
+      github/repos) label=cloudflare/swag-token ;;
+      *) exit 0 ;;
+    esac
+    printf '19:57:07.953 STDOUT [%s] tofu: Plan: 0 to add, 1 to change, 0 to destroy.\n' "$label"
+    exit 2
+    ;;
+  *" apply "*) touch "$APPLY_MARKER"; exit 0 ;;
+  *) exit 99 ;;
+esac
+SH
+  run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'foreign plan evidence'
+}
+
+@test "failed evidence extraction cannot pass on partial usable output" {
+  local real_sed
+  real_sed=$(command -v sed)
+  cat > "$STUB/sed" <<SH
+#!/usr/bin/env bash
+"$real_sed" "\$@"
+code=\$?
+[ "\${1:-}" = '-nE' ] && exit 42
+exit "\$code"
+SH
+  chmod 700 "$STUB/sed"
+  DRIFT_UNIT=github/repos run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'failed to parse plan evidence'
+}
+
+@test "failed destroy-count parsing cannot imply zero destruction" {
+  local real_awk
+  real_awk=$(command -v awk)
+  cat > "$STUB/awk" <<SH
+#!/usr/bin/env bash
+case "\$*" in
+  *'if (match('* ) exit 42 ;;
+esac
+exec "$real_awk" "\$@"
+SH
+  chmod 700 "$STUB/awk"
+  DRIFT_UNIT=github/repos PLAN_OUT='19:57:07.953 STDOUT [github/repos] tofu: Plan: 0 to add, 0 to change, 1 to destroy.' run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$BATS_TEST_TMPDIR/applied" ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'failed to parse destruction evidence'
 }

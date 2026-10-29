@@ -151,6 +151,14 @@ age-encrypted).
 connection mid-apply and lock you out. Run `plan`/`apply` from a **wired** host
 on the controller's LAN.
 
+The merged-main runner (`bin/iac-apply.sh`) applies saved plans only after its
+guards pass. Every changed unit must have exactly one complete, recognized
+OpenTofu plan summary bound to that unit's planning invocation. Missing,
+ambiguous or unsupported summaries and parser failures stop before any apply;
+destroy/replacement actions cannot be overridden by a zero-destroy summary.
+Inspect the saved revision and correct the evidence/parser before
+retrying. Do not relax the guards to recover from a changed log format.
+
 ## Workflow
 
 ```
