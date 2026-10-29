@@ -1,6 +1,6 @@
 # Paused household HA inference route
 
-**Status:** Implemented — HA withdrawn; Discovery catalog and semantic probe deployed and verified.
+**Status:** Superseded for the HA main path on 2026-10-27 — `qwen-chat` + `qwen-pqnld` resumed; `ha-agent-qwen4b` remains withdrawn. The original pause record follows as history.
 
 Household inference is explicitly suspended after the Kepler/Apollo GPU exchange.
 Withdraw `ha-agent-qwen4b` from the active production model manifest so LiteLLM
@@ -87,3 +87,20 @@ These units are explicitly outside scheduled drift coverage until a separate
 credential-adoption gate verifies access and zero-diff plans; remove their
 exclusions and update the scope fixture together then. No whole-repo clean
 claim follows from this bounded monitor.
+
+
+## 2026-10-27 — household HA inference resumed
+
+The production HA main path resumed with LiteLLM `qwen-chat` (Apollo
+`qwen38-27b-nvfp4`) and `qwen-pqnld` (Apollo pqnld chat shim) for the
+`ha | escalate | noop` route. The harness uses `qwen-chat` for the answer or
+gated tool call.
+
+`ha-agent-qwen4b` remains absent from the active production catalog; the
+`ha-harness` key lists it only for rollback. The superseded pause does not
+apply to any other route.
+
+Evidence: live `/v1/models` exposes both routes; the HA Assist pipelines select
+`conversation.ha_agent_conversation`; harness `/health` reports `qwen-chat`.
+The Apollo pqnld tailnet exposure is a temporary user-unit proxy until the
+nixpkgs module-aggregation fix allows the declarative bind to deploy.
