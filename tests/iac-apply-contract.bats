@@ -3,6 +3,9 @@
 setup() {
   REPO_ROOT=$(CDPATH= cd -- "$BATS_TEST_DIRNAME/.." && pwd)
   STUB="$BATS_TEST_TMPDIR"
+  unset IAC_APPLY_CERTMANAGER_LIFECYCLE_READY
+  export PLAN_LOG="$BATS_TEST_TMPDIR/planned-units"
+  export APPLY_LOG="$BATS_TEST_TMPDIR/apply-commands"
   cat > "$STUB/terragrunt" <<'SH'
 #!/usr/bin/env bash
 case " $* " in
@@ -12,6 +15,7 @@ case " $* " in
       [ "$prev" = "--filter" ] && unit="$arg"
       prev="$arg"
     done
+    printf '%s\n' "$unit" >> "$PLAN_LOG"
     if [ -n "${DRIFT_UNIT:-}" ] && [ "$unit" != "$DRIFT_UNIT" ]; then
       echo "No changes. Your infrastructure matches the configuration."
       exit 0
@@ -24,6 +28,7 @@ case " $* " in
     exit "${PLAN_RC:-2}"
     ;;
   *" apply "*)
+    printf '%s\n' "$*" >> "$APPLY_LOG"
     touch "$APPLY_MARKER"
     exit "${APPLY_RC:-0}"
     ;;
@@ -586,4 +591,127 @@ drift_plan() {
 
   [ "$status" -eq 0 ]
   [ -e "$BATS_TEST_TMPDIR/applied" ]
+}
+
+certmanager_plan() {
+  printf '19:57:07.953 STDOUT [cloudflare/certmanager-token] tofu: %s\n' "$@"
+}
+
+@test "cert-manager lifecycle readiness is required before unattended apply" {
+  PLAN_OUT=$(certmanager_plan 'Plan: 1 to add, 0 to change, 0 to destroy.')
+  DRIFT_UNIT=cloudflare/certmanager-token run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$APPLY_LOG" ]
+  grep -qxF cloudflare/certmanager-token "$PLAN_LOG"
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'cert-manager lifecycle readiness'
+}
+
+@test "cert-manager lifecycle readiness accepts only the exact value one" {
+  local value
+  PLAN_OUT=$(certmanager_plan 'Plan: 1 to add, 0 to change, 0 to destroy.')
+  for value in '' 0 true yes 01 ' 1' '1 ' $'1\n'; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$APPLY_LOG"
+    IAC_APPLY_CERTMANAGER_LIFECYCLE_READY="$value" DRIFT_UNIT=cloudflare/certmanager-token run_apply
+
+    [ "$status" -eq 3 ] || { printf 'Accepted readiness value %q\n' "$value"; return 1; }
+    [ ! -e "$APPLY_LOG" ]
+  done
+}
+
+@test "cert-manager lifecycle attestation permits its legitimate saved plan" {
+  PLAN_OUT=$(certmanager_plan 'Plan: 1 to add, 0 to change, 0 to destroy.')
+  IAC_APPLY_CERTMANAGER_LIFECYCLE_READY=1 DRIFT_UNIT=cloudflare/certmanager-token run_apply
+
+  [ "$status" -eq 0 ]
+  [ "$(wc -l < "$APPLY_LOG")" -eq 1 ]
+  grep -E -- '--filter cloudflare/certmanager-token --non-interactive -- apply -no-color .*/cloudflare_certmanager-token.tfplan$' "$APPLY_LOG"
+}
+
+@test "an empty denylist cannot bypass cert-manager lifecycle readiness" {
+  PLAN_OUT=$(certmanager_plan 'Plan: 1 to add, 0 to change, 0 to destroy.')
+  IAC_APPLY_DENYLIST= DRIFT_UNIT=cloudflare/certmanager-token run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$APPLY_LOG" ]
+}
+
+@test "a clean cert-manager unit remains monitored without blocking unrelated drift" {
+  DRIFT_UNIT=github/repos run_apply
+
+  [ "$status" -eq 0 ]
+  grep -qxF cloudflare/certmanager-token "$PLAN_LOG"
+  [ "$(wc -l < "$APPLY_LOG")" -eq 1 ]
+  grep -q -- '--filter github/repos ' "$APPLY_LOG"
+}
+
+@test "cert-manager lifecycle attestation cannot bypass existing plan guards" {
+  local evidence
+  for evidence in \
+    'Plan: 0 to add, 0 to change, 1 to destroy.' \
+    $'  -/+ resource "cloudflare_api_token" "this" {\nPlan: 0 to add, 1 to change, 0 to destroy.' \
+    'Plan: incomplete'; do
+    rm -f "$BATS_TEST_TMPDIR/applied" "$APPLY_LOG"
+    PLAN_OUT=$(while IFS= read -r line; do certmanager_plan "$line"; done <<< "$evidence")
+    IAC_APPLY_CERTMANAGER_LIFECYCLE_READY=1 DRIFT_UNIT=cloudflare/certmanager-token run_apply
+    [ "$status" -eq 3 ]
+    [ ! -e "$APPLY_LOG" ]
+  done
+  PLAN_OUT=$(certmanager_plan 'Plan: 1 to add, 0 to change, 0 to destroy.')
+  IAC_APPLY_CERTMANAGER_LIFECYCLE_READY=1 IAC_APPLY_DENYLIST=cloudflare/certmanager-token DRIFT_UNIT=cloudflare/certmanager-token run_apply
+  [ "$status" -eq 3 ]
+  [ ! -e "$APPLY_LOG" ]
+}
+
+@test "an unready cert-manager unit refuses the whole batch before any apply" {
+  cat > "$STUB/terragrunt" <<'SH'
+#!/usr/bin/env bash
+unit=""; prev=""
+for arg in "$@"; do
+  [ "$prev" = "--filter" ] && unit="$arg"
+  prev="$arg"
+done
+case " $* " in
+  *" plan "*)
+    [ -e "$APPLY_MARKER" ] && exit 0
+    case "$unit" in
+      cloudflare/access|cloudflare/certmanager-token)
+        printf '19:57:07.953 STDOUT [%s] tofu: Plan: 1 to add, 0 to change, 0 to destroy.\n' "$unit"
+        exit 2 ;;
+      *) exit 0 ;;
+    esac ;;
+  *" apply "*) printf '%s\n' "$unit" >> "$APPLY_LOG"; touch "$APPLY_MARKER" ;;
+esac
+SH
+  run_apply
+
+  [ "$status" -eq 3 ]
+  [ ! -e "$APPLY_LOG" ]
+}
+
+@test "cert-manager readiness is checked again before a later pass applies anything" {
+  cat > "$STUB/terragrunt" <<'SH'
+#!/usr/bin/env bash
+unit=""; prev=""
+for arg in "$@"; do
+  [ "$prev" = "--filter" ] && unit="$arg"
+  prev="$arg"
+done
+case " $* " in
+  *" plan "*)
+    if [ ! -e "$APPLY_MARKER" ]; then
+      [ "$unit" = github/repos ] || exit 0
+    else
+      case "$unit" in cloudflare/access|cloudflare/certmanager-token) ;; *) exit 0 ;; esac
+    fi
+    printf '19:57:07.953 STDOUT [%s] tofu: Plan: 1 to add, 0 to change, 0 to destroy.\n' "$unit"
+    exit 2 ;;
+  *" apply "*) printf '%s\n' "$unit" >> "$APPLY_LOG"; touch "$APPLY_MARKER" ;;
+esac
+SH
+  run_apply
+
+  [ "$status" -eq 3 ]
+  [ "$(cat "$APPLY_LOG")" = github/repos ]
+  jq -r .content "$BATS_TEST_TMPDIR/payload.json" | grep -q 'cert-manager lifecycle readiness'
 }

@@ -170,6 +170,30 @@ Incomplete or ambiguous drift sections stop before apply.
 Inspect the saved revision and correct the evidence/parser before
 retrying. Do not relax the guards to recover from a changed log format.
 
+`cloudflare/certmanager-token` remains in the monitored scope, but a changed plan
+refuses the entire apply pass unless
+`IAC_APPLY_CERTMANAGER_LIFECYCLE_READY=1` is explicitly supplied. Unset, empty or
+any other value refuses. A clean token plan does not block unrelated changes.
+This gate is independent of `IAC_APPLY_DENYLIST`, and the attestation cannot
+bypass destruction, replacement, evidence or denylist checks. It is checked again
+on each convergence pass, before any saved plan in that pass is applied.
+
+The variable is an operator attestation, not automatic proof. Before supplying
+it, record the accepted Q10 prerequisites: provider capability, state adoption
+with a clean token plan, value-safe consumer handoff, fresh certificate issuance
+and served-certificate verification, and closure of the recorded predecessor
+token by immutable ID. Preserve the last valid TLS Secret. The separate all-unit
+clean-plan gate still includes Access policy reconciliation and its required
+operator approval. No readiness value is enabled by this repository.
+
+Desktop owns the caller and may supply the attestation through the existing
+`homelab-iac-main-apply` service environment after that proof is reviewed.
+Its caller records a refused revision in `refused-sha`; changing the environment
+alone does not retry that revision. A new reviewed IaC revision or a separately
+authorized operator retry is required. Removing the attestation closes future
+admission without removing monitoring. Do not revert the guard to recover from
+missing lifecycle evidence, and do not infer live rollout from a source merge.
+
 ## Workflow
 
 ```
