@@ -1,0 +1,48 @@
+local_file.missing: Refreshing state... [id=7e760de443b304553bb502fd60394be93a752d74]
+local_file.kept: Refreshing state... [id=aab6a7dce5eb974f9f4aef64a4e7364454a223fc]
+
+Note: Objects have changed outside of OpenTofu
+
+OpenTofu detected the following changes made outside of OpenTofu since the
+last "tofu apply" which may have affected this plan:
+
+  # local_file.missing has been deleted
+  - resource "local_file" "missing" {
+      - id                   = "7e760de443b304553bb502fd60394be93a752d74" -> null
+        # (10 unchanged attributes hidden)
+    }
+
+
+Unless you have made equivalent changes to your configuration, or ignored the
+relevant attributes using ignore_changes, the following plan may include
+actions to undo or respond to these changes.
+
+─────────────────────────────────────────────────────────────────────────────
+
+OpenTofu used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+
+OpenTofu will perform the following actions:
+
+  # local_file.missing will be created
+  + resource "local_file" "missing" {
+      + content              = <<-EOT
+            disposable fixture
+        EOT
+      + content_base64sha256 = (known after apply)
+      + content_base64sha512 = (known after apply)
+      + content_md5          = (known after apply)
+      + content_sha1         = (known after apply)
+      + content_sha256       = (known after apply)
+      + content_sha512       = (known after apply)
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "missing.txt"
+      + id                   = (known after apply)
+    }
+
+Plan: 1 to add, 0 to change, 0 to destroy.
+
+Changes to Outputs:
+  ~ missing_id = "7e760de443b304553bb502fd60394be93a752d74" -> (known after apply)

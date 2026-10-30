@@ -79,10 +79,45 @@ while :; do
         exit 1
         ;;
     esac
-    # Attribute this unit's evidence so the guards can name their units.
-    detail+=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
+    # Bind evidence to the invocation that produced it before pooling units.
+    if ! unit_detail=$(printf '%s\n' "$out" | sed -E 's/\x1b\[[0-9;]*m//g' \
       | sed -nE 's/^.*STDOUT \[([^]]+)\] tofu: (.*)$/\1\t\2/p' \
-      | awk -F'\t' '$2 ~ /^(Plan:|  *(~|\+|-|#) )/ && $2 !~ /^ *# \(/')$'\n'
+      | awk -F'\t' '
+        NF == 2 && $2 == "Changes to Outputs:" { output_unit = $1 }
+        $2 ~ /^(Plan:|You can apply this plan|state, without changing)/ { output_unit = "" }
+        # Native output values are indented deeper than resource headings/actions.
+        $1 == output_unit && $2 ~ /^    / { next }
+        NF == 2 && $2 == "Note: Objects have changed outside of OpenTofu" {
+          if (drift_unit != "" || planned_markers) invalid = 1
+          drift_unit = $1
+          drift_open = 1
+          print; next
+        }
+        NF == 2 && $2 ~ /^OpenTofu (will perform the following actions:|planned the following actions, but then encountered a problem:)$/ {
+          planned_markers++
+          if (drift_unit != "") {
+            if ($1 != drift_unit || !drift_open || planned_markers != 1) invalid = 1
+            drift_open = 0
+          }
+          print; next
+        }
+        drift_open && $2 ~ /^(Plan:|Changes to Outputs:)/ { invalid = 1 }
+        # Only native deletion records belong to the observed drift exception.
+        drift_open && $1 == drift_unit && NF == 2 && $2 ~ /^  - resource / { next }
+        $2 ~ /^(Plan:|Changes to Outputs:|You can apply this plan|state, without changing| *(~|\+|-|-\/\+|\+\/-|<=|#) )/ && $2 !~ /^ *# \(/
+        END { exit (drift_open || invalid) }
+      '); then
+      alert "🛑 **merged-main apply refused** — failed to parse plan evidence for: $unit. Nothing applied."
+      exit 3
+    fi
+    if ! printf '%s\n' "$unit_detail" | awk -F'\t' -v unit="$unit" '
+      NF && $1 != unit { foreign = 1 }
+      END { exit foreign }
+    '; then
+      alert "🛑 **merged-main apply refused** — foreign plan evidence while planning: $unit. Nothing applied."
+      exit 3
+    fi
+    detail+="$unit_detail"$'\n'
   done <"$UNITS_FILE"
 
   if [ -n "$changed" ]; then
@@ -124,17 +159,70 @@ while :; do
     exit 3
   fi
 
+  # Resource plans need a complete count summary. OpenTofu 1.12.1 output-only
+  # plans instead have an unindented header and two-line no-infrastructure
+  # footer; require that whole envelope, with no resource actions or headings.
+  invalid=""
+  for unit in $changed; do
+    if ! printf '%s\n' "$detail" | awk -F'\t' -v unit="$unit" '
+      $1 == unit && $2 ~ /^Plan:/ {
+        count++
+        if (NF != 2 || $2 !~ /^Plan: ([0-9]+ to import, )?[0-9]+ to add, [0-9]+ to change, [0-9]+ to destroy\.$/) invalid = 1
+      }
+      $1 == unit {
+        if ($2 ~ /^Changes to Outputs:/) {
+          headers++
+          if (NF != 2 || $2 != "Changes to Outputs:" || stage != 0) output_invalid = 1
+          stage = 1
+        }
+        if ($2 ~ /^  [~+-] [^[:space:]=]+ +=/) {
+          outputs++
+          if (stage != 1) output_invalid = 1
+        }
+        if ($2 ~ /^You can apply this plan/) {
+          starts++
+          if (NF != 2 || $2 != "You can apply this plan to save these new output values to the OpenTofu" || stage != 1) output_invalid = 1
+          stage = 2
+        }
+        if ($2 ~ /^state, without changing/) {
+          ends++
+          if (NF != 2 || $2 != "state, without changing any real infrastructure." || stage != 2) output_invalid = 1
+          stage = 3
+        }
+        if ($2 ~ /^ *# / || $2 ~ /^ *(~|\+|-|-\/\+|\+\/-|<=) (resource|data) "/) resources = 1
+      }
+      END {
+        summary_ok = count == 1 && !invalid
+        output_ok = count == 0 && headers == 1 && starts == 1 && ends == 1 && outputs > 0 && !output_invalid && !resources
+        exit !(summary_ok || output_ok)
+      }
+    '; then
+      invalid+="$unit "
+    fi
+  done
+  if [ -n "$invalid" ]; then
+    alert "🛑 **merged-main apply refused** — missing, ambiguous or unsupported plan summary for: $invalid. Nothing applied."
+    exit 3
+  fi
+
   # Read the destroy count from the summary line wherever it sits: an
   # import-bearing plan prints "Plan: 1 to import, 0 to add, 0 to change, 3 to
-  # destroy." and positional fields would read the wrong number.
-  destroys=$(printf '%s\n' "$detail" \
-    | awk -F'\t' '$2 ~ /^Plan: / {
+  # destroy." and positional fields would read the wrong number. Explicit
+  # destroy/replacement actions also refuse a contradictory zero summary.
+  if ! destroys=$(printf '%s\n' "$detail" \
+    | awk -F'\t' '
+      $2 ~ /^ *(-|-\/\+|\+\/-) resource / ||
+      $2 ~ /^ *# .* (will be destroyed|must be replaced)([ (]|$)/ { print $1; next }
+      $2 ~ /^Plan: / {
         if (match($2, /[0-9]+ to destroy/)) {
           n = substr($2, RSTART, RLENGTH)
           sub(/ to destroy/, "", n)
           if (n + 0 > 0) print $1
         }
-      }' | paste -sd ' ' -)
+      }' | paste -sd ' ' -); then
+    alert "🛑 **merged-main apply refused** — failed to parse destruction evidence. Nothing applied."
+    exit 3
+  fi
   if [ -n "$destroys" ]; then
     alert "🛑 **merged-main apply refused** — plan would destroy resources in: $destroys. Nothing applied."
     exit 3

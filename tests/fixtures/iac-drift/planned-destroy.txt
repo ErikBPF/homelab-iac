@@ -1,0 +1,30 @@
+local_file.missing: Refreshing state... [id=7e760de443b304553bb502fd60394be93a752d74]
+local_file.kept: Refreshing state... [id=aab6a7dce5eb974f9f4aef64a4e7364454a223fc]
+
+OpenTofu used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  - destroy
+
+OpenTofu will perform the following actions:
+
+  # local_file.kept will be destroyed
+  - resource "local_file" "kept" {
+      - content              = <<-EOT
+            disposable retained fixture
+        EOT -> null
+      - content_base64sha256 = "A2XIXUT/X9dQCioK34mvSvHbfE4e0qYxLCZRURHBb+o=" -> null
+      - content_base64sha512 = "p4C8BJND2s7+xH0fmbPul1yTyoaEVtFIxkXfPPMz308hrJJA6PoByBNDfqsVNGDDn3AjxVPbvIbYjjy5f//WsA==" -> null
+      - content_md5          = "c065155546cc09650859510d3c7d4aea" -> null
+      - content_sha1         = "aab6a7dce5eb974f9f4aef64a4e7364454a223fc" -> null
+      - content_sha256       = "0365c85d44ff5fd7500a2a0adf89af4af1db7c4e1ed2a6312c26515111c16fea" -> null
+      - content_sha512       = "a780bc049343dacefec47d1f99b3ee975c93ca868456d148c645df3cf333df4f21ac9240e8fa01c813437eab153460c39f7023c553dbbc86d88e3cb97fffd6b0" -> null
+      - directory_permission = "0777" -> null
+      - file_permission      = "0777" -> null
+      - filename             = "kept.txt" -> null
+      - id                   = "aab6a7dce5eb974f9f4aef64a4e7364454a223fc" -> null
+    }
+
+Plan: 0 to add, 0 to change, 1 to destroy.
+
+Changes to Outputs:
+  - missing_id = "7e760de443b304553bb502fd60394be93a752d74" -> null

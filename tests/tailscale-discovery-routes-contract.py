@@ -2,6 +2,8 @@
 """Keep subnet-route approval scoped to Discovery's existing node."""
 
 from pathlib import Path
+from ipaddress import ip_network
+import json
 import re
 
 root = Path(__file__).resolve().parents[1]
@@ -35,4 +37,41 @@ for guard in [
     'contains(device.addresses, "100.103.52.100")',
 ]:
     assert guard in body, f"Discovery identity guard is missing: {guard}"
+
+# HuJSON adds comments and trailing commas to JSON. Preserve quoted strings
+# while removing those two extensions; leave syntax validation to json.loads.
+policy = (root / "tailscale/acl/policy.hujson").read_text()
+quoted = r'"(?:\\.|[^"\\])*"'
+policy = re.sub(
+    rf'({quoted})|//[^\n]*|/\*.*?\*/',
+    lambda match: match.group(1) or " ", policy, flags=re.S,
+)
+policy = re.sub(
+    rf'({quoted})|,(?=\s*[}}\]])',
+    lambda match: match.group(1) or "", policy,
+)
+
+
+def unique_keys(pairs):
+    result = {}
+    for key, value in pairs:
+        assert key not in result, "Duplicate policy key makes route ownership ambiguous"
+        result[key] = value
+    return result
+
+
+policy = json.loads(policy, object_pairs_hook=unique_keys)
+protected_routes = [ip_network(route) for route in re.findall(r'"([^"]+)"', routes.group(1))]
+auto_routes = policy.get("autoApprovers", {}).get("routes", {})
+assert isinstance(auto_routes, dict), "Route auto-approvers must be a mapping"
+for route, approvers in auto_routes.items():
+    assert isinstance(approvers, list), "Route auto-approvers must be lists"
+    try:
+        network = ip_network(route, strict=False)
+    except ValueError:
+        raise AssertionError("Route auto-approval must use a valid CIDR") from None
+    assert not approvers or not any(
+        network.version == protected.version and network.overlaps(protected)
+        for protected in protected_routes
+    ), "Route auto-approval overlaps Discovery's managed routes"
 print("PASS: Discovery-only subnet-route approval contract")
