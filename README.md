@@ -151,6 +151,25 @@ age-encrypted).
 connection mid-apply and lock you out. Run `plan`/`apply` from a **wired** host
 on the controller's LAN.
 
+The merged-main runner (`bin/iac-apply.sh`) applies saved plans only after its
+guards pass. Resource changes need exactly one complete, recognized OpenTofu
+plan summary bound to that unit's planning invocation. Output-only changes use
+the native OpenTofu 1.12.1 format: one unindented `Changes to Outputs:` header,
+an output diff, and its complete two-line no-infrastructure footer, with no
+resource actions or headings. Indented output values, including unchanged
+heredoc text, are excluded from resource evidence only within that exact
+unit-bound output section. Plain, data-source and multiline outputs are
+covered by native fixtures. This checks human-readable plan evidence; it does
+not structurally inspect saved-plan JSON or authenticate provider output.
+Missing, ambiguous or unsupported evidence and parser failures stop before any
+apply; destroy/replacement actions cannot be overridden by a zero-destroy
+summary. Output-only changes still respect the human-only unit denylist.
+Observed deletions in a native drift note do not count as planned destruction;
+that exception requires one exact, ordered, unit-bound note/action boundary.
+Incomplete or ambiguous drift sections stop before apply.
+Inspect the saved revision and correct the evidence/parser before
+retrying. Do not relax the guards to recover from a changed log format.
+
 ## Workflow
 
 ```

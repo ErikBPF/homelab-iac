@@ -1,0 +1,61 @@
+local_file.kept: Refreshing state... [id=aab6a7dce5eb974f9f4aef64a4e7364454a223fc]
+local_file.missing: Refreshing state... [id=7e760de443b304553bb502fd60394be93a752d74]
+
+Note: Objects have changed outside of OpenTofu
+
+OpenTofu detected the following changes made outside of OpenTofu since the
+last "tofu apply" which may have affected this plan:
+
+  # local_file.missing has been deleted
+  - resource "local_file" "missing" {
+      - id                   = "7e760de443b304553bb502fd60394be93a752d74" -> null
+        # (10 unchanged attributes hidden)
+    }
+
+
+Unless you have made equivalent changes to your configuration, or ignored the
+relevant attributes using ignore_changes, the following plan may include
+actions to undo or respond to these changes.
+
+─────────────────────────────────────────────────────────────────────────────
+
+OpenTofu used the selected providers to generate the following execution
+plan. Resource actions are indicated with the following symbols:
+  + create
+-/+ destroy and then create replacement
+
+OpenTofu will perform the following actions:
+
+  # local_file.kept will be replaced, as requested
+-/+ resource "local_file" "kept" {
+      ~ content_base64sha256 = "A2XIXUT/X9dQCioK34mvSvHbfE4e0qYxLCZRURHBb+o=" -> (known after apply)
+      ~ content_base64sha512 = "p4C8BJND2s7+xH0fmbPul1yTyoaEVtFIxkXfPPMz308hrJJA6PoByBNDfqsVNGDDn3AjxVPbvIbYjjy5f//WsA==" -> (known after apply)
+      ~ content_md5          = "c065155546cc09650859510d3c7d4aea" -> (known after apply)
+      ~ content_sha1         = "aab6a7dce5eb974f9f4aef64a4e7364454a223fc" -> (known after apply)
+      ~ content_sha256       = "0365c85d44ff5fd7500a2a0adf89af4af1db7c4e1ed2a6312c26515111c16fea" -> (known after apply)
+      ~ content_sha512       = "a780bc049343dacefec47d1f99b3ee975c93ca868456d148c645df3cf333df4f21ac9240e8fa01c813437eab153460c39f7023c553dbbc86d88e3cb97fffd6b0" -> (known after apply)
+      ~ id                   = "aab6a7dce5eb974f9f4aef64a4e7364454a223fc" -> (known after apply)
+        # (4 unchanged attributes hidden)
+    }
+
+  # local_file.missing will be created
+  + resource "local_file" "missing" {
+      + content              = <<-EOT
+            disposable fixture
+        EOT
+      + content_base64sha256 = (known after apply)
+      + content_base64sha512 = (known after apply)
+      + content_md5          = (known after apply)
+      + content_sha1         = (known after apply)
+      + content_sha256       = (known after apply)
+      + content_sha512       = (known after apply)
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "missing.txt"
+      + id                   = (known after apply)
+    }
+
+Plan: 2 to add, 0 to change, 1 to destroy.
+
+Changes to Outputs:
+  ~ missing_id = "7e760de443b304553bb502fd60394be93a752d74" -> (known after apply)
