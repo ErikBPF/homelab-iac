@@ -29,6 +29,12 @@ resource "cloudflare_zero_trust_access_service_token" "device" {
 
   account_id = var.account_id
   name       = each.value.service_token_name
+
+  # Mint the successor before the old token dies, so a rotation cannot strand
+  # the device without a working credential.
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Non-interactive policy: the app's own token (if any) + referenced existing tokens.
