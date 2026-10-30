@@ -239,6 +239,15 @@ while :; do
     exit 3
   fi
 
+  # Keep monitoring the token; only an explicit operator lifecycle attestation
+  # admits its changes. Check the whole pass before applying any saved plan.
+  for unit in $changed; do
+    if [ "$unit" = cloudflare/certmanager-token ] && [ "${IAC_APPLY_CERTMANAGER_LIFECYCLE_READY:-}" != 1 ]; then
+      alert "🛑 **merged-main apply refused** — cert-manager lifecycle readiness has not been attested. Nothing applied in this pass."
+      exit 3
+    fi
+  done
+
   for unit in $changed; do
     out=$(unit_scope "$unit" -- apply -no-color "$(plan_file "$unit")" 2>&1)
     code=$?
