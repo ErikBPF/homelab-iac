@@ -101,5 +101,6 @@
       "fqdn": "whisper.pastelariadev.com",
       "scope": "public"
     }
-  }
+  },
+  "tailnetPeers": {}
 }
