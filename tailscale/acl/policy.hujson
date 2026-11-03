@@ -13,6 +13,7 @@
 		"archinaut":  "100.67.123.113",
 		"voyager":    "100.105.38.10",
 		"vanguard":   "100.90.247.79",
+		// Verified live 2026-11-03: the phone holds 100.66.253.15 (IPv6 fd7a:115c:a1e0::113b:fd0f, unused here).
 		"s25-ultra-de-erik": "100.66.253.15",
 	},
 
