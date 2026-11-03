@@ -17,8 +17,8 @@ setup() {
 
   grep -qF '"nanokvm":   "100.125.209.99"' "$policy"
   python3 "$REPO_ROOT/tests/tailscale-discovery-routes-contract.py"
-  grep -qF '{"action": "accept", "src": ["laptop", "endeavour", "pathfinder"], "dst": ["nanokvm:22,443"]}' "$policy"
-  grep -qF '{"src": "laptop", "accept": ["nanokvm:22", "nanokvm:443"]}' "$policy"
+  grep -qF '{"action": "accept", "src": ["endeavour", "pathfinder", "kepler"], "dst": ["nanokvm:22,443"]}' "$policy"
+  grep -qF '{"src": "kepler", "accept": ["nanokvm:22", "nanokvm:443"]}' "$policy"
   grep -qF '{"src": "orion", "deny": ["nanokvm:22", "nanokvm:443"]}' "$policy"
 }
 
