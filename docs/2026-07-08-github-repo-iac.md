@@ -142,3 +142,19 @@ branch protection on the Free plan); the least-privilege Actions overrides stay.
 `homelab-gitops` is public for the same reason. Both live repositories were
 already public, so this is code-only: the plan no longer carries a visibility
 flip, and the private-repo count in `tests/github-hardening-contract.bats` is 16.
+
+### Amendment (2026-11-03): retire `agentmemory`, `sail` and `sail-dev`
+
+All three repositories were deleted on GitHub, so `github/repos` failed every
+drift check: the Actions-permissions read returns 404 for a missing repository
+and `bin/drift-check.sh` exits 1, which leaves
+`homelab-iac-drift.service` failed on discovery. The entries are removed from
+`github/repos/terragrunt.hcl` and `tests/github-hardening-contract.bats` now
+declares 33 repositories and a private-repo count of 15 (was 16).
+
+Removing a map key does not remove the resource from the MinIO state, and plan
+refreshes orphaned instances before destroying them. `github/modules/repo/main.tf`
+therefore carries `removed { lifecycle { destroy = false } }` blocks for the
+repository, Actions-permission, workflow-permission and branch-protection
+instances of all three keys. Those blocks drop the state entries without reading
+the API. Keep them until a plan against the pruned catalogue is clean.
