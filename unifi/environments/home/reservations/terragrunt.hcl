@@ -22,7 +22,7 @@ locals {
   }
 
   # Reservations for fleet hosts with a MAC+IP (incl. the .115 HA appliance, adopted
-  # via `terragrunt import`). voyager (public, no MAC) / laptop (roaming) fall out.
+  # via `terragrunt import`). voyager (public, no MAC) / endeavour (roaming) fall out.
   fleet_res = {
     for name, h in local.fleet.hosts :
     h.mac => {
