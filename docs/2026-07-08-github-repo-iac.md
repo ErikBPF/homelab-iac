@@ -153,8 +153,10 @@ and `bin/drift-check.sh` exits 1, which leaves
 declares 33 repositories and a private-repo count of 15 (was 16).
 
 Removing a map key does not remove the resource from the MinIO state, and plan
-refreshes orphaned instances before destroying them. `github/modules/repo/main.tf`
-therefore carries `removed { lifecycle { destroy = false } }` blocks for the
-repository, Actions-permission, workflow-permission and branch-protection
-instances of all three keys. Those blocks drop the state entries without reading
-the API. Keep them until a plan against the pruned catalogue is clean.
+refreshes orphaned instances before destroying them, which re-issues the same
+Actions-permissions 404. The retired instances were removed from state with
+`terragrunt state rm` on discovery before the pruned plan ran: the repository,
+Actions-permission, workflow-permission and branch-protection instances of all
+three keys, 11 addresses in total. `state rm` is a one-time operator action; the
+catalogue change itself is code-only. A state backup from before the removal
+remains at `/var/lib/homelab-iac-drift/github-repos-state-backup.json`.
