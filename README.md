@@ -46,7 +46,7 @@ lifecycle and application behavior.
 
 | Sister repo | Owns | Coupling to this repo |
 |---|---|---|
-| `desktop-nixos` | Fleet host OS (kepler, orion, discovery, pathfinder, laptop…) | **Addressing contract** — the fixed-IP reservations here assign the IPs those hosts use (e.g. `kepler` → `.230`, `homeassistant` → `.115`, `archinaut` → `.225`, `nix-erik` → `.125`). Change a host's IP in one repo, update the reservation in the other. |
+| `desktop-nixos` | Fleet host OS (kepler, orion, discovery, pathfinder, endeavour…) | **Addressing contract** — the fixed-IP reservations here assign the IPs those hosts use (e.g. `kepler` → `.230`, `homeassistant` → `.115`, `archinaut` → `.225`, `nix-erik` → `.125`). Change a host's IP in one repo, update the reservation in the other. |
 | `servarr` | Container stacks on kepler/discovery/orion | Containers talk over the LAN/VLANs defined here; ingress resolves via the static DNS records. |
 | `hermes-flake` | hermes-agent on kepler | Runs on a host addressed by a reservation here. |
 | `home-assistant-config` | HA app config | HA host = the `homeassistant` reservation (`.115`); voice backend on kepler. |

@@ -21,7 +21,7 @@ XDG_RUNTIME_DIR=/run/user/1000 systemctl --user stop telstar-get
 XDG_RUNTIME_DIR=/run/user/1000 systemd-run --user --unit=telstar-get --collect \
   bash /home/erik/telstar-get-retry.sh
 ```
-From the laptop: `ssh -p 2222 erik@<discovery> 'bash -lc "journalctl --user -u telstar-get --no-pager | tail"'`.
+From endeavour: `ssh -p 2222 erik@<discovery> 'bash -lc "journalctl --user -u telstar-get --no-pager | tail"'`.
 
 ## Completed cutover
 1. Applied temporary `/32` bootstrap/recovery ingress on TCP/22 and TCP/2222.
@@ -42,7 +42,7 @@ From the laptop: `ssh -p 2222 erik@<discovery> 'bash -lc "journalctl --user -u t
 - MinIO S3 state backend needs `AWS_ACCESS_KEY_ID/SECRET`, mapped from
   `MINIO_TFSTATE_ROOT_USER/PASSWORD`.
 - `TG_TF_PATH=tofu`; discovery's tofu is a **tenv** shim, so `TENV_AUTO_INSTALL=true`.
-- SSH pubkey injected into telstar = the laptop's `id_ed25519.pub` (copied to
+- SSH pubkey injected into telstar = endeavour's `id_ed25519.pub` (copied to
   discovery as `~/telstar-ssh-key.pub`; a pubkey is not secret) so the deploy
   host can reach it.
 
