@@ -28,9 +28,6 @@ inputs = {
       default_workflow_permissions = "read"
       can_approve_pull_requests    = false
     }
-    agentmemory = {
-      protect_main = true
-    }
     ai-server = {
       visibility   = "private"
       protect_main = false # GitHub Free does not support private branch protection.
@@ -167,14 +164,6 @@ inputs = {
     romozinha = {
       visibility   = "private"
       protect_main = false
-    }
-    sail = {
-      protect_main = true
-    }
-    sail-dev = {
-      visibility                   = "private"
-      protect_main                 = false
-      default_workflow_permissions = "write"
     }
     servarr = {
       visibility                   = "private"
