@@ -23,6 +23,10 @@ export TF_VAR_state_passphrase="${TF_VAR_state_passphrase:-${UNIFI_STATE_PASSPHR
 # The remaining exclusions retain Discovery's 23-unit monitoring scope while
 # refreshing the paused-HA catalog. Adopt new units only after their runtime
 # credentials and zero-diff plans pass; see docs/2026-09-07-paused-ha-route.md.
+# cloudflare/access is bootstrap-only: it needs a token with Access: Apps and
+# Policies plus Service Tokens edit, which the shared CLOUDFLARE_API_TOKEN does
+# not hold. Keep it out of the unattended scope until that token exists; see
+# the BOOTSTRAP block in cloudflare/access/terragrunt.hcl.
 out=$(terragrunt run --all \
   --parallelism 1 \
   --filter '!oracle/compute-telstar' \
@@ -38,6 +42,7 @@ out=$(terragrunt run --all \
   --filter '!components/openbao/environments/home/deepseek-harness-litellm' \
   --filter '!components/openbao/environments/home/harbor-project-iam' \
   --filter '!components/openbao/environments/home/runtime-secret-foundation' \
+  --filter '!cloudflare/access' \
   --non-interactive -- plan -detailed-exitcode -no-color 2>&1)
 code=$?
 
