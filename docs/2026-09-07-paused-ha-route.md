@@ -104,3 +104,23 @@ Evidence: live `/v1/models` exposes both routes; the HA Assist pipelines select
 `conversation.ha_agent_conversation`; harness `/health` reports `qwen-chat`.
 The Apollo pqnld tailnet exposure is a temporary user-unit proxy until the
 nixpkgs module-aggregation fix allows the declarative bind to deploy.
+
+### Amendment 2026-11-04 — `cloudflare/access` leaves the unattended scope
+
+`cloudflare/access` is removed from `tests/fixtures/drift-monitored-units.txt`
+and filtered out of `bin/drift-check.sh`. Both unattended paths consume that
+fixture, so the merged-main apply stops planning it as well. The unit needs a
+Cloudflare token with Account > Access: Apps and Policies: Edit plus Access:
+Service Tokens: Edit; the shared `CLOUDFLARE_API_TOKEN` does not hold those
+scopes, so every run failed with `Authentication error (10000)` and blocked the
+units after it.
+
+The monitored fixture now holds 24 units (was 25); the "23-unit" figure above
+describes the original `dc54f16` refresh, not the current set. Re-admission
+requires the bootstrap token, a zero-diff plan from discovery, and restoring the
+fixture entry and filter in one change: homelab-iac#163 tracks it.
+
+Discovery runs the pinned `homelab-iac` flake input without refreshing itself,
+so this exclusion only reaches the drift unit after the following
+`desktop-nixos` consumer pin bump and deploy. The merged-main apply reads the
+merged revision directly and picks the exclusion up on its next run.

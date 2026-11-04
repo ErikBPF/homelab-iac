@@ -20,7 +20,7 @@ export TF_VAR_state_passphrase="${TF_VAR_state_passphrase:-${UNIFI_STATE_PASSPHR
 # Telstar's capture loop owns this state while it retries OCI capacity. Planning
 # it concurrently races the remote state lock; its service provides the health
 # signal instead.
-# The remaining exclusions retain Discovery's 23-unit monitoring scope while
+# The remaining exclusions retain Discovery's 24-unit monitoring scope while
 # refreshing the paused-HA catalog. Adopt new units only after their runtime
 # credentials and zero-diff plans pass; see docs/2026-09-07-paused-ha-route.md.
 # cloudflare/access is bootstrap-only: it needs a token with Access: Apps and
