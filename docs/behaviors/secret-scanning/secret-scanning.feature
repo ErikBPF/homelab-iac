@@ -18,7 +18,8 @@ Feature: Reject secrets before infrastructure changes land
 
   Scenario: Scan automatically without PR-controlled suppression
     When a pull request, main push or main-branch manual dispatch scans committed history
-    Then fixed default rules and the immutable PR base fingerprint policy judge the change
+    Then fixed default rules and the trusted policy snapshot judge the change
+    And PRs use their immutable base while main runs use the reviewed commit
     And PR-local config, ignore files, symlinks and inline comments cannot hide a new credential
     And repository code executes only after the verified scanner
 
