@@ -129,7 +129,7 @@ jobs:
           tflint_version: v0.64.0
 
       - name: Install contract-test runner
-        run: sudo apt-get update && sudo apt-get install -y bats
+        run: sudo apt-get update && sudo apt-get install -y bats just
 
       - name: Provider bootstrap contract
         run: python3 tests/litellm-provider-bootstrap.py

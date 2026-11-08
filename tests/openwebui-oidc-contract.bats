@@ -48,3 +48,22 @@ setup() {
 @test "OpenWebUI preserves imported computed grant types" {
   ! grep -Eq '^[[:space:]]*grant_types[[:space:]]*=' "$module/main.tf"
 }
+
+@test "config-manager has dedicated write-only OpenBao storage and exact read role" {
+  f=components/openbao/modules/authentik-config-manager/main.tf
+  grep -Fq 'data_json_wo' "$f"
+  grep -Fq 'iac/authentik-config-manager' "$f"
+  grep -Fq 'secret/data/iac/authentik-config-manager' "$f"
+  grep -Fq 'capabilities = ["read"]' "$f"
+  ! grep -Fq 'capabilities = ["create"' "$f"
+  grep -Fq 'ephemeral = true' components/openbao/modules/authentik-config-manager/variables.tf
+  grep -Fq 'OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_ROLE_ID' bin/authentik-config-manager
+  grep -Fq 'revoke-self' bin/authentik-config-manager
+  grep -Fq 'components/authentik/environments/home/openwebui-oidc' bin/authentik-config-manager
+  grep -Fq 'authentik-config-manager *args:' justfile
+  grep -Fq -- "--filter '!components/openbao/environments/home/authentik-config-manager'" bin/drift-check.sh
+}
+
+@test "config-manager just wrapper revokes and fails closed without credential output" {
+  python3 tests/authentik-config-manager.py
+}

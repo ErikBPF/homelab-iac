@@ -21,6 +21,7 @@
     pkgs.opentofu
     pkgs.terragrunt
     pkgs.jq
+    pkgs.just
     pkgs.curl
     pkgs.sops
     pkgs.age
