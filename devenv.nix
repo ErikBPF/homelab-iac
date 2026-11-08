@@ -34,7 +34,14 @@
     mkdir -p "$TF_PLUGIN_CACHE_DIR"
     # Decrypt the sops-managed secrets into the dotenv-loaded .env if missing.
     if [ -f .env.sops ] && { [ ! -f .env ] || [ .env.sops -nt .env ]; }; then
-      sops -d --input-type dotenv --output-type dotenv .env.sops > .env
+      tmp=.env.tmp.$$
+      if sops -d --input-type dotenv --output-type dotenv .env.sops > "$tmp"; then
+        chmod 600 "$tmp"
+        mv "$tmp" .env
+      else
+        rm -f "$tmp"
+        echo 'homelab-iac: .env refresh failed; keeping the existing copy' >&2
+      fi
     fi
     # Terragrunt dependency output reads bypass per-unit inputs.
     # Expand only inside the shell; never evaluate the passphrase into Nix.
