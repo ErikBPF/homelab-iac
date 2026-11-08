@@ -59,7 +59,7 @@ class SecurityWorkflow(unittest.TestCase):
         self.assertIn('git show "${SCAN_POLICY_REF}:.gitleaksignore"', self.job)
         self.assertIn('git cat-file -e "${SCAN_POLICY_REF}^{commit}"', self.job)
         self.assertIn("useDefault = true", self.job)
-        self.assertIn('cp "$RUNNER_TEMP/gitleaks.ignore" .gitleaksignore', self.job)
+        self.assertIn('cp --remove-destination "$RUNNER_TEMP/gitleaks.ignore" .gitleaksignore', self.job)
         self.assertNotIn("GITHUB_TOKEN:", self.job)
         self.assertNotIn("upload-artifact", self.job)
         for action in re.findall(r"uses: (\S+)", self.source):
@@ -120,7 +120,8 @@ class SecurityWorkflow(unittest.TestCase):
                 subprocess.run(["git", *args], cwd=root, env=env, check=True, capture_output=True)
             def scan(expected, secret=""):
                 # Mirror workflow replacement of the implicitly loaded source ignore file.
-                (root / ".gitleaksignore").write_bytes((root / ".git/trusted.ignore").read_bytes())
+                subprocess.run(["cp", "--remove-destination", str(root / ".git/trusted.ignore"),
+                                str(root / ".gitleaksignore")], check=True, capture_output=True)
                 result = subprocess.run(["gitleaks", "git", "--log-opts=HEAD", "--redact", "--no-banner", "--ignore-gitleaks-allow",
                                          "--config", str(root / ".git/trusted.toml"),
                                          "--gitleaks-ignore-path", str(root / ".git/trusted.ignore"), "."],
@@ -140,6 +141,10 @@ class SecurityWorkflow(unittest.TestCase):
             (root / ".gitleaks.toml").write_text('[extend]\nuseDefault = true\n[allowlist]\npaths = [".*"]\n')
             (root / ".gitleaksignore").write_text(f"{head}:leak.txt:github-pat:1\n")
             git("add", "."); git("commit", "-qm", "untrusted suppression fixture"); scan(1, token)
+            (root / ".gitleaksignore").unlink()
+            (root / ".gitleaksignore").symlink_to(root / ".git/trusted.toml")
+            git("add", ".gitleaksignore"); git("commit", "-qm", "untrusted policy symlink"); scan(1, token)
+            self.assertEqual((root / ".git/trusted.toml").read_text(), "[extend]\nuseDefault = true\n")
             (root / "leak.txt").write_text("github_token=" + token + " # gitleaks:allow\n")
             git("add", "leak.txt"); git("commit", "-qm", "untrusted inline suppression"); scan(1, token)
             git("rm", "leak.txt"); git("commit", "-qm", "remove fixture"); scan(1, token)
