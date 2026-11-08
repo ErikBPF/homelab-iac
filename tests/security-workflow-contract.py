@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""Verify workflow wiring, synthetic scanner outcomes and value-free notifications."""
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import tempfile
+import textwrap
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+WORKFLOW = ROOT / ".github/workflows/ci.yml"
+JOB = "secret-scan"
+
+
+def notification_runs(condition, event, outcome):
+    values = {"github.event_name": event, "steps.gitleaks.outcome": outcome}
+    terms = condition.split(" && ")
+    assert terms[0] == "always()", "failure notifications need an explicit status function"
+    result = True
+    for term in terms[1:]:
+        match = re.fullmatch(r"([a-z_.]+) (==|!=) '([a-z_]+)'", term)
+        assert match and match[1] in values, "unsupported notification expression"
+        equal = values[match[1]] == match[3]
+        result = result and (equal if match[2] == "==" else not equal)
+    return result
+
+
+class SecurityWorkflow(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.source = WORKFLOW.read_text()
+        cls.job = re.search(
+            rf"(?ms)^  {re.escape(JOB)}:\n(.*?)(?=^  [a-z][a-z0-9_-]*:|\Z)", cls.source
+        )[1]
+        marker = "      - name: Notify security channel\n"
+        cls.notice = cls.job.split(marker, 1)[1] if marker in cls.job else ""
+        match = re.search(r"(?m)^        if: (.+)$", cls.notice)
+        cls.condition = match[1] if match else ""
+        cls.script = textwrap.dedent(cls.notice.split("        run: |\n", 1)[1]) if "        run: |\n" in cls.notice else ""
+
+    def test_automatic_unprivileged_full_history_scanning(self):
+        trigger = re.search(r"(?ms)^on:\n(.*?)(?=^[a-z])", self.source)[1]
+        events = set(re.findall(r"(?m)^  ([a-z_]+):", trigger))
+        self.assertEqual(events, {"push", "pull_request", "workflow_dispatch"})
+        self.assertRegex(trigger, r"(?m)^    branches: \[main\]$")
+        self.assertNotIn("paths:", trigger)
+        self.assertIn("contents: read", self.source)
+        self.assertNotRegex(self.source, r"(?:contents|pull-requests|id-token): write")
+        self.assertIn("runs-on: ubuntu-latest", self.job)
+        self.assertIn("fetch-depth: 0", self.job)
+        self.assertIn("persist-credentials: false", self.job)
+        self.assertNotIn("continue-on-error", self.job)
+        self.assertIn("      - id: gitleaks\n", self.job)
+        self.assertIn("sha256sum --check", self.job)
+        self.assertIn("gitleaks git --log-opts=HEAD --redact --no-banner .", self.job)
+        self.assertNotIn("GITHUB_TOKEN:", self.job)
+        self.assertNotIn("upload-artifact", self.job)
+        for action in re.findall(r"uses: (\S+)", self.source):
+            self.assertRegex(action, r"@[0-9a-f]{40}$")
+
+    def test_trusted_failure_and_fork_notification_fixtures(self):
+        self.assertTrue(self.condition, "security failure notification missing")
+        for event in ("push", "pull_request", "workflow_dispatch"):
+            for outcome in ("failure", "success", "skipped", "cancelled"):
+                self.assertEqual(notification_runs(self.condition, event, outcome),
+                                 outcome == "failure" and event != "pull_request")
+        # A fork PR has the same event and must never enter the webhook step.
+        self.assertFalse(notification_runs(self.condition, "pull_request", "failure"))
+        with self.assertRaises(AssertionError):
+            notification_runs("success() && unknown", "push", "failure")
+
+    def test_declared_public_scanner_merge_gates(self):
+        config = (ROOT / "github/repos/terragrunt.hcl").read_text()
+        for repo, checks in (("homelab-iac", ("lint", "secret-scan")), ("homelab-gitops", ("secrets",))):
+            block = re.search(rf"(?ms)^    {re.escape(repo)} = \{{(.*?)^    \}}", config)[1]
+            self.assertRegex(block, r"protect_main\s*=\s*true")
+            required = re.search(r"required_checks\s*=\s*\[([^]]+)\]", block)
+            self.assertIsNotNone(required, f"{repo}: scanner gate missing")
+            self.assertTrue(set(checks).issubset(re.findall(r'"([^\"]+)"', required[1])))
+        private = re.search(r"(?ms)^    servarr = \{(.*?)^    \}", config)[1]
+        self.assertRegex(private, r'visibility\s*=\s*"private"')
+        self.assertRegex(private, r'protect_main\s*=\s*false')
+
+    def test_actual_notification_script_and_missing_webhook(self):
+        self.assertTrue(self.script, "security notification script missing")
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            stub = root / "curl"
+            stub.write_text("#!/usr/bin/env python3\nimport os,sys\nfrom pathlib import Path\nPath(os.environ['S7_CALLS']).write_text(sys.stdin.read())\n")
+            stub.chmod(0o755)
+            env = {"PATH": str(root) + os.pathsep + os.environ["PATH"], "HOME": directory,
+                   "S7_CALLS": str(root / "calls"), "CLEYTIN_USER_ID": "1532710143517659356",
+                   "GITHUB_REPOSITORY": "fixture/repository", "GITHUB_REF_NAME": "main",
+                   "GITHUB_SERVER_URL": "https://github.invalid", "GITHUB_RUN_ID": "1"}
+            for webhook in ("", "https://discord.invalid/synthetic"):
+                env["WEBHOOK"] = webhook
+                result = subprocess.run(["bash", "-euo", "pipefail", "-c", self.script],
+                                        env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, "notification script failed")
+                self.assertEqual((root / "calls").exists(), bool(webhook))
+            payload = json.loads((root / "calls").read_text())
+            self.assertEqual(payload["allowed_mentions"], {"users": [env["CLEYTIN_USER_ID"]]})
+            self.assertIn("findings withheld", payload["embeds"][0]["description"])
+
+    def test_real_scanner_rejects_new_and_removed_synthetic_secret(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = {**os.environ, "GIT_AUTHOR_NAME": "Security fixture",
+                   "GIT_AUTHOR_EMAIL": "fixture@example.invalid", "GIT_COMMITTER_NAME": "Security fixture",
+                   "GIT_COMMITTER_EMAIL": "fixture@example.invalid", "GIT_CONFIG_GLOBAL": "/dev/null",
+                   "GIT_CONFIG_NOSYSTEM": "1"}
+            def git(*args):
+                subprocess.run(["git", *args], cwd=root, env=env, check=True, capture_output=True)
+            def scan(expected, secret=""):
+                result = subprocess.run(["gitleaks", "git", "--log-opts=HEAD", "--redact", "--no-banner", "."],
+                                        cwd=root, env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, expected, "unexpected real scanner result")
+                self.assertTrue(not secret or secret not in result.stdout + result.stderr, "scanner failed to redact canary")
+            git("init", "-q")
+            (root / "clean.txt").write_text("no credentials\n")
+            git("add", "."); git("commit", "-qm", "clean fixture"); scan(0)
+            token = "ghp_" + "Ab1Cd2Ef3Gh4Ij5Kl6Mn7Op8Qr9St0Uv1Wx2"
+            (root / "leak.txt").write_text("github_token=" + token + "\n")
+            git("add", "."); git("commit", "-qm", "synthetic fixture"); scan(1, token)
+            git("rm", "leak.txt"); git("commit", "-qm", "remove fixture"); scan(1, token)
+
+
+if __name__ == "__main__":
+    unittest.main()

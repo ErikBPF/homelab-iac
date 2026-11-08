@@ -8,6 +8,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,23 +26,40 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Install Gitleaks
+      - id: gitleaks
+        name: Verify scanner and scan checked-out history
         env:
           GITLEAKS_VERSION: "8.24.3"
           GITLEAKS_SHA256: "9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c"
         run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
           curl -fsSL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_SHA256}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum --check
-          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
-          sudo install "$RUNNER_TEMP/gitleaks" /usr/local/bin/gitleaks
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          export PATH="$RUNNER_TEMP/gitleaks-bin:$PATH"
+          python3 tests/security-workflow-contract.py
+          python3 tests/secret-scanning.py
+          gitleaks git --log-opts=HEAD --redact --no-banner .
 
-      - name: Verify scanner behavior
-        run: python3 tests/secret-scanning.py
-
-      - name: Scan committed secrets
-        run: gitleaks git --redact --no-banner .
+      - name: Notify security channel
+        if: always() && github.event_name != 'pull_request' && steps.gitleaks.outcome == 'failure'
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_SECURITY_WEBHOOK }}
+          CLEYTIN_USER_ID: "1532710143517659356"
+        run: |
+          if [[ -z "$WEBHOOK" ]]; then
+            echo "::notice::DISCORD_SECURITY_WEBHOOK not configured"
+            exit 0
+          fi
+          jq -nc \
+            --arg cleytin "$CLEYTIN_USER_ID" \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg ref "$GITHUB_REF_NAME" \
+            --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            '{content:("<@"+$cleytin+">") ,allowed_mentions:{users:[$cleytin]},embeds:[{title:"SECRET SCAN FAILED",description:("**Repository:** `"+$repo+"`\n**Ref:** `"+$ref+"`\nReview required; findings withheld from Discord.\n[Open workflow]("+$url+")"),color:15548997}]}' \
+            | curl -fsS -H "Content-Type: application/json" --data @- "$WEBHOOK"
 
   lint:
     runs-on: ubuntu-latest
