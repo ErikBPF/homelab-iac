@@ -44,3 +44,11 @@ fingerprints to roll back. Existing Trivy and lint jobs remain independent.
 
 Sources: [Gitleaks CLI](https://github.com/gitleaks/gitleaks/tree/v8.24.3),
 [action scan implementation](https://github.com/gitleaks/gitleaks-action/blob/e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e/src/gitleaks.js).
+
+## S7 continuation supersedes original exclusions
+
+The accepted security-remediation S7 scope now includes automatic push/main, PR and dispatch scans, value-free trusted failure notifications, and producer-before-consumer public required checks. The original “no notification” and “no branch-protection administration” exclusions above are historical and superseded for this continuation only. Findings remain withheld; PRs receive no webhook. Servarr remains private with enforcement unavailable on GitHub Free.
+
+Run the real scan before any repository Python. Use explicit fixed defaults, immutable PR-base fingerprint exceptions, symlink-safe replacement of the implicitly loaded source ignore file and disabled inline suppression. The workflow contract reproduces hostile local config, new fingerprints, inline comments and symlinks. The verified Authentik signing-key object UUID receives a single anchored secret-value exception in trusted scanner configuration; commit-pinned exceptions would break on squash. A squash fixture permits that exact public identifier and rejects another value. No whole-path, UUID-class or credential exception is introduced.
+
+`python3 tests/security-workflow-contract.py` exercises these boundaries with the checksummed CLI and stubbed notifications. Publish successful producer contexts on main before applying their enforcement consumer. Existing review rulesets stay intact. These new event/policy assertions refine the original source contract without claiming the Gherkin is an automated integration test.

@@ -36,7 +36,14 @@ jobs:
           set -euo pipefail
           # PR policy comes from its immutable base; main policy has passed review.
           git cat-file -e "${SCAN_POLICY_REF}^{commit}"
-          printf '[extend]\nuseDefault = true\n' > "$RUNNER_TEMP/gitleaks.toml"
+          cat > "$RUNNER_TEMP/gitleaks.toml" <<'TOML'
+          [extend]
+          useDefault = true
+          [allowlist]
+          description = "Verified Authentik signing-key object UUID, not key material"
+          regexTarget = "secret"
+          regexes = ['^a2f6e3ea-c944-4328-8ffd-e0a2b2beb529$']
+          TOML
           : > "$RUNNER_TEMP/gitleaks.ignore"
           if git cat-file -e "${SCAN_POLICY_REF}:.gitleaksignore" 2>/dev/null; then
             git show "${SCAN_POLICY_REF}:.gitleaksignore" > "$RUNNER_TEMP/gitleaks.ignore"
