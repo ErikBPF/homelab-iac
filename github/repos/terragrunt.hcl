@@ -110,12 +110,13 @@ inputs = {
       protect_main = false
     }
     homelab-gitops = {
-      visibility   = "public"
-      protect_main = true
+      visibility      = "public"
+      protect_main    = true
+      required_checks = ["secrets"]
     }
     homelab-iac = {
       protect_main    = true
-      required_checks = ["lint"]
+      required_checks = ["lint", "secret-scan"]
     }
     kindle-dash = {
       default_workflow_permissions = "read"
