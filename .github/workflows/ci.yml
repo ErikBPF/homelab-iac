@@ -42,16 +42,17 @@ jobs:
             git show "${SCAN_POLICY_REF}:.gitleaksignore" > "$RUNNER_TEMP/gitleaks.ignore"
           fi
           # Gitleaks also auto-loads source/.gitleaksignore despite the path flag.
-          cp "$RUNNER_TEMP/gitleaks.ignore" .gitleaksignore
+          cp --remove-destination "$RUNNER_TEMP/gitleaks.ignore" .gitleaksignore
           mkdir -p "$RUNNER_TEMP/gitleaks-bin"
           curl -fsSL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_SHA256}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum --check
           tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
           export PATH="$RUNNER_TEMP/gitleaks-bin:$PATH"
+          # Scan before executing code from the scanned revision.
+          gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" .
           python3 tests/security-workflow-contract.py
           python3 tests/secret-scanning.py
-          gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" .
 
       - name: Notify security channel
         if: always() && github.event_name != 'pull_request' && steps.gitleaks.outcome == 'failure'
