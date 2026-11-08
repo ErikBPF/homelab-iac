@@ -34,6 +34,11 @@ jobs:
           GITLEAKS_SHA256: "9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c"
         run: |
           set -euo pipefail
+          # Manual scans use reviewed main; branch changes must use PR scanning.
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$GITHUB_REF" != refs/heads/main ]]; then
+            echo "::error::Manual security scans must target main; open a PR for branch changes."
+            exit 1
+          fi
           # PR policy comes from its immutable base; main policy has passed review.
           git cat-file -e "${SCAN_POLICY_REF}^{commit}"
           cat > "$RUNNER_TEMP/gitleaks.toml" <<'TOML'
@@ -62,11 +67,13 @@ jobs:
           python3 tests/secret-scanning.py
 
       - name: Notify security channel
-        if: always() && github.event_name != 'pull_request' && steps.gitleaks.outcome == 'failure'
+        if: always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.gitleaks.outcome == 'failure'
         env:
           WEBHOOK: ${{ secrets.DISCORD_SECURITY_WEBHOOK }}
           CLEYTIN_USER_ID: "1532710143517659356"
         run: |
+          # GitHub string equality ignores case; require the exact reviewed ref.
+          if [[ "$GITHUB_REF" != refs/heads/main ]]; then exit 0; fi
           if [[ -z "$WEBHOOK" ]]; then
             echo "::notice::DISCORD_SECURITY_WEBHOOK not configured"
             exit 0
