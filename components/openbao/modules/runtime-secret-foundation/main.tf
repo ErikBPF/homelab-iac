@@ -52,6 +52,7 @@ resource "vault_policy" "iac_writer" {
     "path \"secret/data/platform/authentik\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/platform/authentik\" { capabilities = [\"read\"] }",
     "path \"secret/data/iac/github\" { capabilities = [\"read\"] }",
+    "path \"secret/data/iac/cloudflare\" { capabilities = [\"read\"] }",
   ])
 }
 
