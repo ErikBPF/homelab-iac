@@ -8,6 +8,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -25,23 +26,65 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Install Gitleaks
+      - id: gitleaks
+        name: Verify scanner and scan checked-out history
         env:
+          SCAN_POLICY_REF: ${{ github.event.pull_request.base.sha || github.sha }}
           GITLEAKS_VERSION: "8.24.3"
           GITLEAKS_SHA256: "9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c"
         run: |
+          set -euo pipefail
+          # Manual scans use reviewed main; branch changes must use PR scanning.
+          if [[ "$GITHUB_EVENT_NAME" == workflow_dispatch && "$GITHUB_REF" != refs/heads/main ]]; then
+            echo "::error::Manual security scans must target main; open a PR for branch changes."
+            exit 1
+          fi
+          # PR policy comes from its immutable base; main policy has passed review.
+          git cat-file -e "${SCAN_POLICY_REF}^{commit}"
+          cat > "$RUNNER_TEMP/gitleaks.toml" <<'TOML'
+          [extend]
+          useDefault = true
+          [allowlist]
+          description = "Verified Authentik signing-key object UUID, not key material"
+          regexTarget = "secret"
+          regexes = ['^a2f6e3ea-c944-4328-8ffd-e0a2b2beb529$']
+          TOML
+          : > "$RUNNER_TEMP/gitleaks.ignore"
+          if git cat-file -e "${SCAN_POLICY_REF}:.gitleaksignore" 2>/dev/null; then
+            git show "${SCAN_POLICY_REF}:.gitleaksignore" > "$RUNNER_TEMP/gitleaks.ignore"
+          fi
+          # Gitleaks also auto-loads source/.gitleaksignore despite the path flag.
+          cp --remove-destination "$RUNNER_TEMP/gitleaks.ignore" .gitleaksignore
+          mkdir -p "$RUNNER_TEMP/gitleaks-bin"
           curl -fsSL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
           echo "${GITLEAKS_SHA256}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum --check
-          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
-          sudo install "$RUNNER_TEMP/gitleaks" /usr/local/bin/gitleaks
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
+          export PATH="$RUNNER_TEMP/gitleaks-bin:$PATH"
+          # Scan before executing code from the scanned revision.
+          gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" .
+          python3 tests/security-workflow-contract.py
+          python3 tests/secret-scanning.py
 
-      - name: Verify scanner behavior
-        run: python3 tests/secret-scanning.py
-
-      - name: Scan committed secrets
-        run: gitleaks git --redact --no-banner .
+      - name: Notify security channel
+        if: always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' && steps.gitleaks.outcome == 'failure'
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_SECURITY_WEBHOOK }}
+          CLEYTIN_USER_ID: "1532710143517659356"
+        run: |
+          # GitHub string equality ignores case; require the exact reviewed ref.
+          if [[ "$GITHUB_REF" != refs/heads/main ]]; then exit 0; fi
+          if [[ -z "$WEBHOOK" ]]; then
+            echo "::notice::DISCORD_SECURITY_WEBHOOK not configured"
+            exit 0
+          fi
+          jq -nc \
+            --arg cleytin "$CLEYTIN_USER_ID" \
+            --arg repo "$GITHUB_REPOSITORY" \
+            --arg ref "$GITHUB_REF_NAME" \
+            --arg url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            '{content:("<@"+$cleytin+">") ,allowed_mentions:{users:[$cleytin]},embeds:[{title:"SECRET SCAN FAILED",description:("**Repository:** `"+$repo+"`\n**Ref:** `"+$ref+"`\nReview required; findings withheld from Discord.\n[Open workflow]("+$url+")"),color:15548997}]}' \
+            | curl -fsS -H "Content-Type: application/json" --data @- "$WEBHOOK"
 
   lint:
     runs-on: ubuntu-latest
@@ -100,7 +143,7 @@ jobs:
           tflint_version: v0.64.0
 
       - name: Install contract-test runner
-        run: sudo apt-get update && sudo apt-get install -y bats
+        run: sudo apt-get update && sudo apt-get install -y bats just
 
       - name: Provider bootstrap contract
         run: python3 tests/litellm-provider-bootstrap.py

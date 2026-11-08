@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_ROLE_ID:?OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_ROLE_ID is required}"
+: "${OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_SECRET_ID:?OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_SECRET_ID is required}"
+[[ $# -gt 0 ]] || { echo "usage: $0 <terragrunt-arguments...>" >&2; exit 64; }
+
+repo_root=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd)
+vault_addr=${VAULT_ADDR:-https://openbao.homelab.pastelariadev.com}
+expected_username="svc-homelab-iac-authentik-config-manager"
+
+login=$(
+  jq -n '{role_id: env.OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_ROLE_ID, secret_id: env.OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_SECRET_ID}' |
+    curl --fail --silent --show-error \
+      --header 'Content-Type: application/json' --data-binary @- \
+      "$vault_addr/v1/auth/approle/login"
+)
+vault_token=$(jq -er '.auth.client_token' <<<"$login")
+unset OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_ROLE_ID OPENBAO_AUTHENTIK_CONFIG_MANAGER_READER_SECRET_ID
+revoked=false
+
+vault_curl() {
+  curl --fail --silent --show-error \
+    --config <(printf 'header = "X-Vault-Token: %s"\n' "$vault_token") "$@"
+}
+
+cleanup() {
+  if ! $revoked; then
+    vault_curl --request POST "$vault_addr/v1/auth/token/revoke-self" >/dev/null || true
+  fi
+}
+trap cleanup EXIT
+
+payload=$(vault_curl "$vault_addr/v1/secret/data/iac/authentik-config-manager")
+vault_curl --request POST "$vault_addr/v1/auth/token/revoke-self" >/dev/null
+revoked=true
+
+AUTHENTIK_CONFIG_MANAGER_USERNAME=$(jq -er '.data.data.AUTHENTIK_CONFIG_MANAGER_USERNAME' <<<"$payload")
+AUTHENTIK_CONFIG_MANAGER_TOKEN=$(jq -er '.data.data.AUTHENTIK_CONFIG_MANAGER_TOKEN' <<<"$payload")
+[[ $AUTHENTIK_CONFIG_MANAGER_USERNAME == "$expected_username" ]] || {
+  echo "OpenBao returned an unexpected Authentik config-manager identity" >&2
+  exit 1
+}
+[[ ${#AUTHENTIK_CONFIG_MANAGER_TOKEN} -ge 32 &&
+   ${#AUTHENTIK_CONFIG_MANAGER_TOKEN} -le 512 &&
+   $AUTHENTIK_CONFIG_MANAGER_TOKEN =~ ^[A-Za-z0-9_-]+$ ]] || {
+  echo "OpenBao returned an invalid Authentik config-manager credential" >&2
+  exit 1
+}
+export AUTHENTIK_CONFIG_MANAGER_USERNAME AUTHENTIK_CONFIG_MANAGER_TOKEN
+trap - EXIT
+
+export AWS_ACCESS_KEY_ID="${AWS_ACCESS_KEY_ID:-${MINIO_TFSTATE_ROOT_USER:-}}"
+export AWS_SECRET_ACCESS_KEY="${AWS_SECRET_ACCESS_KEY:-${MINIO_TFSTATE_ROOT_PASSWORD:-}}"
+export TF_VAR_state_passphrase="${TF_VAR_state_passphrase:-${UNIFI_STATE_PASSPHRASE:-}}"
+unset vault_token login payload AUTHENTIK_CONFIG_MANAGER_USERNAME
+cd "$repo_root/components/authentik/environments/home/openwebui-oidc"
+exec terragrunt "$@"
