@@ -44,3 +44,7 @@ setup() {
   run grep -F -- "--filter '!components/authentik/environments/home/openwebui-oidc'" bin/drift-check.sh
   [ "$status" -eq 0 ]
 }
+
+@test "OpenWebUI preserves imported computed grant types" {
+  ! grep -Eq '^[[:space:]]*grant_types[[:space:]]*=' "$module/main.tf"
+}

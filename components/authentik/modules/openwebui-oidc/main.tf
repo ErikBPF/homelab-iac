@@ -34,9 +34,9 @@ resource "authentik_provider_oauth2" "openwebui" {
   logout_method              = "backchannel"
   logout_uri                 = ""
   signing_key                = "a2f6e3ea-c944-4328-8ffd-e0a2b2beb529"
-  grant_types                = []
-  jwt_federation_providers   = []
-  jwt_federation_sources     = []
+  # Omit computed grant_types to preserve the imported provider grant set.
+  jwt_federation_providers = []
+  jwt_federation_sources   = []
   property_mappings = [
     "4d038866-aa28-420e-9086-bbb9254fb485",
     "5e30d09e-9480-4ef9-bb88-73dc672c43cc",
