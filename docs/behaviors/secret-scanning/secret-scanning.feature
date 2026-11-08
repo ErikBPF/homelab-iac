@@ -17,7 +17,7 @@ Feature: Reject secrets before infrastructure changes land
     And no findings are uploaded, commented, or sent to a webhook
 
   Scenario: Scan automatically without PR-controlled suppression
-    When a pull request, main push or manual dispatch scans committed history
+    When a pull request, main push or main-branch manual dispatch scans committed history
     Then fixed default rules and the immutable PR base fingerprint policy judge the change
     And PR-local config, ignore files, symlinks and inline comments cannot hide a new credential
     And repository code executes only after the verified scanner
@@ -34,3 +34,9 @@ Feature: Reject secrets before infrastructure changes land
     Then public IaC requires lint and secret-scan and public GitOps requires secrets
     And the independent app-review ruleset remains enforced
     And private Servarr remains private with enforcement blocked by GitHub Free
+
+  Scenario: Reject manual scans of unreviewed refs
+    When manual security scanning targets a feature branch or a tag
+    Then the job fails before repository code executes
+    And no security notification is sent
+    And the contributor must use automatic PR scanning

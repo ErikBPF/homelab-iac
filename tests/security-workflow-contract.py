@@ -14,15 +14,15 @@ WORKFLOW = ROOT / ".github/workflows/ci.yml"
 JOB = "secret-scan"
 
 
-def notification_runs(condition, event, outcome):
-    values = {"github.event_name": event, "steps.gitleaks.outcome": outcome}
+def notification_runs(condition, event, outcome, ref="refs/heads/main"):
+    values = {"github.event_name": event, "steps.gitleaks.outcome": outcome, "github.ref": ref}
     terms = condition.split(" && ")
     assert terms[0] == "always()", "failure notifications need an explicit status function"
     result = True
     for term in terms[1:]:
-        match = re.fullmatch(r"([a-z_.]+) (==|!=) '([a-z_]+)'", term)
+        match = re.fullmatch(r"([a-z_.]+) (==|!=) '([a-z0-9_/-]+)'", term)
         assert match and match[1] in values, "unsupported notification expression"
-        equal = values[match[1]] == match[3]
+        equal = values[match[1]].casefold() == match[3].casefold()
         result = result and (equal if match[2] == "==" else not equal)
     return result
 
@@ -67,12 +67,26 @@ class SecurityWorkflow(unittest.TestCase):
         for action in re.findall(r"uses: (\S+)", self.source):
             self.assertRegex(action, r"@[0-9a-f]{40}$")
 
+    def test_manual_dispatch_requires_reviewed_main(self):
+        run = self.job.split("        run: |\n", 1)[1]
+        guard = textwrap.dedent(run.split("          git cat-file -e", 1)[0])
+        for event, ref, allowed in (("push","refs/heads/main",True),
+                                    ("pull_request","refs/pull/1/merge",True),
+                                    ("workflow_dispatch","refs/heads/main",True),
+                                    ("workflow_dispatch","refs/heads/feature",False),
+                                    ("workflow_dispatch","refs/tags/main",False)):
+            env = {"PATH":os.environ["PATH"], "GITHUB_EVENT_NAME":event, "GITHUB_REF":ref}
+            result = subprocess.run(["bash","-euo","pipefail","-c",guard], env=env, capture_output=True)
+            self.assertEqual(result.returncode == 0, allowed, "unreviewed dispatch policy accepted")
+
     def test_trusted_failure_and_fork_notification_fixtures(self):
         self.assertTrue(self.condition, "security failure notification missing")
         for event in ("push", "pull_request", "workflow_dispatch"):
             for outcome in ("failure", "success", "skipped", "cancelled"):
                 self.assertEqual(notification_runs(self.condition, event, outcome),
                                  outcome == "failure" and event != "pull_request")
+        self.assertFalse(notification_runs(self.condition, "workflow_dispatch", "failure", "refs/heads/feature"))
+        self.assertFalse(notification_runs(self.condition, "workflow_dispatch", "failure", "refs/tags/main"))
         # A fork PR has the same event and must never enter the webhook step.
         self.assertFalse(notification_runs(self.condition, "pull_request", "failure"))
         with self.assertRaises(AssertionError):
@@ -99,7 +113,7 @@ class SecurityWorkflow(unittest.TestCase):
             stub.chmod(0o755)
             env = {"PATH": str(root) + os.pathsep + os.environ["PATH"], "HOME": directory,
                    "S7_CALLS": str(root / "calls"), "CLEYTIN_USER_ID": "1532710143517659356",
-                   "GITHUB_REPOSITORY": "fixture/repository", "GITHUB_REF_NAME": "main",
+                   "GITHUB_REPOSITORY": "fixture/repository", "GITHUB_REF_NAME": "main", "GITHUB_REF": "refs/heads/main",
                    "GITHUB_SERVER_URL": "https://github.invalid", "GITHUB_RUN_ID": "1"}
             for webhook in ("", "https://discord.invalid/synthetic"):
                 env["WEBHOOK"] = webhook
@@ -110,6 +124,11 @@ class SecurityWorkflow(unittest.TestCase):
             payload = json.loads((root / "calls").read_text())
             self.assertEqual(payload["allowed_mentions"], {"users": [env["CLEYTIN_USER_ID"]]})
             self.assertIn("findings withheld", payload["embeds"][0]["description"])
+            for ref in ("refs/heads/feature", "refs/heads/Main", "refs/tags/main"):
+                (root / "calls").unlink(missing_ok=True)
+                subprocess.run(["bash", "-euo", "pipefail", "-c", self.script],
+                               env={**env,"GITHUB_REF":ref}, capture_output=True, check=True)
+                self.assertFalse((root / "calls").exists(), "unreviewed ref notified")
 
     def test_real_scanner_rejects_new_and_removed_synthetic_secret(self):
         with tempfile.TemporaryDirectory() as directory:
