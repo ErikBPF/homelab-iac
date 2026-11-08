@@ -62,6 +62,8 @@ class SecurityWorkflow(unittest.TestCase):
         self.assertIn('cp --remove-destination "$RUNNER_TEMP/gitleaks.ignore" .gitleaksignore', self.job)
         self.assertNotIn("GITHUB_TOKEN:", self.job)
         self.assertNotIn("upload-artifact", self.job)
+        self.assertLess(self.job.index("          gitleaks git "),
+                        self.job.index("          python3 tests/"))
         for action in re.findall(r"uses: (\S+)", self.source):
             self.assertRegex(action, r"@[0-9a-f]{40}$")
 

@@ -49,9 +49,10 @@ jobs:
           echo "${GITLEAKS_SHA256}  ${RUNNER_TEMP}/gitleaks.tar.gz" | sha256sum --check
           tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
           export PATH="$RUNNER_TEMP/gitleaks-bin:$PATH"
+          # Scan before executing code from the scanned revision.
+          gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" .
           python3 tests/security-workflow-contract.py
           python3 tests/secret-scanning.py
-          gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" .
 
       - name: Notify security channel
         if: always() && github.event_name != 'pull_request' && steps.gitleaks.outcome == 'failure'
