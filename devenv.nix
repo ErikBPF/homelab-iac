@@ -33,7 +33,7 @@
   enterShell = ''
     mkdir -p "$TF_PLUGIN_CACHE_DIR"
     # Decrypt the sops-managed secrets into the dotenv-loaded .env if missing.
-    if [ ! -f .env ] && [ -f .env.sops ]; then
+    if [ -f .env.sops ] && { [ ! -f .env ] || [ .env.sops -nt .env ]; }; then
       sops -d --input-type dotenv --output-type dotenv .env.sops > .env
     fi
     # Terragrunt dependency output reads bypass per-unit inputs.
