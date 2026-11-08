@@ -54,7 +54,12 @@ class SecurityWorkflow(unittest.TestCase):
         self.assertNotIn("continue-on-error", self.job)
         self.assertIn("      - id: gitleaks\n", self.job)
         self.assertIn("sha256sum --check", self.job)
-        self.assertIn("gitleaks git --log-opts=HEAD --redact --no-banner .", self.job)
+        self.assertIn('gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" .', self.job)
+        self.assertIn("SCAN_POLICY_REF: ${{ github.event.pull_request.base.sha || github.sha }}", self.job)
+        self.assertIn('git show "${SCAN_POLICY_REF}:.gitleaksignore"', self.job)
+        self.assertIn('git cat-file -e "${SCAN_POLICY_REF}^{commit}"', self.job)
+        self.assertIn("useDefault = true", self.job)
+        self.assertIn('cp "$RUNNER_TEMP/gitleaks.ignore" .gitleaksignore', self.job)
         self.assertNotIn("GITHUB_TOKEN:", self.job)
         self.assertNotIn("upload-artifact", self.job)
         for action in re.findall(r"uses: (\S+)", self.source):
@@ -114,16 +119,29 @@ class SecurityWorkflow(unittest.TestCase):
             def git(*args):
                 subprocess.run(["git", *args], cwd=root, env=env, check=True, capture_output=True)
             def scan(expected, secret=""):
-                result = subprocess.run(["gitleaks", "git", "--log-opts=HEAD", "--redact", "--no-banner", "."],
+                # Mirror workflow replacement of the implicitly loaded source ignore file.
+                (root / ".gitleaksignore").write_bytes((root / ".git/trusted.ignore").read_bytes())
+                result = subprocess.run(["gitleaks", "git", "--log-opts=HEAD", "--redact", "--no-banner", "--ignore-gitleaks-allow",
+                                         "--config", str(root / ".git/trusted.toml"),
+                                         "--gitleaks-ignore-path", str(root / ".git/trusted.ignore"), "."],
                                         cwd=root, env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, expected, "unexpected real scanner result")
                 self.assertTrue(not secret or secret not in result.stdout + result.stderr, "scanner failed to redact canary")
             git("init", "-q")
+            (root / ".git/trusted.toml").write_text("[extend]\nuseDefault = true\n")
+            (root / ".git/trusted.ignore").write_text("")
             (root / "clean.txt").write_text("no credentials\n")
             git("add", "."); git("commit", "-qm", "clean fixture"); scan(0)
             token = "ghp_" + "Ab1Cd2Ef3Gh4Ij5Kl6Mn7Op8Qr9St0Uv1Wx2"
             (root / "leak.txt").write_text("github_token=" + token + "\n")
             git("add", "."); git("commit", "-qm", "synthetic fixture"); scan(1, token)
+            # The scanned revision must not suppress its own credential finding.
+            head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+            (root / ".gitleaks.toml").write_text('[extend]\nuseDefault = true\n[allowlist]\npaths = [".*"]\n')
+            (root / ".gitleaksignore").write_text(f"{head}:leak.txt:github-pat:1\n")
+            git("add", "."); git("commit", "-qm", "untrusted suppression fixture"); scan(1, token)
+            (root / "leak.txt").write_text("github_token=" + token + " # gitleaks:allow\n")
+            git("add", "leak.txt"); git("commit", "-qm", "untrusted inline suppression"); scan(1, token)
             git("rm", "leak.txt"); git("commit", "-qm", "remove fixture"); scan(1, token)
 
 

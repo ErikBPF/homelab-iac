@@ -29,10 +29,20 @@ jobs:
       - id: gitleaks
         name: Verify scanner and scan checked-out history
         env:
+          SCAN_POLICY_REF: ${{ github.event.pull_request.base.sha || github.sha }}
           GITLEAKS_VERSION: "8.24.3"
           GITLEAKS_SHA256: "9991e0b2903da4c8f6122b5c3186448b927a5da4deef1fe45271c3793f4ee29c"
         run: |
           set -euo pipefail
+          # PR policy comes from its immutable base; main policy has passed review.
+          git cat-file -e "${SCAN_POLICY_REF}^{commit}"
+          printf '[extend]\nuseDefault = true\n' > "$RUNNER_TEMP/gitleaks.toml"
+          : > "$RUNNER_TEMP/gitleaks.ignore"
+          if git cat-file -e "${SCAN_POLICY_REF}:.gitleaksignore" 2>/dev/null; then
+            git show "${SCAN_POLICY_REF}:.gitleaksignore" > "$RUNNER_TEMP/gitleaks.ignore"
+          fi
+          # Gitleaks also auto-loads source/.gitleaksignore despite the path flag.
+          cp "$RUNNER_TEMP/gitleaks.ignore" .gitleaksignore
           mkdir -p "$RUNNER_TEMP/gitleaks-bin"
           curl -fsSL -o "$RUNNER_TEMP/gitleaks.tar.gz" \
             "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
@@ -41,7 +51,7 @@ jobs:
           export PATH="$RUNNER_TEMP/gitleaks-bin:$PATH"
           python3 tests/security-workflow-contract.py
           python3 tests/secret-scanning.py
-          gitleaks git --log-opts=HEAD --redact --no-banner .
+          gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" .
 
       - name: Notify security channel
         if: always() && github.event_name != 'pull_request' && steps.gitleaks.outcome == 'failure'
