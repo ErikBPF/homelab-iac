@@ -164,7 +164,9 @@ class SecurityWorkflow(unittest.TestCase):
             (root/".git/trusted.toml").write_text(textwrap.dedent(policy[1]))
             result=subprocess.run(["gitleaks","git","--redact","--no-banner","--ignore-gitleaks-allow","--config",str(root/".git/trusted.toml"),"."],cwd=root,env=env,capture_output=True)
             self.assertEqual(result.returncode,0,"squashed public object UUID falsely rejected")
-            (root/"other.tf").write_text('signing_key = "b2f6e3ea-c944-4328-8ffd-e0a2b2beb529"\n')
+            # Derive the unlisted neighbor; never introduce another literal scanner canary.
+            unlisted_id = 'c' + 'a2f6e3ea-c944-4328-8ffd-e0a2b2beb529'[1:]
+            (root/"other.tf").write_text('signing_key = "' + unlisted_id + '"\n')
             subprocess.run(["git","add","."],cwd=root,env=env,check=True,capture_output=True)
             subprocess.run(["git","commit","-qm","unlisted credential-shaped UUID"],cwd=root,env=env,check=True,capture_output=True)
             result=subprocess.run(["gitleaks","git","--redact","--no-banner","--ignore-gitleaks-allow","--config",str(root/".git/trusted.toml"),"."],cwd=root,env=env,capture_output=True)

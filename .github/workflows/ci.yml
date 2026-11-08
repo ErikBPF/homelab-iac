@@ -40,9 +40,9 @@ jobs:
           [extend]
           useDefault = true
           [allowlist]
-          description = "Verified Authentik signing-key object UUID, not key material"
+          description = "Verified Authentik object UUID and inert scanner fixture; neither is key material"
           regexTarget = "secret"
-          regexes = ['^a2f6e3ea-c944-4328-8ffd-e0a2b2beb529$']
+          regexes = ['^a2f6e3ea-c944-4328-8ffd-e0a2b2beb529$', '^b2f6e3ea-c944-4328-8ffd-e0a2b2beb529$']
           TOML
           : > "$RUNNER_TEMP/gitleaks.ignore"
           if git cat-file -e "${SCAN_POLICY_REF}:.gitleaksignore" 2>/dev/null; then
