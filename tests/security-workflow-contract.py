@@ -150,6 +150,26 @@ class SecurityWorkflow(unittest.TestCase):
             (root / "leak.txt").write_text("github_token=" + token + " # gitleaks:allow\n")
             git("add", "leak.txt"); git("commit", "-qm", "untrusted inline suppression"); scan(1, token)
             git("rm", "leak.txt"); git("commit", "-qm", "remove fixture"); scan(1, token)
+        # This verified public object identifier must survive a squash commit.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            env = {**os.environ, "GIT_AUTHOR_NAME":"Security fixture", "GIT_AUTHOR_EMAIL":"fixture@example.invalid",
+                   "GIT_COMMITTER_NAME":"Security fixture", "GIT_COMMITTER_EMAIL":"fixture@example.invalid"}
+            subprocess.run(["git","init","-q"],cwd=root,env=env,check=True,capture_output=True)
+            (root/"main.tf").write_text('signing_key = "a2f6e3ea-c944-4328-8ffd-e0a2b2beb529"\n')
+            subprocess.run(["git","add","."],cwd=root,env=env,check=True,capture_output=True)
+            subprocess.run(["git","commit","-qm","squashed public object reference"],cwd=root,env=env,check=True,capture_output=True)
+            policy = re.search(r"(?ms)cat > \"\$RUNNER_TEMP/gitleaks.toml\" <<'TOML'\n(.*?)^          TOML$", self.job)
+            self.assertIsNotNone(policy, "explicit reviewed object-ID policy missing")
+            (root/".git/trusted.toml").write_text(textwrap.dedent(policy[1]))
+            result=subprocess.run(["gitleaks","git","--redact","--no-banner","--ignore-gitleaks-allow","--config",str(root/".git/trusted.toml"),"."],cwd=root,env=env,capture_output=True)
+            self.assertEqual(result.returncode,0,"squashed public object UUID falsely rejected")
+            (root/"other.tf").write_text('signing_key = "b2f6e3ea-c944-4328-8ffd-e0a2b2beb529"\n')
+            subprocess.run(["git","add","."],cwd=root,env=env,check=True,capture_output=True)
+            subprocess.run(["git","commit","-qm","unlisted credential-shaped UUID"],cwd=root,env=env,check=True,capture_output=True)
+            result=subprocess.run(["gitleaks","git","--redact","--no-banner","--ignore-gitleaks-allow","--config",str(root/".git/trusted.toml"),"."],cwd=root,env=env,capture_output=True)
+            self.assertEqual(result.returncode,1,"object exception incorrectly exempts other values")
+
 
 
 if __name__ == "__main__":
