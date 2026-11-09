@@ -203,7 +203,9 @@
         "text"
       ],
       "privacy_tier": "confidential",
-      "lifecycle": "production"
+      "lifecycle": "production",
+      "context_limit": 105000,
+      "output_limit": 105000
     },
     "qwen3.8-flash-next": {
       "custom_llm_provider": "openai",
@@ -251,7 +253,9 @@
         "text"
       ],
       "privacy_tier": "confidential",
-      "lifecycle": "production"
+      "lifecycle": "production",
+      "context_limit": 105000,
+      "output_limit": 105000
     },
     "qwen-jev": {
       "custom_llm_provider": "openai",
