@@ -67,6 +67,47 @@ class SecurityWorkflow(unittest.TestCase):
         for action in re.findall(r"uses: (\S+)", self.source):
             self.assertRegex(action, r"@[0-9a-f]{40}$")
 
+    def test_contract_runs_after_failed_scan_without_masking_either_result(self):
+        scan_step = self.job.split("      - id: gitleaks\n", 1)[1].split("\n      - ", 1)[0]
+        scan_script = textwrap.dedent(scan_step.split("        run: |\n", 1)[1])
+        scan_tail = scan_script.split("# Scan before executing code from the scanned revision.\n", 1)[1]
+        cases = ((name, scan, result) for name in ("Verify workflow contract", "Verify scanner contract")
+                 for scan, result in ((1, 0), (0, 1), (0, 0), (1, 1)))
+        for name, scan_exit, contract_exit in cases:
+            contract = re.search(rf"(?ms)^      - name: {name}\n(.*?)(?=^      - |\Z)", self.job)
+            with self.subTest(step=name, scan=scan_exit, contract=contract_exit), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                verified = root / "gitleaks-bin"
+                verified.mkdir()
+                stub_bin = root / "stubs"
+                stub_bin.mkdir()
+                scanner = verified / "gitleaks"
+                scanner.write_text('#!/bin/sh\nprintf "scan\\n" >> "$S7_EVENTS"\nexit "$S7_SCAN_EXIT"\n')
+                scanner.chmod(0o700)
+                python = stub_bin / "python3"
+                python.write_text('#!/bin/sh\n[ "$(command -v gitleaks)" = "$RUNNER_TEMP/gitleaks-bin/gitleaks" ] || exit 97\nprintf "contract\\n" >> "$S7_EVENTS"\nexit "$S7_CONTRACT_EXIT"\n')
+                python.chmod(0o700)
+                output = root / "outputs"
+                output.touch()
+                env = {"PATH":str(stub_bin)+os.pathsep+os.environ["PATH"],
+                       "RUNNER_TEMP":directory, "GITHUB_OUTPUT":str(output),
+                       "S7_EVENTS":str(root / "events"), "S7_SCAN_EXIT":str(scan_exit),
+                       "S7_CONTRACT_EXIT":str(contract_exit)}
+                scan = subprocess.run(["bash", "-euo", "pipefail", "-c", scan_tail],
+                                      env={**env, "PATH":str(verified)+os.pathsep+env["PATH"]},
+                                      cwd=root, capture_output=True)
+                verification = None
+                if contract and "scan_completed=true" in output.read_text().splitlines():
+                    self.assertIn("if: always() && !cancelled() && steps.gitleaks.outputs.scan_completed == 'true'", contract[1])
+                    script = textwrap.dedent(contract[1].split("        run: |\n", 1)[1])
+                    verification = subprocess.run(["bash", "-euo", "pipefail", "-c", script],
+                                                  env=env, cwd=root, capture_output=True)
+                self.assertEqual((root / "events").read_text().splitlines(), ["scan", "contract"],
+                                 "contract must run after a failed scan")
+                self.assertEqual(scan.returncode, scan_exit, "scanner failure was masked or mixed with contract status")
+                self.assertIsNotNone(verification, "contract needs an independent workflow step")
+                self.assertEqual(verification.returncode, contract_exit, "contract result was masked")
+
     def test_manual_dispatch_requires_reviewed_main(self):
         run = self.job.split("        run: |\n", 1)[1]
         guard = textwrap.dedent(run.split("          git cat-file -e", 1)[0])
