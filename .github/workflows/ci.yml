@@ -62,8 +62,21 @@ jobs:
           tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP/gitleaks-bin" gitleaks
           export PATH="$RUNNER_TEMP/gitleaks-bin:$PATH"
           # Scan before executing code from the scanned revision.
-          gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" .
+          scan_exit=0
+          gitleaks git --log-opts=HEAD --redact --no-banner --ignore-gitleaks-allow --config "$RUNNER_TEMP/gitleaks.toml" --gitleaks-ignore-path "$RUNNER_TEMP/gitleaks.ignore" . || scan_exit=$?
+          echo "scan_completed=true" >> "$GITHUB_OUTPUT"
+          exit "$scan_exit"
+
+      - name: Verify workflow contract
+        if: always() && !cancelled() && steps.gitleaks.outputs.scan_completed == 'true'
+        run: |
+          export PATH="$RUNNER_TEMP/gitleaks-bin:$PATH"
           python3 tests/security-workflow-contract.py
+
+      - name: Verify scanner contract
+        if: always() && !cancelled() && steps.gitleaks.outputs.scan_completed == 'true'
+        run: |
+          export PATH="$RUNNER_TEMP/gitleaks-bin:$PATH"
           python3 tests/secret-scanning.py
 
       - name: Notify security channel
