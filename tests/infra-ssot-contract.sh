@@ -401,6 +401,8 @@ check_s05() {
   done
   assert_file_contains "$variables" 'input_cost_per_second[[:space:]]*=[[:space:]]*optional\(number' \
     "S05 RED: input_cost_per_second is not a typed module input"
+  assert_file_excludes "$variables" 'cache_read_input_cost_per_million_tokens[[:space:]]*=[[:space:]]*optional\(number,' \
+    "S05 RED: an undeclared cache-read price must stay absent instead of defaulting to a free cache"
   assert_file_contains "$main" 'input_cost_per_second[[:space:]]*=[[:space:]]*each\.value\.input_cost_per_second' \
     "S05 RED: model module does not directly map input_cost_per_second"
   assert_file_excludes "$main" 'additional_litellm_params[[:space:]]*=[[:space:]]*merge\(' \
@@ -442,6 +444,12 @@ check_s05() {
   canary_key=$(jq -r '.remote_state.config.key' "$canary_render")
   [[ -n "$production_key" && -n "$canary_key" && "$production_key" != "$canary_key" ]] \
     || fail "S05 RED: production and canary units share a state key"
+
+  jq -e '
+    .inputs.models["deepseek-v4.1-flash"].cache_read_input_cost_per_million_tokens == 0.006 and
+    ([.inputs.models[] | select(has("cache_read_input_cost_per_million_tokens") | not)] | length) > 0
+  ' "$production_render" >/dev/null \
+    || fail "S05 RED: cache-read price must be present only on the reviewed route"
 
   printf '%s\n' "S05 PASS: exact Discovery production manifest, Orion retrieval routes, allowlists, and cutoff guard proven offline"
 }
