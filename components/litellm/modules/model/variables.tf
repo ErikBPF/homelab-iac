@@ -1,17 +1,18 @@
 variable "models" {
   description = "LiteLLM models keyed by stable logical alias."
   type = map(object({
-    custom_llm_provider            = string
-    base_model                     = string
-    pricing_base_model             = optional(string, "")
-    team_id                        = optional(string, "")
-    model_api_key                  = string
-    model_api_base                 = string
-    mode                           = string
-    input_cost_per_million_tokens  = optional(number, 0)
-    output_cost_per_million_tokens = optional(number, 0)
-    input_cost_per_second          = optional(number)
-    additional_litellm_params      = optional(map(string), {})
+    custom_llm_provider                      = string
+    base_model                               = string
+    pricing_base_model                       = optional(string, "")
+    team_id                                  = optional(string, "")
+    model_api_key                            = string
+    model_api_base                           = string
+    mode                                     = string
+    input_cost_per_million_tokens            = optional(number, 0)
+    output_cost_per_million_tokens           = optional(number, 0)
+    cache_read_input_cost_per_million_tokens = optional(number, 0)
+    input_cost_per_second                    = optional(number)
+    additional_litellm_params                = optional(map(string), {})
     # API-backed model_info metadata.
     context_limit      = optional(number)
     output_limit       = optional(number)
@@ -51,7 +52,8 @@ variable "models" {
       (model.input_cost_per_character == null || model.input_cost_per_character >= 0) &&
       (model.input_cost_per_second == null || model.input_cost_per_second >= 0) &&
       model.input_cost_per_million_tokens >= 0 &&
-      model.output_cost_per_million_tokens >= 0
+      model.output_cost_per_million_tokens >= 0 &&
+      model.cache_read_input_cost_per_million_tokens >= 0
     ])
     error_message = "Context limits must be positive, token limits may be zero, output_limit must not exceed context_limit, and prices must be non-negative."
   }
