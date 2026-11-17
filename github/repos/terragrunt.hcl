@@ -21,6 +21,15 @@ locals {
 # live automation capabilities; all other settings use hardened defaults.
 inputs = {
   repos = {
+    airflow-mcp = {
+      visibility                   = "public"
+      allow_auto_merge             = false
+      protect_main                 = true
+      required_checks              = ["test"]
+      default_workflow_permissions = "read"
+      can_approve_pull_requests    = false
+      vulnerability_alerts         = true
+    }
     agent-evals = {
       visibility                   = "private"
       allow_auto_merge             = false
