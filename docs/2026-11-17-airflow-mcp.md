@@ -23,3 +23,9 @@ Branch protection is active and imported into encrypted IaC state. The initial t
 ## Recovery and remaining scope
 
 Repository destruction is blocked by the shared module; do not delete the repository to roll back a code issue. Revert a code commit or disable optional tools instead. Production RBAC, hosted OAuth, external secret backend edits and PyPI publication remain outside this initial release. Existing unrelated working-tree changes are preserved. The task's IaC source change is submitted separately in [PR #172](https://github.com/ErikBPF/homelab-iac/pull/172); it excludes local user edits and remains awaiting review.
+
+## CR reconciliation — 2026-11-17
+
+[Hackerman finding](https://github.com/ErikBPF/homelab-iac/pull/172#issuecomment-6946022226), reviewed head `784e0ab831c5e9c101df44fdb993124db8702096`: P1, stale base retains retired `agentmemory`, `sail`, and `sail-dev`. Confirmed in source. The earlier extra plan additions were caused by the stale checkout, not an outstanding request to restore those repositories.
+
+Disposition: fixed by replaying only the Airflow commits onto current `origin/main` (`2a6a4fa`) in an isolated worktree. The catalogue keeps all three retirements and current status-check settings; the private-repository assertion stays 15. The resulting functional diff adds only the Airflow entry and its expected test key. All ten GitHub contract tests pass. A live Terragrunt plan targeting Airflow protection, Actions permissions, workflow permissions and vulnerability alerts reports `No changes. Your infrastructure matches the configuration.` No apply was needed. This is scoped verification, not a full-fleet drift claim. Existing `.env.sops` and `devenv.nix` user changes remain untouched in the original checkout. The previous bootstrap receipts above describe observed history, not the rebased desired state. Fresh CR is required for the rewritten head.
