@@ -51,15 +51,32 @@ def main(action):
             print(json.dumps({"alias": info.get("key_alias"), "hash": k,
                 "models": info.get("models")}))
         return
+    if action == "grant-all":
+        changed = []
+        for k in request("/key/list")["keys"]:
+            info = request("/key/info?key=" + k)["info"]
+            models = list(info["models"])
+            # An empty list and "all-proxy-models" both mean unrestricted; adding a
+            # model to either would narrow the key instead of widening it.
+            if not models or "all-proxy-models" in models or NAME in models:
+                continue
+            models.append(NAME)
+            request("/key/update", {"key": k, "models": models})
+            if request("/key/info?key=" + k)["info"]["models"] != models:
+                raise ValueError("Unexpected key state after grant")
+            changed.append(info.get("key_alias"))
+        print(json.dumps({"action": action, "model": NAME, "granted_to": changed,
+                          "count": len(changed)}))
+        return
     if action in ("grant", "revoke"):
         fingerprint = sys.argv[2]
         if not re.fullmatch("[0-9a-f]{64}", fingerprint):
             raise ValueError("Unexpected key fingerprint")
         info = request("/key/info?key=" + fingerprint)["info"]
         models = list(info["models"])
-        if "all-proxy-models" in models:
+        if not models or "all-proxy-models" in models:
             print(json.dumps({"action": action, "alias": info["key_alias"],
-                "note": "key already allows every model"}))
+                "note": "key is unrestricted; a model list would narrow it"}))
             return
         if action == "grant" and NAME not in models:
             models.append(NAME)
