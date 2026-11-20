@@ -26,6 +26,9 @@ PAYLOAD = {
         "mode": "chat",
         "max_input_tokens": 262144,
         "max_output_tokens": 8192,
+        # /model/update merges model_info, so omitting this field keeps the stale
+        # context-sized value; send the output cap so the row converges.
+        "max_tokens": 8192,
         "input_cost_per_token": 0,
         "output_cost_per_token": 0,
         "supports_function_calling": True,
@@ -70,12 +73,17 @@ def main(action):
     if action == "grant-all":
         keys, total = list_keys()
         changed = []
+        skipped = []
         for k in keys:
             info = request("/key/info?key=" + k)["info"]
             models = list(info["models"])
             # An empty list and "all-proxy-models" both mean unrestricted; adding a
             # model to either would narrow the key instead of widening it.
-            if not models or "all-proxy-models" in models or NAME in models:
+            if not models or "all-proxy-models" in models:
+                skipped.append({"alias": info.get("key_alias"), "reason": "unrestricted"})
+                continue
+            if NAME in models:
+                skipped.append({"alias": info.get("key_alias"), "reason": "already granted"})
                 continue
             models.append(NAME)
             request("/key/update", {"key": k, "models": models})
@@ -83,8 +91,8 @@ def main(action):
                 raise ValueError("Unexpected key state after grant")
             changed.append(info.get("key_alias"))
         print(json.dumps({"action": action, "model": NAME, "granted_to": changed,
-                          "count": len(changed), "listed": len(keys),
-                          "total_count": total}))
+                          "count": len(changed), "skipped": skipped,
+                          "listed": len(keys), "total_count": total}))
         return
     if action in ("grant", "revoke"):
         fingerprint = sys.argv[2]
@@ -141,6 +149,16 @@ def main(action):
         raise ValueError("Unexpected route or key state")
     if current and current[0]["litellm_params"]["api_base"] != BASE:
         raise ValueError("Unexpected route or key state")
+    if current:
+        meta = current[0]["model_info"]
+        # /model/update merges model_info, so a stale field can survive the write.
+        # Assert what the row now advertises instead of trusting the update.
+        if not (meta.get("max_input_tokens") == 262144
+                and meta.get("max_output_tokens") == 8192
+                and meta.get("max_tokens") in (None, 8192)):
+            raise ValueError("Unexpected route metadata: %s" % json.dumps({
+                key: meta.get(key) for key in
+                ("max_tokens", "max_input_tokens", "max_output_tokens")}))
     print(json.dumps({"action": action, "model": NAME, "id": IDENT, "api_base": BASE}))
 
 

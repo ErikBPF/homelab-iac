@@ -62,6 +62,21 @@ class KeyListing(unittest.TestCase):
         self.assertEqual(json.loads(out.getvalue().splitlines()[-1])["total_count"], len(HASHES))
 
 
+class GrantAllSkips(unittest.TestCase):
+    def test_grant_all_names_every_skipped_key_and_reason(self):
+        keys = ["a" * 64, "b" * 64, "c" * 64]
+        state = {keys[0]: ["other"], keys[1]: [], keys[2]: [route.NAME]}
+        writes = []
+        with patch.object(route, "request", page_request([keys[:1], keys[1:]], state, writes)), \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            route.main("grant-all")
+        summary = json.loads(out.getvalue().splitlines()[-1])
+        self.assertEqual([w["key"] for w in writes], [keys[0]])
+        self.assertEqual(summary["skipped"],
+                         [{"alias": keys[1], "reason": "unrestricted"},
+                          {"alias": keys[2], "reason": "already granted"}])
+
+
 class RevokeBoundary(unittest.TestCase):
     def test_revoke_never_creates_unrestricted_key(self):
         for models, expected in [([route.NAME], None), (["other", route.NAME], ["other"]),

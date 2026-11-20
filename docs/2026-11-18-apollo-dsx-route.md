@@ -35,6 +35,18 @@ would narrow the key instead of removing one alias. `revoke` also fails when thi
 alias is the key's only allowed model, because an empty list means unrestricted.
 Disable or delete such a key through the key workflow instead.
 
+`grant-all` is the bulk path: it grants the alias to every managed key that is
+not unrestricted, and it skips a key whose list is empty or holds
+`all-proxy-models` for the same reason `grant` does. Every skipped key appears in
+the summary with its reason (`unrestricted` or `already granted`), so a rerun is
+auditable and a newly added unrestricted key is visible instead of looking
+granted.
+
+`apply` overwrites the row and then reads its metadata back, failing when the
+output cap is not `8192` on `max_tokens` and `max_output_tokens` with
+`262144` on `max_input_tokens`. LiteLLM merges `model_info` on update, so an
+omitted field would keep its stored value.
+
 Rollback: `remove` deletes the row; revoke memberships first if a key should not
 keep the model. The engine itself is stopped on the host, not here.
 
