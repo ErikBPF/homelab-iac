@@ -24,7 +24,6 @@ PAYLOAD = {
     "model_info": {
         "id": IDENT,
         "mode": "chat",
-        "max_tokens": 262144,
         "max_input_tokens": 262144,
         "max_output_tokens": 8192,
         "input_cost_per_token": 0,
