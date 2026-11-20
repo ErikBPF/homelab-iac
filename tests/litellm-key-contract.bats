@@ -67,7 +67,8 @@
     ($route.input_modalities == ["text", "image"]) and
     $route.supports_vision and $route.supports_reasoning and $route.supports_tools and
     ($route.input_cost_per_million_tokens == 0.30) and
-    ($route.output_cost_per_million_tokens == 1.20)
+    ($route.output_cost_per_million_tokens == 1.20) and
+    ($route.cache_read_input_cost_per_million_tokens == 0.006)
   ' components/litellm/environments/home/production/models.json
 }
 
