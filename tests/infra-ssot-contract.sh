@@ -447,7 +447,9 @@ check_s05() {
 
   jq -e '
     .inputs.models["deepseek-v4.1-flash"].cache_read_input_cost_per_million_tokens == 0.006 and
-    ([.inputs.models[] | select(has("cache_read_input_cost_per_million_tokens") | not)] | length) > 0
+    ([.inputs.models | to_entries[] |
+      select(.value | has("cache_read_input_cost_per_million_tokens")) | .key] | sort)
+      == ["deepseek-v4.1-flash"]
   ' "$production_render" >/dev/null \
     || fail "S05 RED: cache-read price must be present only on the reviewed route"
 
