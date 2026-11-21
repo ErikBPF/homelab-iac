@@ -133,3 +133,70 @@ SH
   jq -r .content "$disc_payload" | grep -q 'homelab-iac drift'
   jq -r .content "$disc_payload" | grep -q '\[adguard/config\]'
 }
+
+@test "structured result distinguishes drift execution and notification outcomes without plan data" {
+  python3 - <<'PY'
+import hashlib, json, os, pathlib, subprocess, tempfile
+with tempfile.TemporaryDirectory() as temporary:
+    root = pathlib.Path(temporary)
+    tg = root / 'terragrunt'
+    tg.write_text('#!/bin/sh\n[ "$TF_VAR_state_passphrase" = "fixture-passphrase" ] || exit 9\nprintf "%s\\n" "private-plan-fixture"\nexit "$FIXTURE_EXIT"\n')
+    tg.chmod(0o700)
+    curl = root / 'curl'
+    curl.write_text('#!/bin/sh\nexit "$FIXTURE_DELIVERY"\n')
+    curl.chmod(0o700)
+    for code, delivery, outcome, notice in [(0,0,'clean','not-required'), (2,0,'drift','delivered'), (2,1,'drift','failed'), (2,0,'drift','not-configured'), (1,0,'error','delivered'), (1,1,'error','failed')]:
+        result = root / 'result.json'
+        result.unlink(missing_ok=True)
+        env = dict(PATH=f'{root}:{os.environ["PATH"]}', HOME=str(root), FIXTURE_EXIT=str(code), FIXTURE_DELIVERY=str(delivery), UNIFI_STATE_PASSPHRASE='fixture-passphrase', DISCORD_WEBHOOK_URL='https://example.invalid/fixture', DRIFT_RESULT_FILE=str(result), DRIFT_SOURCE_REVISION='a'*40)
+        if notice == 'not-configured':
+            env.pop('DISCORD_WEBHOOK_URL')
+        run = subprocess.run(['bash','bin/drift-check.sh'],env=env,capture_output=True,text=True)
+        assert run.returncode == code, (code,run.returncode)
+        assert result.exists(), 'structured result not published'
+        value = json.loads(result.read_text())
+        assert value == dict(schemaVersion=1, outcome=outcome, notification=notice, sourceRevision='a'*40, scopeSha256=hashlib.sha256(pathlib.Path('tests/fixtures/drift-monitored-units.txt').read_bytes()).hexdigest()), value
+        assert result.stat().st_mode & 0o777 == 0o600
+        assert 'private-plan-fixture' not in result.read_text()
+        assert 'fixture-passphrase' not in result.read_text()
+PY
+}
+
+@test "interrupted plans cannot reuse a previous clean result and expose unknown sentinels" {
+  python3 - <<'PY'
+import json, os, pathlib, signal, subprocess, tempfile, time
+with tempfile.TemporaryDirectory() as temporary:
+    root = pathlib.Path(temporary)
+    tg = root / 'terragrunt'
+    tg.write_text('#!/bin/sh\nif [ "$FIXTURE_WAIT" = 1 ]; then touch "$FIXTURE_READY"; exec sleep 30; fi\nexit 0\n')
+    tg.chmod(0o700)
+    result, ready = root / 'result.json', root / 'ready'
+    env = dict(PATH=f'{root}:{os.environ["PATH"]}', HOME=str(root), FIXTURE_WAIT='0', FIXTURE_READY=str(ready), DRIFT_RESULT_FILE=str(result), DRIFT_SOURCE_REVISION='a'*40, DISCORD_WEBHOOK_URL='https://example.invalid/fixture')
+    for interrupt in (signal.SIGKILL, signal.SIGTERM):
+        env['FIXTURE_WAIT'] = '0'
+        subprocess.run(['bash','bin/drift-check.sh'], env=env, check=True, capture_output=True)
+        assert json.loads(result.read_text())['outcome'] == 'clean'
+        env.update(FIXTURE_WAIT='1', DRIFT_SOURCE_REVISION='invalid')
+        ready.unlink(missing_ok=True)
+        process = subprocess.Popen(['bash','bin/drift-check.sh'], env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE, start_new_session=True)
+        try:
+            deadline = time.monotonic() + 5
+            while not ready.exists() and time.monotonic() < deadline:
+                time.sleep(.01)
+            assert ready.exists(), 'stub plan did not start'
+            os.killpg(process.pid, interrupt)
+            process.communicate(timeout=5)
+            assert process.returncode != 0
+            if interrupt == signal.SIGKILL:
+                assert not result.exists(), 'killed plan retained previous clean result'
+            else:
+                value = json.loads(result.read_text())
+                assert value['outcome'] == 'error', value
+                assert value['notification'] == 'unknown', value
+                assert value['sourceRevision'] == 'unknown', value
+        finally:
+            if process.poll() is None:
+                os.killpg(process.pid, signal.SIGKILL)
+                process.communicate(timeout=5)
+PY
+}

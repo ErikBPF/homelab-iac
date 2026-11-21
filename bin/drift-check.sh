@@ -9,7 +9,38 @@ set -uo pipefail
 CLEYTIN_USER_ID=1532710143517659356
 
 cd "$(dirname "$0")/.." || exit 1
+
+# An untrappable interruption must not retain an earlier successful plan.
+# Callers must also clear before invoking us, since execution itself can fail.
+if [ -n "${DRIFT_RESULT_FILE:-}" ]; then
+  rm -f -- "$DRIFT_RESULT_FILE" || exit 1
+fi
+
 export TG_TF_PATH="${TG_TF_PATH:-tofu}"
+
+# Optional private machine result: detection is independent of webhook delivery.
+# This record deliberately excludes provider output and credential values.
+outcome=error
+notification=not-configured
+[ -z "${DISCORD_WEBHOOK_URL:-}" ] || notification=unknown
+write_result() {
+  [ -n "${DRIFT_RESULT_FILE:-}" ] || return 0
+  local revision scope temporary
+  revision="${DRIFT_SOURCE_REVISION:-$(git rev-parse HEAD 2>/dev/null || printf unknown)}"
+  [[ "$revision" =~ ^[0-9a-f]{40}$ ]] || revision=unknown
+  scope=$(sha256sum tests/fixtures/drift-monitored-units.txt) || return 0
+  scope=${scope%% *}
+  temporary=$(umask 077; mktemp "${DRIFT_RESULT_FILE}.XXXXXX") || return 0
+  if jq -nc --arg outcome "$outcome" --arg notification "$notification" \
+    --arg revision "$revision" --arg scope "$scope" \
+    '{schemaVersion:1,outcome:$outcome,notification:$notification,sourceRevision:$revision,scopeSha256:$scope}' > "$temporary" \
+    && mv -f "$temporary" "$DRIFT_RESULT_FILE"; then
+    return 0
+  fi
+  rm -f "$temporary"
+  echo "homelab-iac: structured result publication failed" >&2
+}
+trap write_result EXIT
 
 # State lives in MinIO (S3 backend). The bucket creds are MINIO_TFSTATE_* in the
 # secret store; OpenTofu's s3 backend reads AWS_*. Map them if not already set.
@@ -50,9 +81,12 @@ code=$?
 
 case "$code" in
   0)
+    outcome=clean
+    notification=not-required
     echo "homelab-iac: no drift in the adopted unit scope."
     ;;
   2)
+    outcome=drift
     # Attribute terragrunt's per-unit lines to their unit, then keep only the
     # evidence: changed attributes and the per-unit Plan line. Clean units
     # ("No changes") are dropped so they neither pad the alert nor its budget.
@@ -73,9 +107,13 @@ case "$code" in
       summary+=$'\n… trimmed; full diff: journalctl -u homelab-iac-drift'
     fi
     if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
-      curl -fsS -m 10 -H "Content-Type: application/json" \
+      if curl -fsS -m 10 -H "Content-Type: application/json" \
         --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg summary "$summary" --arg c "🟠 **homelab-iac drift** — ${units_display:-unknown} drifted from code." '{content:("<@"+$user+">\n"+$c+"\n\n"+$summary),allowed_mentions:{users:[$user]}}')" \
-        "$DISCORD_WEBHOOK_URL" >/dev/null || true
+        "$DISCORD_WEBHOOK_URL" >/dev/null; then
+        notification=delivered
+      else
+        notification=failed
+      fi
     fi
     exit 2
     ;;
@@ -85,9 +123,13 @@ case "$code" in
     # Alert on errors too — a broken checker (unreachable provider, expired
     # creds, registry down) otherwise looks identical to "no drift".
     if [ -n "${DISCORD_WEBHOOK_URL:-}" ]; then
-      curl -fsS -m 10 -H "Content-Type: application/json" \
+      if curl -fsS -m 10 -H "Content-Type: application/json" \
         --data "$(jq -nc --arg user "$CLEYTIN_USER_ID" --arg c "🔴 **homelab-iac drift-check ERROR** (exit $code) — provider unreachable / expired creds / registry down. Investigate." '{content:("<@"+$user+">\n"+$c),allowed_mentions:{users:[$user]}}')" \
-        "$DISCORD_WEBHOOK_URL" >/dev/null || true
+        "$DISCORD_WEBHOOK_URL" >/dev/null; then
+        notification=delivered
+      else
+        notification=failed
+      fi
     fi
     exit 1
     ;;
