@@ -133,3 +133,31 @@ SH
   jq -r .content "$disc_payload" | grep -q 'homelab-iac drift'
   jq -r .content "$disc_payload" | grep -q '\[adguard/config\]'
 }
+
+@test "structured result distinguishes drift execution and notification outcomes without plan data" {
+  python3 - <<'PY'
+import hashlib, json, os, pathlib, subprocess, tempfile
+with tempfile.TemporaryDirectory() as temporary:
+    root = pathlib.Path(temporary)
+    tg = root / 'terragrunt'
+    tg.write_text('#!/bin/sh\n[ "$TF_VAR_state_passphrase" = "fixture-passphrase" ] || exit 9\nprintf "%s\\n" "private-plan-fixture"\nexit "$FIXTURE_EXIT"\n')
+    tg.chmod(0o700)
+    curl = root / 'curl'
+    curl.write_text('#!/bin/sh\nexit "$FIXTURE_DELIVERY"\n')
+    curl.chmod(0o700)
+    for code, delivery, outcome, notice in [(0,0,'clean','not-required'), (2,0,'drift','delivered'), (2,1,'drift','failed'), (2,0,'drift','not-configured'), (1,0,'error','delivered'), (1,1,'error','failed')]:
+        result = root / 'result.json'
+        result.unlink(missing_ok=True)
+        env = dict(PATH=f'{root}:{os.environ["PATH"]}', HOME=str(root), FIXTURE_EXIT=str(code), FIXTURE_DELIVERY=str(delivery), UNIFI_STATE_PASSPHRASE='fixture-passphrase', DISCORD_WEBHOOK_URL='https://example.invalid/fixture', DRIFT_RESULT_FILE=str(result), DRIFT_SOURCE_REVISION='a'*40)
+        if notice == 'not-configured':
+            env.pop('DISCORD_WEBHOOK_URL')
+        run = subprocess.run(['bash','bin/drift-check.sh'],env=env,capture_output=True,text=True)
+        assert run.returncode == code, (code,run.returncode)
+        assert result.exists(), 'structured result not published'
+        value = json.loads(result.read_text())
+        assert value == dict(schemaVersion=1, outcome=outcome, notification=notice, sourceRevision='a'*40, scopeSha256=hashlib.sha256(pathlib.Path('tests/fixtures/drift-monitored-units.txt').read_bytes()).hexdigest()), value
+        assert result.stat().st_mode & 0o777 == 0o600
+        assert 'private-plan-fixture' not in result.read_text()
+        assert 'fixture-passphrase' not in result.read_text()
+PY
+}
