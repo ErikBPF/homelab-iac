@@ -9,6 +9,13 @@ set -uo pipefail
 CLEYTIN_USER_ID=1532710143517659356
 
 cd "$(dirname "$0")/.." || exit 1
+
+# An untrappable interruption must not retain an earlier successful plan.
+# Callers must also clear before invoking us, since execution itself can fail.
+if [ -n "${DRIFT_RESULT_FILE:-}" ]; then
+  rm -f -- "$DRIFT_RESULT_FILE" || exit 1
+fi
+
 export TG_TF_PATH="${TG_TF_PATH:-tofu}"
 
 # Optional private machine result: detection is independent of webhook delivery.
