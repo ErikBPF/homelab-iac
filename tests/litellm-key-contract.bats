@@ -106,4 +106,10 @@
   grep -Fq 'path \"secret/metadata/home/ocr-review-litellm\" { capabilities = [\"read\"] }' "$foundation"
   grep -Fq 'resource "vault_policy" "endeavour_model_inference_reader"' "$foundation"
   grep -Fq 'token_policies = [vault_policy.github_token_reader.name, vault_policy.endeavour_model_inference_reader.name]' "$foundation"
+
+  # The shared login must not widen either policy: one path, read-only.
+  reader=$(sed -n '/resource "vault_policy" "endeavour_model_inference_reader"/,/^}/p' "$foundation")
+  test "$(grep -Fc 'path "secret/data/home/ocr-review-litellm"' <<<"$reader")" -eq 1
+  test "$(grep -Fc 'capabilities = ["read"]' <<<"$reader")" -eq 1
+  ! grep -Eq 'create|update|delete|list|\*' <<<"$reader"
 }
