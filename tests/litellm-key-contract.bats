@@ -85,3 +85,31 @@
   grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$unit"
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$unit"
 }
+
+@test "Workstation OCR review gets a scoped LiteLLM key through OpenBao" {
+  key_unit=components/litellm/environments/home/ocr-review-key/terragrunt.hcl
+  vault_unit=components/openbao/environments/home/ocr-review-litellm/terragrunt.hcl
+  foundation=components/openbao/modules/runtime-secret-foundation/main.tf
+
+  grep -Fq 'modules//scoped-key' "$key_unit"
+  grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-ocr-review-model-inference"' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["glm-5.3-flash", "deepseek-v4.1-flash"\]' "$key_unit"
+  grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$key_unit"
+  grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$key_unit"
+  grep -Eq 'consumer[[:space:]]*=[[:space:]]*"ocr-review"' "$key_unit"
+
+  grep -Fq 'dependency "ocr_review_key"' "$vault_unit"
+  grep -Fq 'name          = "home/ocr-review-litellm"' "$vault_unit"
+  grep -Fq 'LITELLM_OCR_API_KEY = dependency.ocr_review_key.outputs.key' "$vault_unit"
+
+  grep -Fq 'path \"secret/data/home/ocr-review-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }' "$foundation"
+  grep -Fq 'path \"secret/metadata/home/ocr-review-litellm\" { capabilities = [\"read\"] }' "$foundation"
+  grep -Fq 'resource "vault_policy" "endeavour_model_inference_reader"' "$foundation"
+  grep -Fq 'token_policies = [vault_policy.github_token_reader.name, vault_policy.endeavour_model_inference_reader.name]' "$foundation"
+
+  # The shared login must not widen either policy: one path, read-only.
+  reader=$(sed -n '/resource "vault_policy" "endeavour_model_inference_reader"/,/^}/p' "$foundation")
+  test "$(grep -Fc 'path "secret/data/home/ocr-review-litellm"' <<<"$reader")" -eq 1
+  test "$(grep -Fc 'capabilities = ["read"]' <<<"$reader")" -eq 1
+  ! grep -Eq 'create|update|delete|list|\*' <<<"$reader"
+}

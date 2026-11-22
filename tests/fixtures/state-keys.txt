@@ -18,6 +18,7 @@ components/litellm/environments/home/canary components/litellm/environments/home
 components/litellm/environments/home/cognee-key components/litellm/environments/home/cognee-key/terraform.tfstate
 components/litellm/environments/home/deepseek-harness-key components/litellm/environments/home/deepseek-harness-key/terraform.tfstate
 components/litellm/environments/home/ha-harness-key components/litellm/environments/home/ha-harness-key/terraform.tfstate
+components/litellm/environments/home/ocr-review-key components/litellm/environments/home/ocr-review-key/terraform.tfstate
 components/litellm/environments/home/production components/litellm/environments/home/production/terraform.tfstate
 components/openbao/environments/home/aster-authentik-reader components/openbao/environments/home/aster-authentik-reader/terraform.tfstate
 components/openbao/environments/home/authentik-config-manager components/openbao/environments/home/authentik-config-manager/terraform.tfstate
@@ -26,6 +27,7 @@ components/openbao/environments/home/cognee-litellm components/openbao/environme
 components/openbao/environments/home/deepseek-harness-litellm components/openbao/environments/home/deepseek-harness-litellm/terraform.tfstate
 components/openbao/environments/home/ha-harness-litellm components/openbao/environments/home/ha-harness-litellm/terraform.tfstate
 components/openbao/environments/home/harbor-project-iam components/openbao/environments/home/harbor-project-iam/terraform.tfstate
+components/openbao/environments/home/ocr-review-litellm components/openbao/environments/home/ocr-review-litellm/terraform.tfstate
 components/openbao/environments/home/runtime-secret-foundation components/openbao/environments/home/runtime-secret-foundation/terraform.tfstate
 github/repos github/repos/terraform.tfstate
 oracle/compute-telstar oracle/compute-telstar/terraform.tfstate
