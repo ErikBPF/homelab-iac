@@ -24,9 +24,16 @@ PY
 @test "Grafana component cannot persist issued tokens" {
   python3 - <<'PY'
 from pathlib import Path
-import re
+import re, tempfile
 root = Path("components/grafana")
-text = "\n".join(p.read_text() for p in root.rglob("*.tf"))
+# Real Terragrunt/provider caches must not alter the source policy result.
+with tempfile.TemporaryDirectory(dir=root, prefix=".reader-contract-") as temporary:
+    for cache in (".terragrunt-cache", ".terraform"):
+        directory = Path(temporary) / cache
+        directory.mkdir()
+        (directory / "cached.tf").write_text('resource "grafana_service_account_token" "cached" {}')
+    text = "\n".join(p.read_text() for p in root.rglob("*.tf")
+                     if not {".terragrunt-cache", ".terraform"}.intersection(p.parts))
 resources = re.findall(r'resource\s+"([^"]+)"', text)
 assert resources == ["grafana_service_account"], "only account metadata belongs in Terraform"
 provider = (root / "root.hcl").read_text()

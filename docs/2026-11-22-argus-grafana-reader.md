@@ -1,7 +1,7 @@
 # Argus Grafana reader: prepared identity and bounded handoff
 
 **Status:** source preparation only; live role approval, apply, token issuance,
-Vault write and runtime restart have not occurred. **Revision:** 2, 2026-11-22.
+Vault write and runtime restart have not occurred. **Revision:** 3, 2026-11-22.
 **Human seed:** “use argus credentials to check open alerts on grafana. Lets amend”.
 
 ## Outcome and why
@@ -122,3 +122,48 @@ revision 2 names it explicitly and resolves the API ID through verified metadata
 The first draft is retained in the private task receipt `/tmp/argus-reader-draft-1.md`;
 RED/GREEN/regression logs are `/tmp/argus-reader-{red,green,regression}.log`.
 No live identity, token, Vault or runtime mutation was performed.
+
+
+### CI integration correction
+
+CI run `45042516112` on PR #179 (`bedebd8`) reported one failed Bats case:
+`S01 shared-root canary contract`. The source added a tracked Terragrunt unit
+without registering its state key in `tests/fixtures/state-keys.txt`; the earlier
+67-case focused run did not include this repository-wide inventory contract.
+A local rerun reproduced the exact assertion failure before the fix.
+
+The correction adds only the new unit's already verified backend key to the
+inventory. Removing that single new line reproduces the previous fixture byte
+for byte: no existing unit or state key changed. The strict inventory assertion
+is unchanged; the Grafana drift exclusion and unattended-apply fixture remain
+unchanged. Focused S01 and all **176 Bats cases** pass. The first full local run
+also exposed an uninitialized LiteLLM provider submodule in this linked worktree;
+CI already initializes submodules. Initializing the exact recorded commit
+`6837ca9a731a40146ae00cfc0f23f34eabed6cec` fixed that local prerequisite without
+changing the gitlink or provider source. This setup failure is not an implementation
+RED anchor. The full-suite retry used the normal Go module cache across Bats's
+isolated HOME directories, matching the CI cache separation.
+
+The CI provider-bootstrap, optimized-Python Apollo route, Discovery routes and
+Tailscale identity scripts also pass. Receipt logs are
+`/tmp/argus-reader-ci-{red,focused-green,all-bats,all-bats-final}.log`;
+`all-bats` preserves the local prerequisite failure and `all-bats-final` records
+176 passes. No contract was weakened, no existing state key changed, and no live
+resource, credential or backend mutation occurred.
+
+
+### Hosted review reconciliation
+
+Hackerman's review of `bedebd8` found a P2 in the source-only token guard:
+recursive scanning also counted generated `.terragrunt-cache` and `.terraform`
+files. Harmless cached token-resource fixtures reproduced the assertion failure.
+The scanner now excludes those two directory segments only; account/token
+resources in actual source remain subject to the unchanged exact-resource check.
+The fixtures are retained inside the contract and automatically cleaned up.
+Focused RED/GREEN receipts are `/tmp/argus-reader-cache-{red,green}.log`.
+Independent targeted review verified byte-preserved existing state keys,
+unchanged unattended scope and exact cache exclusions, with no remaining blocker;
+the reviewer did not independently rerun Bats. The final complete Bats rerun after
+this correction passed **176/176**, recorded in
+`/tmp/argus-reader-ci-all-bats-reviewed.log`. This evidence does not authorize
+live bootstrap or change runtime behavior.
