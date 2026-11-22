@@ -9,6 +9,7 @@ cloudflare/tunnel cloudflare/tunnel/terraform.tfstate
 components/authentik/environments/home/aster-identity-reader components/authentik/environments/home/aster-identity-reader/terraform.tfstate
 components/authentik/environments/home/iac-access components/authentik/environments/home/iac-access/terraform.tfstate
 components/authentik/environments/home/openwebui-oidc components/authentik/environments/home/openwebui-oidc/terraform.tfstate
+components/grafana/environments/home/argus-reader components/grafana/environments/home/argus-reader/terraform.tfstate
 components/harbor-iam/environments/home/fleet-readers components/harbor-iam/environments/home/fleet-readers/terraform.tfstate
 components/harbor-iam/environments/home/production components/harbor-iam/environments/home/production/terraform.tfstate
 components/harbor-iam/environments/home/project-members components/harbor-iam/environments/home/project-members/terraform.tfstate

@@ -64,6 +64,7 @@ out=$(terragrunt run --all \
   --filter '!components/litellm/environments/home/canary' \
   --filter '!components/authentik/environments/home/aster-identity-reader' \
   --filter '!components/authentik/environments/home/iac-access' \
+  --filter '!components/grafana/environments/home/argus-reader' \
   --filter '!components/authentik/environments/home/openwebui-oidc' \
   --filter '!components/harbor-iam/environments/home/fleet-readers' \
   --filter '!components/harbor-iam/environments/home/production' \

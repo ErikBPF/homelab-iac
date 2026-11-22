@@ -170,6 +170,13 @@ jobs:
         env:
           GOMODCACHE: ${{ runner.temp }}/go-mod
 
+      - name: Grafana reader offline plan
+        run: |
+          cp components/grafana/environments/home/argus-reader/.terraform.lock.hcl components/grafana/modules/argus-reader/.terraform.lock.hcl
+          tofu -chdir=components/grafana/modules/argus-reader init -backend=false -input=false -lockfile=readonly
+          tofu -chdir=components/grafana/modules/argus-reader validate
+          tofu -chdir=components/grafana/modules/argus-reader test -no-color
+
       - name: tofu fmt
         run: git ls-files -z '*.tf' '*.tfvars' | xargs -0 -r tofu fmt -check
 
