@@ -531,7 +531,7 @@
         "text"
       ],
       "privacy_tier": "confidential",
-      "lifecycle": "production",
+      "lifecycle": "manual",
       "probe_skip": true
     }
   }

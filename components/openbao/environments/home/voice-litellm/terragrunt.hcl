@@ -1,3 +1,5 @@
+# Applied through an interactive owner plan. Excluded from unattended drift/apply
+# until the scheduled runner credentials and zero-diff plan are verified.
 include "shared" {
   path = "${get_repo_root()}/_shared/root.hcl"
 }

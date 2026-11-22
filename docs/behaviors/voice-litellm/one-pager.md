@@ -15,3 +15,11 @@ The approved Servarr merge exception required a targeted temporary `allow_merge_
 Six existing key contracts and formatting checks passed. Gateway English/Portuguese ASR and installed synthetic controller E2E passed; forced local fallback and cancellation passed. Orion GPU rewrite is unavailable after one bounded owner restart, so contextual mode uses local Ollama.
 
 Privacy limits remain: a failed rewrite had one identifiable spend row with no synthetic marker, but successful ASR lacked an identifiable accounting row; Langfuse queries timed out. Configuration and these probes do not prove universal diagnostic-content exclusion. Source integration remains pending. Preserve encrypted key state and OpenBao as credential owners; do not recreate or rotate the working key just to reconcile source.
+
+## PR180 review reconciliation — 2026-11-22
+
+Accepted the missing Discovery alias fixture/count and state-key registrations; their existing contracts reproduced RED before correction. Both voice units remain explicitly excluded from the unattended drift/apply scope until that runner's credentials and zero-diff plans are verified. Interactive successful applies do not prove unattended readiness. The monitored-unit fixture remains unchanged because adoption is deferred deliberately, not omitted.
+
+Confirmed `qwen3.8-coder` in [the pinned Servarr source](https://github.com/ErikBPF/servarr/blob/f991f2cfe84bfd43f14aa47c147439704ebcfa79/machines/orion/ai-models.compose.yml#L40). The model name is correct; readiness was overstated by the production lifecycle. Changed it to `manual`, retained `probe_skip` for the unavailable endpoint and the scoped key allowlist so the accepted gateway-attempt/local-fallback behavior is preserved. Lifecycle is local catalog metadata, not passed to the provider. No endpoint mutation, credential rotation or new apply was performed. Promotion requires a successful rewrite qualification and an explicit probe decision.
+
+Validation after reconciliation: all 176 Bats contracts passed with the pinned provider submodule initialized; exact alias/state/drift assertions remain enforced. Independent review found no remaining material concern. [Repair and validation receipt](cr-validation.txt). Fresh automated review is requested after publication.

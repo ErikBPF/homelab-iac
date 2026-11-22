@@ -1,0 +1,186 @@
+2026-11-22 CR fixes
+Baseline: existing S01 state-key, S05 alias-set and drift-scope assertions failed.
+First candidate: alias uniqueness count and state-key ordering still failed; corrected both without weakening exact-set checks.
+Local environment: S04 needed the pinned provider submodule; initialized it at the tracked commit.
+Final command: nix shell nixpkgs#bats --command bats tests
+Result: exit0; all176 contracts passed.
+Independent read-only review: no remaining material concern.
+Canonical graphify update completed; Terraform/HCL AST coverage unavailable because tree_sitter_hcl is not installed. No worktree graph built.
+
+1..176
+ok 1 Aster has a separate non-superuser Authentik identity with read-only user and group rights
+ok 2 Aster Authentik token stays out of Terraform state and uses one OpenBao path
+ok 3 Aster namespace has its own exact-path OpenBao read identity
+ok 4 Authentik runtime values use the existing write-only OpenBao module
+ok 5 Authentik runtime values remain ephemeral and absent from outputs
+ok 6 Authentik writer access is limited to its exact KV path
+ok 7 every consumer token unit reuses the least-scope api-token module
+ok 8 swag and cert-manager use distinct consumer tokens
+ok 9 consumer tokens grant zone DNS write and nothing account-scoped
+ok 10 token replacement creates before destroying
+ok 11 drift pin refresh retains the previously monitored unit set
+ok 12 drift check exposes the state key to dependency tofu commands
+ok 13 drift check executes its pinned working tree without git refresh
+ok 14 drift check serializes fresh-source initialization
+ok 15 drift check excludes the disposable LiteLLM lifecycle canary
+ok 16 drift alert keeps the changed attribute lines and names the units
+ok 17 drift alert survives clean units ahead of a late drifting unit
+ok 18 drift alert payload stays inside Discord's content limit for the full scope
+ok 19 structured result distinguishes drift execution and notification outcomes without plan data
+ok 20 interrupted plans cannot reuse a previous clean result and expose unknown sentinels
+ok 21 GitHub app token refresh stays runtime-only
+ok 22 Vault agent can rotate only the GitHub app token secret
+ok 23 every active GitHub repository is catalogued and protectable repos are protected
+ok 24 ndc requires its observed correctness and secret scans plus dependency alerts
+ok 25 opencode-tui remains managed with declarative archival
+ok 26 branch protection denies bypass-prone mutations
+ok 27 repository defaults remove merged branches and unsafe merge modes
+ok 28 auto-merge is enabled only where branch protection makes it usable
+ok 29 imported Actions secrets are not overwritten implicitly
+ok 30 completed migration leaves no import blocks
+ok 31 private model and device repos use least-privilege Actions defaults
+ok 32 Actions permissions wait for repository creation
+ok 33 GitOps lanes receive separate read-only Vault AppRoles
+ok 34 Wazuh host agents receive a dedicated read-only AppRole
+ok 35 Grafana reader stays outside unattended drift and apply
+ok 36 Grafana component cannot persist issued tokens
+ok 37 purpose-named secret handoffs stay ignored
+ok 38 Harbor IAM providers are pinned and credentials are purpose-named environment-only
+ok 39 Authentik Harbor client is strict, signed, scoped, and reader-bound
+ok 40 Harbor keeps local breakglass while day-two IAM maps readers only as project guests
+ok 41 Harbor bootstrap creates one future-project-safe IAM manager
+ok 42 Harbor bootstrap runner fails closed for fresh or write-only state
+ok 43 Admin bootstrap grants no standing directory mutation capability
+ok 44 Harbor project membership has an independent day-two state
+ok 45 Harbor project IAM manager credential is write-only in OpenBao
+ok 46 Harbor day-two OpenBao identity can read only its exact credential
+ok 47 GitHub token reader is read-only and scoped to one KV path
+ok 48 Harbor day-two wrapper resolves only its robot credential through AppRole
+ok 49 Harbor day-two wrapper revokes OpenBao and hides credentials from Terragrunt
+ok 50 Harbor OIDC state exposes no client secret output
+ok 51 Harbor fleet readers are derived, pull-only, future-safe, and write-only
+ok 52 Cognee publisher is library-only and delivered write-only through OpenBao
+ok 53 Harbor cache endpoints, projects, retention, and GC are declarative but unscheduled
+ok 54 Harbor library project scans, generates SBOMs, retains releases, and protects release tags
+ok 55 only proven Harbor consumers receive exact-read OpenBao identities
+ok 56 HA private project is owned alongside its publisher with create ordering
+ok 57 HA publisher has only project pull and push with independent lifecycle controls
+ok 58 HA publisher secret is ephemeral and write-only with provider-qualified username
+ok 59 HA publisher extends only exact writer paths and preserves shared identities
+ok 60 clean plan applies nothing
+ok 61 non-destructive drift is applied and reported
+ok 62 a plan with destroys is refused without applying
+ok 63 denylisted units are never applied automatically
+ok 64 a failed plan stops without applying
+ok 65 a failed apply reports and does not claim success
+ok 66 destroy counts ending in zero are still refused
+ok 67 destroy counts are parsed from an import-bearing plan line
+ok 68 an unattributable plan is refused instead of applied blind
+ok 69 another unit cannot supply the changed unit's plan evidence
+ok 70 drift that does not converge is reported instead of marked applied
+ok 71 an empty denylist disables the guard
+ok 72 the apply scope comes from the drift-check fixture
+ok 73 attributed resource lines without a destroy summary are refused
+ok 74 a changed unit with a malformed destroy count is refused
+ok 75 duplicate plan summaries are refused as ambiguous evidence
+ok 76 a valid summary cannot hide a second incomplete summary
+ok 77 unrecognized summary suffixes are refused instead of guessed
+ok 78 a non-destructive import-bearing plan remains applicable
+ok 79 destructive resource actions cannot contradict a zero-destroy summary
+ok 80 destructive resource headings cannot contradict a zero-destroy summary
+ok 81 a tab cannot hide unsupported trailing summary evidence
+ok 82 two changed calls cannot swap attributed unit identities
+ok 83 failed evidence extraction cannot pass on partial usable output
+ok 84 failed destroy-count parsing cannot imply zero destruction
+ok 85 native plain output-only changes apply the saved plan
+ok 86 native data-source output-only changes apply the saved plan
+ok 87 native heredoc output-only changes apply the saved plan
+ok 88 native output strings do not impersonate envelope or resource lines
+ok 89 native unchanged heredoc comments remain output text
+ok 90 native unchanged heredoc resource text remains output text
+ok 91 output-only evidence cannot bypass the denylist
+ok 92 foreign output-only envelopes are refused
+ok 93 incomplete malformed duplicated or reordered output-only envelopes are refused
+ok 94 output-only envelopes cannot substitute for resource plan summaries
+ok 95 native resource lines inside or after an output envelope still refuse
+ok 96 output strings cannot supply a missing unindented envelope
+ok 97 output-only plans still fail closed on evidence parser errors
+ok 98 native out-of-band deletion applies its create-only saved plan
+ok 99 native drift cannot hide planned destruction or replacement
+ok 100 observed drift cannot suppress a destroy-create replacement record
+ok 101 observed drift cannot suppress a create-destroy replacement record
+ok 102 native create-only drift still respects the denylist
+ok 103 drift suppression requires exact ordered unit-bound section markers
+ok 104 planned actions after drift cannot contradict a zero-destroy summary
+ok 105 planned headings after drift cannot contradict a zero-destroy summary
+ok 106 native output heredocs keep drift and action markers as literal text
+ok 107 cert-manager lifecycle readiness is required before unattended apply
+ok 108 cert-manager lifecycle readiness accepts only the exact value one
+ok 109 cert-manager lifecycle attestation permits its legitimate saved plan
+ok 110 an empty denylist cannot bypass cert-manager lifecycle readiness
+ok 111 a clean cert-manager unit remains monitored without blocking unrelated drift
+ok 112 cert-manager lifecycle attestation cannot bypass existing plan guards
+ok 113 an unready cert-manager unit refuses the whole batch before any apply
+ok 114 cert-manager readiness is checked again before a later pass applies anything
+ok 115 S01 shared-root canary contract
+ok 116 S02 LiteLLM provider canary contract
+ok 117 S03 catalog and dependency automation contract
+ok 118 S04 LiteLLM provider lifecycle and metadata contract
+ok 119 S05 Discovery production model manifest contract
+ok 120 LiteLLM provider mints the HA harness key
+ok 121 OpenBao handoff owns only the LiteLLM key path
+ok 122 Cognee gets a local-only LiteLLM key through OpenBao
+ok 123 DeepSeek Harness gets a scoped 25 USD LiteLLM key through OpenBao
+ok 124 HA harness key can call qwen-chat and qwen-pqnld
+ok 125 Aster helper key is restricted to DeepSeek through OpenCode Go
+ok 126 household HA routes use qwen-chat and qwen-pqnld while the 4B route stays withdrawn
+ok 127 monitoring names resolve to the Kubernetes ingress
+ok 128 monitoring cutover preserves active AdGuard policy
+ok 129 NanoKVM keeps its current address through DHCP reservation
+ok 130 NanoKVM direct access is limited to admin tailnet devices
+ok 131 NanoKVM device key does not expire
+ok 132 NetBird and its dedicated PocketID client IaC are retired
+ok 133 NetBird public edge is removed without reopening bootstrap SSH
+ok 134 NetBird-only contracts are removed
+ok 135 S08 imports the existing OpenBao runtime-secret foundation
+ok 136 S08 preserves the ESO read-only policy and TTL
+ok 137 S08 root-bootstrap unit is excluded from unattended AppRole drift
+ok 138 S08 preserves every live Vault Agent policy and TTL
+ok 139 S08 bootstrap can use an ephemeral root token without storing it
+ok 140 OpenWebUI adopts provider3 without replacing application or client credentials
+ok 141 OpenWebUI preserves observed token subject flow and mapping settings
+ok 142 OpenWebUI publishes HTTPS before the compatibility callback is retired
+ok 143 OpenWebUI uses the existing config-manager identity with encrypted shared state
+ok 144 unadopted OpenWebUI unit stays outside unattended drift
+ok 145 OpenWebUI preserves imported computed grant types
+ok 146 config-manager has dedicated write-only OpenBao storage and exact read role
+ok 147 config-manager just wrapper revokes and fails closed without credential output
+ok 148 Oracle budget permits small paid usage and alerts before overspend
+ok 149 OCI does not expose fleet SSH to the public internet
+ok 150 tailnet policy authorizes admins and denies ordinary servers
+ok 151 Trivy blocks high and critical IaC findings from a pinned action
+ok 152 every state root uses the rotated provider identity without fallback keys
+ok 153 Apollo reaches Orion's Nix cache
+ok 154 Apollo Kubernetes API is admin-only
+ok 155 Apollo Syncthing is scoped to Orion
+ok 156 public SSH hosts can ship journals only to Loki
+ok 157 retired peers leave no policy references
+ok 158 Gemini has no remaining policy references
+ok 159 mobile SSH targets the active workstations only
+ok 160 primary hosts cross-attach over SSH without fleet admin access
+ok 161 kepler can reach voyager restic receiver
+ok 162 endeavour can reach SWAG on discovery's tailnet IP
+ok 163 k8s zone uses discovery's tailnet DNS
+ok 164 homelab split DNS adopts the existing LAN resolver rule
+ok 165 Orion Wazuh canary can read its enrollment secret
+ok 166 state-lock acquisition failure has a non-retry exit
+ok 167 retry fails closed and cleans temporary credentials
+ok 168 lock recovery validates identity age and active writers
+ok 169 lock recovery supplies the Telstar public key
+ok 170 Main uses dynamic 20-199 and clean reserved addresses
+ok 171 Main DHCP advertises only AdGuard then Kepler
+ok 172 Default DHCP DNS remains omitted
+ok 173 network module preserves ordered list without set or sort
+ok 174 CI runs every Bats contract
+ok 175 Voyager keeps its reserved public IP enabled
+ok 176 Kepler Wazuh reader has one exact read path and a dedicated bounded AppRole
