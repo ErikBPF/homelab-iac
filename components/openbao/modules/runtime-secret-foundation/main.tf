@@ -45,12 +45,15 @@ resource "vault_policy" "iac_writer" {
   policy = join("\n", [
     "path \"secret/data/home/ha-harness-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/home/ha-harness-litellm\" { capabilities = [\"read\"] }",
+    "path \"secret/data/home/voice-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
+    "path \"secret/metadata/home/voice-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/home/deepseek-harness-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/home/deepseek-harness-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/lab/cognee-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/lab/cognee-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/platform/authentik\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/platform/authentik\" { capabilities = [\"read\"] }",
+    "path \"secret/data/iac/cloudflare\" { capabilities = [\"read\"] }",
     "path \"secret/data/iac/github\" { capabilities = [\"read\"] }",
     "path \"secret/data/iac/cloudflare\" { capabilities = [\"read\"] }",
   ])

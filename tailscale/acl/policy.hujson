@@ -156,6 +156,12 @@
 
 	"tests": [
         // Retrieval is reachable through LiteLLM on Discovery, not directly by other peers.
+        {"src": "discovery", "accept": ["orion:9000"]},
+        {"src": "endeavour", "deny": ["orion:9000"]},
+        {"src": "pathfinder", "deny": ["orion:9000"]},
+        {"src": "apollo", "deny": ["orion:9000"]},
+        {"src": "kepler", "deny": ["orion:9000"]},
+        {"src": "s25-ultra-de-erik", "deny": ["orion:9000"]},
         {"src": "s25-ultra-de-erik", "deny": ["orion:8085", "orion:8087"]},
         {"src": "kepler", "deny": ["orion:8085", "orion:8087"]},
 		{"src": "apollo", "accept": ["orion:22000"], "deny": ["kepler:22000", "endeavour:22000"]},
