@@ -56,7 +56,8 @@
 		{"action": "accept", "src": ["*"], "dst": ["swag:80,443"]},
 
 		// 4. discovery is the hub (SWAG reverse-proxy, LiteLLM router, monitoring,
-		//    DNS) — it reaches every host on every port.
+		//    DNS) — it reaches every host on every port. Kepler inference is
+		//    consumed only by LiteLLM on discovery; no general peer grant.
 		{"action": "accept", "src": ["discovery"], "dst": ["*:*"]},
 
 		// 5. Preserved: Syncthing between fleet hosts.
@@ -158,6 +159,11 @@
         // Retrieval is reachable through LiteLLM on Discovery, not directly by other peers.
         {"src": "s25-ultra-de-erik", "deny": ["orion:8085", "orion:8087"]},
         {"src": "kepler", "deny": ["orion:8085", "orion:8087"]},
+        // Kepler hot inference (parakeet ASR :9001, qwen4b tool server :8088) is
+        // reachable through LiteLLM on Discovery only; other peers get no direct path.
+        {"src": "discovery", "accept": ["kepler:9001", "kepler:8088"]},
+        {"src": "s25-ultra-de-erik", "deny": ["kepler:9001", "kepler:8088"]},
+        {"src": "orion", "deny": ["kepler:9001", "kepler:8088"]},
 		{"src": "apollo", "accept": ["orion:22000"], "deny": ["kepler:22000", "endeavour:22000"]},
 		{"src": "orion", "accept": ["apollo:22000"]},
 		{"src": "s25-ultra-de-erik", "deny": ["apollo:22000"]},

@@ -94,6 +94,29 @@
       "privacy_tier": "non-confidential",
       "lifecycle": "production"
     },
+    "ha-agent-qwen4b": {
+      "custom_llm_provider": "openai",
+      "base_model": "qwen4b-v8-onpolicy-dpo-v9",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://100.90.113.117:8088/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "additional_litellm_params": {
+        "timeout": "600"
+      },
+      "max_tokens": 4096,
+      "supports_tools": true,
+      "supports_reasoning": false,
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "privacy_tier": "confidential",
+      "lifecycle": "production"
+    },
     "kimi-k2-code": {
       "custom_llm_provider": "openai",
       "base_model": "kimi-k2.7-code",
@@ -182,6 +205,24 @@
       ],
       "probe_skip": true,
       "privacy_tier": "non-confidential",
+      "lifecycle": "production"
+    },
+    "parakeet-tdt-v3": {
+      "custom_llm_provider": "openai",
+      "base_model": "parakeet-tdt-0.6b-v3",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://100.90.113.117:9001/v1",
+      "mode": "audio_transcription",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "input_modalities": [
+        "audio"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "probe_language": "pt",
+      "privacy_tier": "confidential",
       "lifecycle": "production"
     },
     "qwen-chat": {

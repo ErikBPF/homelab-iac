@@ -1,8 +1,9 @@
 #!/usr/bin/env bats
 
-@test "household HA routes use qwen-chat and qwen-pqnld while the 4B route stays withdrawn" {
+@test "household HA routes use qwen-chat, qwen-pqnld, and the 4B tool route" {
   jq -e '
-    (.models | has("ha-agent-qwen4b") | not) and
+    (.models["ha-agent-qwen4b"].mode == "chat") and
+    (.models["ha-agent-qwen4b"].model_api_base == "http://100.90.113.117:8088/v1") and
     (.models["qwen-chat"].mode == "chat") and
     (.models["qwen-chat"].model_api_base | length > 0) and
     (.models["qwen-pqnld"].mode == "chat") and
