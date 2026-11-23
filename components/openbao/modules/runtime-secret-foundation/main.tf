@@ -131,6 +131,7 @@ locals {
     home-services = "home-services/*"
   }
   harbor_reader_consumers = toset(["discovery", "endeavour", "kepler"])
+  erik_user_hosts         = toset(["endeavour", "kepler"])
 }
 
 resource "vault_policy" "harbor_fleet_readers_publisher" {
@@ -150,6 +151,25 @@ resource "vault_policy" "harbor_fleet_reader" {
   name     = "svc-desktop-nixos-${each.key}-harbor-reader"
   policy   = <<-EOT
     path "secret/data/fleet/harbor/readers/${each.key}" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
+# Per-host reader for Erik's own secrets. Runtime values live under
+# secret/users/erik; the host AppRole can also read the shared GitHub token.
+# No home/* access, no SSH key material, and no write capability.
+resource "vault_policy" "erik_user" {
+  for_each = local.erik_user_hosts
+  name     = "svc-desktop-nixos-${each.key}-erik-reader"
+  policy   = <<-EOT
+    path "secret/data/users/erik/*" {
+      capabilities = ["read"]
+    }
+    path "secret/metadata/users/erik/*" {
+      capabilities = ["read", "list"]
+    }
+    path "secret/data/iac/github" {
       capabilities = ["read"]
     }
   EOT
@@ -297,6 +317,18 @@ resource "vault_approle_auth_backend_role" "harbor_fleet_reader" {
   token_ttl      = 300
   token_max_ttl  = 300
   secret_id_ttl  = 7776000
+  token_type     = "default"
+}
+
+resource "vault_approle_auth_backend_role" "erik_user" {
+  for_each       = local.erik_user_hosts
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-desktop-nixos-${each.key}-erik-reader"
+  bind_secret_id = true
+  token_policies = [vault_policy.erik_user[each.key].name]
+  token_ttl      = 600
+  token_max_ttl  = 3600
+  secret_id_ttl  = 2592000
   token_type     = "default"
 }
 
