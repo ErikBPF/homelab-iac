@@ -3,7 +3,7 @@ resource "tailscale_acl" "this" {
 }
 
 resource "tailscale_device_key" "nanokvm" {
-  device_id           = "nu53rVuxF711CNTRL"
+  device_id           = "nkkZvj4YK721CNTRL"
   key_expiry_disabled = true
 }
 
