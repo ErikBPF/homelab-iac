@@ -15,7 +15,7 @@ setup() {
 @test "NanoKVM direct access is limited to admin tailnet devices" {
   policy="$REPO_ROOT/tailscale/acl/policy.hujson"
 
-  grep -qF '"nanokvm":   "100.125.209.99"' "$policy"
+  grep -qF '"nanokvm":   "100.109.254.53"' "$policy"
   python3 "$REPO_ROOT/tests/tailscale-discovery-routes-contract.py"
   grep -qF '{"action": "accept", "src": ["endeavour", "pathfinder", "kepler"], "dst": ["nanokvm:22,443"]}' "$policy"
   grep -qF '{"src": "kepler", "accept": ["nanokvm:22", "nanokvm:443"]}' "$policy"
@@ -26,6 +26,6 @@ setup() {
   module="$REPO_ROOT/tailscale/modules/acl/main.tf"
 
   grep -qF 'resource "tailscale_device_key" "nanokvm"' "$module"
-  grep -qF 'device_id           = "nu53rVuxF711CNTRL"' "$module"
+  grep -qF 'device_id           = "nkkZvj4YK721CNTRL"' "$module"
   grep -qF 'key_expiry_disabled = true' "$module"
 }
