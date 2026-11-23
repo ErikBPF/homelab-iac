@@ -32,7 +32,7 @@ Project scaffolding follows the `datafoundation-iac` devenv/Terragrunt pattern.
 
 - [`docs/2026-11-22-argus-grafana-reader.md`](docs/2026-11-22-argus-grafana-reader.md) — manual Grafana Viewer identity bootstrap and bounded Vault token handoff; live approval pending.
 
-- [`docs/2026-09-07-paused-ha-route.md`](docs/2026-09-07-paused-ha-route.md) — withdraw the paused household HA route while preserving credentials and checks for promised services.
+- [`docs/2026-09-07-paused-ha-route.md`](docs/2026-09-07-paused-ha-route.md) — pause record for the household HA route, superseded when the 4B route resumed on Kepler's Vulkan stack.
 - [`docs/2026-10-13-discovery-route-approval.md`](docs/2026-10-13-discovery-route-approval.md) — restore Discovery's exact advertised host routes without broadening DNS or ACL policy.
 - [`docs/2026-10-13-tailnet-dns-hardening.md`](docs/2026-10-13-tailnet-dns-hardening.md) — adopt split DNS, guard Discovery identity, retain roaming checks and refresh the published drift-checker pin.
 - [`docs/2026-07-12-infrastructure-ssot-implementation-plan.md`](docs/2026-07-12-infrastructure-ssot-implementation-plan.md) — fleet-wide infrastructure-resource SSOT, LiteLLM Terraform control plane, runtime-secret cutover, DR, and bounded chaos engineering.
