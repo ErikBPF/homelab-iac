@@ -31,9 +31,9 @@ components/openbao/environments/home/harbor-project-iam components/openbao/envir
 components/openbao/environments/home/ocr-review-litellm components/openbao/environments/home/ocr-review-litellm/terraform.tfstate
 components/openbao/environments/home/runtime-secret-foundation components/openbao/environments/home/runtime-secret-foundation/terraform.tfstate
 github/repos github/repos/terraform.tfstate
-oracle/compute oracle/compute/terraform.tfstate
 oracle/compute-telstar oracle/compute-telstar/terraform.tfstate
 oracle/compute-vanguard oracle/compute-vanguard/terraform.tfstate
+oracle/compute oracle/compute/terraform.tfstate
 oracle/console-connection-vanguard oracle/console-connection-vanguard/terraform.tfstate
 oracle/console-history-vanguard oracle/console-history-vanguard/terraform.tfstate
 tailscale/acl tailscale/acl/terraform.tfstate
