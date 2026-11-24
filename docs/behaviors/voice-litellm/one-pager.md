@@ -1,10 +1,10 @@
-# Voice model routing — deployed
+# Voice model routing — key and handoff applied, aliases pending apply
 
-**Stage / revision:** RV / 3
-**Status:** Aliases, scoped key, OpenBao policy and KV applied; primary ASR qualified, rewrite degraded.
+**Stage / revision:** RV / 4
+**Status:** Scoped key, OpenBao policy and KV applied. The two aliases are declared in the manifest but absent from the running gateway, so the client falls back locally; primary ASR qualified, rewrite degraded.
 **Owner / date:** homelab-iac / 2026-11-21
 
-The user's gateway-first/local-fallback request is deployed. Saved plans created only two aliases and one scoped key. `voice-transcribe` uses `openai/aTrain-core/faster-whisper-large-v3-turbo` at Orion:9000/v1; its provider prefix was corrected by a single-model update after the unprefixed route returned HTTP400. `voice-rewrite` uses the existing `qwen3.8-flash-next` alias' Orion:8080/v1 endpoint. Both have typed `no-log=true`, zero configured inference prices and no paid route.
+The user's gateway-first/local-fallback request is declared. Saved plans created only two aliases and one scoped key. `voice-transcribe` uses `openai/aTrain-core/faster-whisper-large-v3-turbo` at Orion:9000/v1; its provider prefix was corrected by a single-model update after the unprefixed route returned HTTP400. `voice-rewrite` uses the existing `qwen3.8-flash-next` alias' Orion:8080/v1 endpoint. Both have typed `no-log=true`, zero configured inference prices and no paid route. The 2026-11-21 apply and qualification receipt below is history: the aliases are not in the running gateway at this revision, so a merge alone does not restore them and the production unit needs its own apply.
 
 The identity `svc-homelab-iac-voice-dictation-model-inference` permits exactly those aliases, parallelism two and 20 requests/minute. An unrelated alias returned HTTP403. Key metadata `store_prompts_in_spend_logs="false"` is normalized by LiteLLM 1.110.2. Client request limits disable retries and gateway fallback.
 
@@ -31,3 +31,7 @@ User requested `qwen3.8-flash-next` as the voice rewrite model. `voice-rewrite` 
 ## Voice credential regression contract — 2026-11-22
 
 Added the requested offline voice-key contract: exact alias allowlist, identity, budget/rate/concurrency limits, local/privacy metadata, OpenBao dependency and field, exact policy grants, and absence from unattended adoption. All seven key contracts passed. Two bounded mutations proved the new test rejects an added paid alias and a removed writer grant; both mutations were restored immediately. No runtime credential or policy changed. Independent reviewer `voice_research_review` checked this diff and reported: “IaC contract covers scoped aliases, limits, privacy metadata, exact handoff, and deferred monitoring.” The reviewer did not execute Bats; the execution results here are from the primary agent.
+
+## Applied-state correction — 2026-11-23
+
+Measured on the live gateway: `/v1/models` still lists `voice-transcribe` and `voice-rewrite` for the scoped key, but both routes answer HTTP 400 `Invalid model name`, the running Discovery `litellm_config.yaml` carries no voice aliases, and the proxy model table has no `voice-*` rows. The aliases were therefore dropped from the running gateway by a later config change; only the scoped key, the OpenBao policy paths and the `secret/home/voice-litellm` KV entry survive from the 2026-11-21 apply. Until the production unit is applied from this manifest, the desktop client's LiteLLM-first attempt always fails and every dictation runs the local Parakeet and Ollama fallback with the "Using local fallback" notice. Re-applying the production unit is a separate, explicit plan/apply decision; merging this PR does not perform it.
