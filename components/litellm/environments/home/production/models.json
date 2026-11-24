@@ -538,7 +538,7 @@
       "custom_llm_provider": "openai",
       "base_model": "openai/aTrain-core/faster-whisper-large-v3-turbo",
       "model_api_key": "sk-no-key-required",
-      "model_api_base": "http://100.72.85.73:9000/v1",
+      "model_api_base": "http://kepler:9000/v1",
       "mode": "audio_transcription",
       "input_cost_per_million_tokens": 0,
       "output_cost_per_million_tokens": 0,
