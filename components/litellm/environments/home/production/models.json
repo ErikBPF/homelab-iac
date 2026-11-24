@@ -558,7 +558,7 @@
     },
     "voice-rewrite": {
       "custom_llm_provider": "openai",
-      "base_model": "qwen3.8-coder",
+      "base_model": "qwen3.8-flash-next",
       "model_api_key": "sk-no-key-required",
       "model_api_base": "http://100.72.85.73:8080/v1",
       "mode": "chat",

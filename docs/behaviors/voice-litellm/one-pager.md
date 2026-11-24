@@ -4,7 +4,7 @@
 **Status:** Aliases, scoped key, OpenBao policy and KV applied; primary ASR qualified, rewrite degraded.
 **Owner / date:** homelab-iac / 2026-11-21
 
-The user's gateway-first/local-fallback request is deployed. Saved plans created only two aliases and one scoped key. `voice-transcribe` uses `openai/aTrain-core/faster-whisper-large-v3-turbo` at Orion:9000/v1; its provider prefix was corrected by a single-model update after the unprefixed route returned HTTP400. `voice-rewrite` uses existing `qwen3.8-coder` at Orion:8080/v1. Both have typed `no-log=true`, zero configured inference prices and no paid route.
+The user's gateway-first/local-fallback request is deployed. Saved plans created only two aliases and one scoped key. `voice-transcribe` uses `openai/aTrain-core/faster-whisper-large-v3-turbo` at Orion:9000/v1; its provider prefix was corrected by a single-model update after the unprefixed route returned HTTP400. `voice-rewrite` uses the existing `qwen3.8-flash-next` alias' Orion:8080/v1 endpoint. Both have typed `no-log=true`, zero configured inference prices and no paid route.
 
 The identity `svc-homelab-iac-voice-dictation-model-inference` permits exactly those aliases, parallelism two and 20 requests/minute. An unrelated alias returned HTTP403. Key metadata `store_prompts_in_spend_logs="false"` is normalized by LiteLLM 1.110.2. Client request limits disable retries and gateway fallback.
 
@@ -23,6 +23,10 @@ Accepted the missing Discovery alias fixture/count and state-key registrations; 
 Confirmed `qwen3.8-coder` in [the pinned Servarr source](https://github.com/ErikBPF/servarr/blob/f991f2cfe84bfd43f14aa47c147439704ebcfa79/machines/orion/ai-models.compose.yml#L40). The model name is correct; readiness was overstated by the production lifecycle. Changed it to `manual`, retained `probe_skip` for the unavailable endpoint and the scoped key allowlist so the accepted gateway-attempt/local-fallback behavior is preserved. Lifecycle is local catalog metadata, not passed to the provider. No endpoint mutation, credential rotation or new apply was performed. Promotion requires a successful rewrite qualification and an explicit probe decision.
 
 Validation after reconciliation: all 176 Bats contracts passed with the pinned provider submodule initialized; exact alias/state/drift assertions remain enforced. Independent review found no remaining material concern. [Repair and validation receipt](cr-validation.txt). Fresh automated review is requested after publication.
+
+## Rewrite model revision — 2026-11-23
+
+User requested `qwen3.8-flash-next` as the voice rewrite model. `voice-rewrite` now names it as `base_model` against the same Orion:8080 endpoint; the alias keeps its own `no-log` metadata and zero configured cost, because it runs on owned hardware, and stays `manual` with `probe_skip` until a rewrite qualification and an explicit probe decision exist. Transcription is unchanged: `qwen3.8-flash-next` is a text model, so audio still goes to the pinned whisper alias. The Discovery alias fixture count moved 23 → 25 for the two aliases main added meanwhile. 179 Bats contracts ran locally: S05 passes with the count corrected, and S01/S02 fail only in linked worktrees because the rendered state key becomes worktree-relative; both pass in a normal checkout.
 
 ## Voice credential regression contract — 2026-11-22
 
