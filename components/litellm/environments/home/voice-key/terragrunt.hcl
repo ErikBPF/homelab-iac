@@ -14,7 +14,7 @@ terraform {
 
 inputs = {
   key_alias             = "svc-homelab-iac-voice-dictation-model-inference"
-  models                = ["voice-transcribe", "voice-rewrite"]
+  models                = ["voice-transcribe", "qwen3.8-flash-next"]
   max_budget            = 25
   budget_duration       = "30d"
   max_parallel_requests = 2

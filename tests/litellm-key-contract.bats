@@ -86,13 +86,13 @@
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$unit"
 }
 
-@test "Voice gets only two local aliases and an exact OpenBao handoff" {
+@test "Voice gets the ASR alias and the production rewrite route" {
   key_unit=components/litellm/environments/home/voice-key/terragrunt.hcl
   vault_unit=components/openbao/environments/home/voice-litellm/terragrunt.hcl
   policy=components/openbao/modules/runtime-secret-foundation/main.tf
 
   grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-voice-dictation-model-inference"$' "$key_unit"
-  grep -Eq 'models[[:space:]]*=[[:space:]]*\["voice-transcribe", "voice-rewrite"\]$' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["voice-transcribe", "qwen3.8-flash-next"\]$' "$key_unit"
   grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$key_unit"
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"$' "$key_unit"
   grep -Eq 'max_parallel_requests[[:space:]]*=[[:space:]]*2$' "$key_unit"

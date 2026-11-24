@@ -4,7 +4,7 @@
 **Status:** Scoped key, OpenBao policy and KV applied. The two aliases are declared in the manifest but absent from the running gateway, so the client falls back locally; primary ASR qualified, rewrite degraded.
 **Owner / date:** homelab-iac / 2026-11-21
 
-The user's gateway-first/local-fallback request is declared. Saved plans created only two aliases and one scoped key. `voice-transcribe` uses `openai/aTrain-core/faster-whisper-large-v3-turbo` at Kepler:9000/v1, where the transcription stack now runs; its provider prefix was corrected by a single-model update after the unprefixed route returned HTTP400. `voice-rewrite` uses the existing `qwen3.8-flash-next` alias' Orion:8080/v1 endpoint. Both have typed `no-log=true`, zero configured inference prices and no paid route. The 2026-11-21 apply and qualification receipt below is history: the aliases are not in the running gateway at this revision. They return with the next merged-main run, because `components/litellm/environments/home/production` stays in the drift-monitored set and `bin/iac-apply.sh` plans and applies it after a merge to main.
+The user's gateway-first/local-fallback request is declared. Saved plans created one voice alias and one scoped key; the dedicated rewrite alias was removed on 2026-11-24. `voice-transcribe` uses `openai/aTrain-core/faster-whisper-large-v3-turbo` at Kepler:9000/v1, where the transcription stack now runs; its provider prefix was corrected by a single-model update after the unprefixed route returned HTTP400. Rewrite traffic uses the existing `qwen3.8-flash-next` route on Orion:8080/v1 directly. Both have typed `no-log=true`, zero configured inference prices and no paid route. The 2026-11-21 apply and qualification receipt below is history: the aliases are not in the running gateway at this revision. They return with the next merged-main run, because `components/litellm/environments/home/production` stays in the drift-monitored set and `bin/iac-apply.sh` plans and applies it after a merge to main.
 
 The identity `svc-homelab-iac-voice-dictation-model-inference` permits exactly those aliases, parallelism two and 20 requests/minute. An unrelated alias returned HTTP403. Key metadata `store_prompts_in_spend_logs="false"` is normalized by LiteLLM 1.110.2. Client request limits disable retries and gateway fallback.
 
@@ -39,3 +39,7 @@ Measured on the live gateway: `/v1/models` still lists `voice-transcribe` and `v
 ## Transcription host move — 2026-11-24
 
 `voice-transcribe` now targets `kepler:9000`, where the transcription stack runs: Kepler serves whisper on :9000 and parakeet on :9001, and its VRAM budget note in desktop-nixos records both resident. Orion no longer answers on :9000 (probe timeout), so the previous endpoint could only fall back locally. The alias still names `openai/aTrain-core/faster-whisper-large-v3-turbo`, the model the Kepler server loads.
+
+## Rewrite alias removed — 2026-11-24
+
+`voice-rewrite` no longer exists. It duplicated the `qwen3.8-flash-next` route on the same Orion endpoint, so the scoped key now allows exactly `voice-transcribe` and `qwen3.8-flash-next`, and the desktop client asks for the production route by name. The manifest drops to 24 aliases and the fixture assertion follows. Stored key metadata is rewritten by the next apply; nothing else about the credential changes.
