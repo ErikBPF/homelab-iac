@@ -343,9 +343,9 @@ check_s05() {
     (.models | type == "object") and
     ((.models | keys) == $aliases[0]) and
     ([.models[].mode] | unique) == ["audio_transcription", "chat", "embedding", "rerank", "responses"] and
-    ([.models[] | select(.model_api_base | test("kepler"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription"]
-    and .models["bge-m3"].model_api_base == "http://100.72.85.73:8085/v1"
-    and .models["bge-reranker-v2-m3"].model_api_base == "http://100.72.85.73:8087"
+    ([.models[] | select(.model_api_base | test("kepler|100\\.90\\.113\\.117"; "i"))] | map(.mode) | sort | unique) == ["audio_transcription", "chat", "embedding", "rerank"]
+    and .models["bge-m3"].model_api_base == "http://100.90.113.117:8085/v1"
+    and .models["bge-reranker-v2-m3"].model_api_base == "http://100.90.113.117:8087"
     and .models["qwen-pqnld"].mode == "chat"
     and .models["qwen-pqnld"].model_api_base == "http://100.77.14.27:11560/v1" and
     ([.models[] | select((.context_limit // null) == null)] | length) > 0 and
@@ -453,7 +453,7 @@ check_s05() {
   ' "$production_render" >/dev/null \
     || fail "S05 RED: cache-read price must be present only on the reviewed route"
 
-  printf '%s\n' "S05 PASS: exact Discovery production manifest, Orion retrieval routes, allowlists, and cutoff guard proven offline"
+  printf '%s\n' "S05 PASS: exact Discovery production manifest, Kepler ASR/chat/embedding/rerank placement, allowlists, and cutoff guard proven offline"
 }
 
 case "$1" in
