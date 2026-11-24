@@ -13,8 +13,8 @@ assumptions no longer match the declared control plane.
 `16449ba51c4a4e0ca97aff5255c9c8ec1920866a`, moved the production retrieval
 declarations to Orion:
 
-- `bge-m3`: `http://100.72.85.73:8085/v1`.
-- `bge-reranker-v2-m3`: `http://100.72.85.73:8087`.
+- `bge-m3`: `http://100.90.113.117:8085/v1`.
+- `bge-reranker-v2-m3`: `http://100.90.113.117:8087`.
 
 The current source is
 [`models.json`](../components/litellm/environments/home/production/models.json),
