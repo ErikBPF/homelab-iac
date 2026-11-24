@@ -34,3 +34,14 @@ not establish live endpoint health, remove remote snapshots or transient
 timers, or prove Cognee retrieval value and populated-dataset recovery.
 Those require separate current evidence; historical pilot results do not
 close them.
+
+## 2026-11-24 — retrieval moved to Kepler's Vulkan GPU
+
+PR ErikBPF/homelab-iac#187 moves both retrieval routes to the Kepler
+llama.cpp/Vulkan stack (servarr `retrieval-vulkan`, desktop-nixos #549):
+
+- `bge-m3`: `http://100.90.113.117:8085/v1`
+- `bge-reranker-v2-m3`: `http://100.90.113.117:8087`
+
+The Orion CPU endpoints above remain the historical #113 record and stay
+running as a fallback until the Kepler routes are accepted live.

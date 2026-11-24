@@ -157,14 +157,17 @@
 
 	"tests": [
         // Retrieval is reachable through LiteLLM on Discovery, not directly by other peers.
-        {"src": "discovery", "accept": ["orion:9000"]},
-        {"src": "endeavour", "deny": ["orion:9000"]},
-        {"src": "pathfinder", "deny": ["orion:9000"]},
-        {"src": "apollo", "deny": ["orion:9000"]},
-        {"src": "kepler", "deny": ["orion:9000"]},
-        {"src": "s25-ultra-de-erik", "deny": ["orion:9000"]},
-        {"src": "s25-ultra-de-erik", "deny": ["orion:8085", "orion:8087"]},
+        // Orion still runs the CPU fallback on 8085/8087; Kepler serves the
+        // primary Vulkan endpoints on the same ports.
+        {"src": "s25-ultra-de-erik", "deny": ["orion:8085", "orion:8087", "kepler:8085", "kepler:8087"]},
+        // Transcription runs on Kepler :9000 as well: Discovery reaches it through
+        // LiteLLM, no other peer gets a direct path.
+        {"src": "discovery", "accept": ["kepler:9000"]},
+        {"src": "s25-ultra-de-erik", "deny": ["kepler:9000"]},
+        {"src": "orion", "deny": ["kepler:9000"]},
         {"src": "kepler", "deny": ["orion:8085", "orion:8087"]},
+        {"src": "orion", "deny": ["kepler:8085", "kepler:8087"]},
+        {"src": "discovery", "accept": ["kepler:8085", "kepler:8087"]},
         // Kepler hot inference (parakeet ASR :9001, qwen4b tool server :8088) is
         // reachable through LiteLLM on Discovery only; other peers get no direct path.
         {"src": "discovery", "accept": ["kepler:9001", "kepler:8088"]},
