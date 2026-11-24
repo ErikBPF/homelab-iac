@@ -13,8 +13,8 @@ assumptions no longer match the declared control plane.
 `16449ba51c4a4e0ca97aff5255c9c8ec1920866a`, moved the production retrieval
 declarations to Orion:
 
-- `bge-m3`: `http://100.90.113.117:8085/v1`.
-- `bge-reranker-v2-m3`: `http://100.90.113.117:8087`.
+- `bge-m3`: `http://100.72.85.73:8085/v1`.
+- `bge-reranker-v2-m3`: `http://100.72.85.73:8087`.
 
 The current source is
 [`models.json`](../components/litellm/environments/home/production/models.json),
@@ -34,3 +34,14 @@ not establish live endpoint health, remove remote snapshots or transient
 timers, or prove Cognee retrieval value and populated-dataset recovery.
 Those require separate current evidence; historical pilot results do not
 close them.
+
+## 2026-11-24 — retrieval moved to Kepler's Vulkan GPU
+
+PR ErikBPF/homelab-iac#187 moves both retrieval routes to the Kepler
+llama.cpp/Vulkan stack (servarr `retrieval-vulkan`, desktop-nixos #549):
+
+- `bge-m3`: `http://100.90.113.117:8085/v1`
+- `bge-reranker-v2-m3`: `http://100.90.113.117:8087`
+
+The Orion CPU endpoints above remain the historical #113 record and stay
+running as a fallback until the Kepler routes are accepted live.
