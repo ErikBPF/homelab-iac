@@ -12,7 +12,7 @@ terraform {
 
 inputs = {
   key_alias             = "svc-homelab-iac-ocr-review-model-inference"
-  models                = ["glm-5.3-flash", "deepseek-v4.1-flash"]
+  models                = ["deepseek-v4.1-flash", "glm-5.3-flash", "parakeet-tdt-v3", "whisper-pt-br"]
   max_budget            = 25
   budget_duration       = "30d"
   max_parallel_requests = 8

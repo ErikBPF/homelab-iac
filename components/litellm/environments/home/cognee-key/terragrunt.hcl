@@ -12,7 +12,7 @@ terraform {
 
 inputs = {
   key_alias             = "cognee"
-  models                = ["bge-m3", "bge-reranker-v2-m3", "qwen-chat"]
+  models                = ["bge-m3", "bge-reranker-v2-m3", "parakeet-tdt-v3", "qwen-chat", "whisper-pt-br"]
   max_parallel_requests = 4
   rpm_limit             = 60
   tpm_limit             = 500000

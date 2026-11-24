@@ -420,8 +420,8 @@ check_s05() {
 
   jq -e --slurpfile aliases "$aliases" '
     (keys == ["cognee", "deepseek-harness", "hermes", "opencode"]) and
-    (.cognee == ["bge-m3", "bge-reranker-v2-m3", "qwen-chat"]) and
-    (."deepseek-harness" == ["deepseek-v4.1-flash", "qwen-chat"]) and
+    (.cognee == ["bge-m3", "bge-reranker-v2-m3", "parakeet-tdt-v3", "qwen-chat", "whisper-pt-br"]) and
+    (."deepseek-harness" == ["deepseek-v4.1-flash", "parakeet-tdt-v3", "qwen-chat", "whisper-pt-br"]) and
     (.hermes | index("deepseek-v4.1-flash") != null) and
     (.opencode | index("deepseek-v4.1-flash") != null) and
     ([to_entries[].value[]] |

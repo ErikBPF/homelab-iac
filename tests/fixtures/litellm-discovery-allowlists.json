@@ -2,11 +2,15 @@
   "cognee": [
     "bge-m3",
     "bge-reranker-v2-m3",
-    "qwen-chat"
+    "parakeet-tdt-v3",
+    "qwen-chat",
+    "whisper-pt-br"
   ],
   "deepseek-harness": [
     "deepseek-v4.1-flash",
-    "qwen-chat"
+    "parakeet-tdt-v3",
+    "qwen-chat",
+    "whisper-pt-br"
   ],
   "hermes": [
     "deepseek-v4.1-flash",

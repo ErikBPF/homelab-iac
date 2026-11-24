@@ -26,7 +26,7 @@
   vault_unit=components/openbao/environments/home/cognee-litellm/terragrunt.hcl
   policy=components/openbao/modules/runtime-secret-foundation/main.tf
 
-  grep -Fq 'models                = ["bge-m3", "bge-reranker-v2-m3", "qwen-chat"]' "$key_unit"
+  grep -Fq 'models                = ["bge-m3", "bge-reranker-v2-m3", "parakeet-tdt-v3", "qwen-chat", "whisper-pt-br"]' "$key_unit"
   grep -Fq 'consumer = "cognee"' "$key_unit"
   grep -Fq 'dependency "cognee_key"' "$vault_unit"
   grep -Fq 'name          = "lab/cognee-litellm"' "$vault_unit"
@@ -42,7 +42,7 @@
 
   grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25' "$key_unit"
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$key_unit"
-  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "qwen-chat"\]' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "parakeet-tdt-v3", "qwen-chat", "whisper-pt-br"\]' "$key_unit"
   grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-deepseek-harness-model-inference"' "$key_unit"
   grep -Eq 'consumer[[:space:]]*=[[:space:]]*"deepseek-harness"' "$key_unit"
   grep -Fq 'modules//scoped-key' "$key_unit"
@@ -74,14 +74,14 @@
 
 @test "HA harness key can call qwen-chat and qwen-pqnld" {
   key_unit=components/litellm/environments/home/ha-harness-key/terragrunt.hcl
-  grep -Fq 'models                = ["ha-agent-qwen4b", "qwen-chat", "qwen-pqnld"]' "$key_unit"
+  grep -Fq 'models                = ["ha-agent-qwen4b", "parakeet-tdt-v3", "qwen-chat", "qwen-pqnld", "whisper-pt-br"]' "$key_unit"
 }
 
 @test "Aster helper key is restricted to DeepSeek through OpenCode Go" {
   unit=components/litellm/environments/home/aster-key/terragrunt.hcl
   grep -Fq 'modules//scoped-key' "$unit"
   grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-aster-model-inference"' "$unit"
-  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash"\]' "$unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "parakeet-tdt-v3", "whisper-pt-br"\]' "$unit"
   grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$unit"
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$unit"
 }
@@ -93,7 +93,7 @@
 
   grep -Fq 'modules//scoped-key' "$key_unit"
   grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-ocr-review-model-inference"' "$key_unit"
-  grep -Eq 'models[[:space:]]*=[[:space:]]*\["glm-5.3-flash", "deepseek-v4.1-flash"\]' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "glm-5.3-flash", "parakeet-tdt-v3", "whisper-pt-br"\]' "$key_unit"
   grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$key_unit"
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$key_unit"
   grep -Eq 'consumer[[:space:]]*=[[:space:]]*"ocr-review"' "$key_unit"
