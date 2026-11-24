@@ -157,10 +157,9 @@
 
 	"tests": [
         // Retrieval is reachable through LiteLLM on Discovery, not directly by other peers.
-        // Orion still runs the CPU fallback on 8085/8087; Kepler serves the
-        // primary Vulkan endpoints on the same ports.
-        {"src": "s25-ultra-de-erik", "deny": ["orion:8085", "orion:8087", "kepler:8085", "kepler:8087"]},
-        {"src": "kepler", "deny": ["orion:8085", "orion:8087"]},
+        // Kepler serves the Vulkan BGE endpoints on 8085/8087; Orion's temporary
+        // CPU placement was retired, so that host exposes neither port.
+        {"src": "s25-ultra-de-erik", "deny": ["kepler:8085", "kepler:8087"]},
         {"src": "orion", "deny": ["kepler:8085", "kepler:8087"]},
         {"src": "discovery", "accept": ["kepler:8085", "kepler:8087"]},
         // Kepler hot inference (parakeet ASR :9001, qwen4b tool server :8088) is
@@ -183,7 +182,7 @@
 		{"src": "orion", "deny": ["kepler:2222"]},       // non-admin cannot SSH
 		{"src": "orion", "deny": ["kepler:8001"]},       // no direct backend access
 		{"src": "discovery", "accept": ["kepler:6443"]}, // hub reaches k3s
-		{"src": "discovery", "accept": ["orion:8080", "orion:8085", "orion:8087"]},  // hub reaches host services (LLMs)
+		{"src": "discovery", "accept": ["orion:8080"]},  // hub reaches Orion's llama.cpp; BGE moved to Kepler
 		{"src": "kepler", "accept": ["discovery:3100"]}, // cluster ships logs to Loki
 		{"src": "voyager", "accept": ["discovery:3100"]}, // public host ships SSH journals
 		{"src": "vanguard", "accept": ["discovery:3100"]}, // public host ships SSH journals
