@@ -535,6 +535,50 @@
       "context_limit": 272000,
       "supports_vision": true,
       "output_limit": 128000
+    },
+    "voice-transcribe": {
+      "custom_llm_provider": "openai",
+      "base_model": "openai/aTrain-core/faster-whisper-large-v3-turbo",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://100.72.85.73:9000/v1",
+      "mode": "audio_transcription",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "additional_litellm_params": {
+        "timeout": "30",
+        "no-log": "true"
+      },
+      "input_modalities": [
+        "audio"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "privacy_tier": "confidential",
+      "lifecycle": "production",
+      "probe_skip": true
+    },
+    "voice-rewrite": {
+      "custom_llm_provider": "openai",
+      "base_model": "qwen3.8-flash-next",
+      "model_api_key": "sk-no-key-required",
+      "model_api_base": "http://100.72.85.73:8080/v1",
+      "mode": "chat",
+      "input_cost_per_million_tokens": 0,
+      "output_cost_per_million_tokens": 0,
+      "additional_litellm_params": {
+        "timeout": "30",
+        "no-log": "true"
+      },
+      "input_modalities": [
+        "text"
+      ],
+      "output_modalities": [
+        "text"
+      ],
+      "privacy_tier": "confidential",
+      "lifecycle": "manual",
+      "probe_skip": true
     }
   }
 }
