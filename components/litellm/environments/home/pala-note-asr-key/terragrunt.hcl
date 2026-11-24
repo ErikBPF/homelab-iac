@@ -12,7 +12,7 @@ terraform {
 
 inputs = {
   key_alias             = "svc-homelab-iac-pala-note-asr"
-  models                = ["parakeet-tdt-v3"]
+  models                = ["parakeet-tdt-v3", "whisper-pt-br"]
   max_parallel_requests = 1
   rpm_limit             = 60
   tpm_limit             = 60000

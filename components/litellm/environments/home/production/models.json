@@ -115,7 +115,8 @@
         "text"
       ],
       "privacy_tier": "confidential",
-      "lifecycle": "production"
+      "lifecycle": "production",
+      "probe_skip": true
     },
     "kimi-k2-code": {
       "custom_llm_provider": "openai",
@@ -223,7 +224,8 @@
       ],
       "probe_language": "pt",
       "privacy_tier": "confidential",
-      "lifecycle": "production"
+      "lifecycle": "production",
+      "probe_skip": true
     },
     "qwen-chat": {
       "custom_llm_provider": "openai",
@@ -390,7 +392,7 @@
     },
     "whisper-pt-br": {
       "custom_llm_provider": "openai",
-      "base_model": "aTrain-core/faster-whisper-large-v3-turbo",
+      "base_model": "whisper-large-v3-turbo",
       "pricing_base_model": "large-v3-turbo",
       "model_api_key": "sk-no-key-required",
       "model_api_base": "http://kepler:9000/v1",
@@ -405,7 +407,8 @@
       ],
       "probe_language": "pt",
       "privacy_tier": "confidential",
-      "lifecycle": "production"
+      "lifecycle": "production",
+      "probe_skip": true
     },
     "zen-free-pickle": {
       "custom_llm_provider": "openai",
