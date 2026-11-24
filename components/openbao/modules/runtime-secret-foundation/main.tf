@@ -49,6 +49,8 @@ resource "vault_policy" "iac_writer" {
     "path \"secret/metadata/home/voice-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/home/deepseek-harness-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/home/deepseek-harness-litellm\" { capabilities = [\"read\"] }",
+    "path \"secret/data/home/ocr-review-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
+    "path \"secret/metadata/home/ocr-review-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/lab/cognee-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/lab/cognee-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/platform/authentik\" { capabilities = [\"create\", \"update\", \"read\"] }",
@@ -131,6 +133,7 @@ locals {
     home-services = "home-services/*"
   }
   harbor_reader_consumers = toset(["discovery", "endeavour", "kepler"])
+  erik_user_hosts         = toset(["endeavour", "kepler"])
 }
 
 resource "vault_policy" "harbor_fleet_readers_publisher" {
@@ -155,6 +158,25 @@ resource "vault_policy" "harbor_fleet_reader" {
   EOT
 }
 
+# Per-host reader for Erik's own secrets. Runtime values live under
+# secret/users/erik; the host AppRole can also read the shared GitHub token.
+# No home/* access, no SSH key material, and no write capability.
+resource "vault_policy" "erik_user" {
+  for_each = local.erik_user_hosts
+  name     = "svc-desktop-nixos-${each.key}-erik-reader"
+  policy   = <<-EOT
+    path "secret/data/users/erik/*" {
+      capabilities = ["read"]
+    }
+    path "secret/metadata/users/erik/*" {
+      capabilities = ["read", "list"]
+    }
+    path "secret/data/iac/github" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
 # The workstation shell (SecretSpec) and the iac provider both resolve the
 # GitHub token from one OpenBao entry. Read-only: the value is written and
 # rotated out of band, never from a repo or a Terraform variable.
@@ -162,6 +184,19 @@ resource "vault_policy" "github_token_reader" {
   name   = "svc-desktop-nixos-endeavour-github-token-reader"
   policy = <<-EOT
     path "secret/data/iac/github" {
+      capabilities = ["read"]
+    }
+  EOT
+}
+
+# The /cr flow on endeavour resolves its LiteLLM review key through the same
+# SecretSpec AppRole that already reads the GitHub token: one login, two
+# read-only boundaries. The GitHub policy keeps its name; this one names the
+# model-inference boundary explicitly.
+resource "vault_policy" "endeavour_model_inference_reader" {
+  name   = "svc-desktop-nixos-endeavour-model-inference-reader"
+  policy = <<-EOT
+    path "secret/data/home/ocr-review-litellm" {
       capabilities = ["read"]
     }
   EOT
@@ -287,11 +322,23 @@ resource "vault_approle_auth_backend_role" "harbor_fleet_reader" {
   token_type     = "default"
 }
 
+resource "vault_approle_auth_backend_role" "erik_user" {
+  for_each       = local.erik_user_hosts
+  backend        = vault_auth_backend.approle.path
+  role_name      = "svc-desktop-nixos-${each.key}-erik-reader"
+  bind_secret_id = true
+  token_policies = [vault_policy.erik_user[each.key].name]
+  token_ttl      = 600
+  token_max_ttl  = 3600
+  secret_id_ttl  = 2592000
+  token_type     = "default"
+}
+
 resource "vault_approle_auth_backend_role" "github_token_reader" {
   backend        = vault_auth_backend.approle.path
   role_name      = "svc-desktop-nixos-endeavour-github-token-reader"
   bind_secret_id = true
-  token_policies = [vault_policy.github_token_reader.name]
+  token_policies = [vault_policy.github_token_reader.name, vault_policy.endeavour_model_inference_reader.name]
   token_ttl      = 300
   token_max_ttl  = 300
   secret_id_ttl  = 7776000

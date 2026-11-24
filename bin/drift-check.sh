@@ -74,10 +74,12 @@ out=$(terragrunt run --all \
   --filter '!components/harbor-iam/environments/home/production' \
   --filter '!components/harbor-iam/environments/home/project-members' \
   --filter '!components/litellm/environments/home/deepseek-harness-key' \
+  --filter '!components/litellm/environments/home/ocr-review-key' \
   --filter '!components/openbao/environments/home/aster-authentik-reader' \
   --filter '!components/openbao/environments/home/authentik-runtime' \
   --filter '!components/openbao/environments/home/authentik-config-manager' \
   --filter '!components/openbao/environments/home/deepseek-harness-litellm' \
+  --filter '!components/openbao/environments/home/ocr-review-litellm' \
   --filter '!components/openbao/environments/home/harbor-project-iam' \
   --filter '!components/openbao/environments/home/runtime-secret-foundation' \
   --filter '!cloudflare/access' \

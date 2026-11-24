@@ -12,7 +12,7 @@ terraform {
 
 inputs = {
   key_alias             = "svc-homelab-iac-aster-model-inference"
-  models                = ["deepseek-v4.1-flash"]
+  models                = ["deepseek-v4.1-flash", "parakeet-tdt-v3", "whisper-pt-br"]
   max_budget            = 25
   budget_duration       = "30d"
   max_parallel_requests = 8

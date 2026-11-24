@@ -26,7 +26,7 @@
   vault_unit=components/openbao/environments/home/cognee-litellm/terragrunt.hcl
   policy=components/openbao/modules/runtime-secret-foundation/main.tf
 
-  grep -Fq 'models                = ["bge-m3", "bge-reranker-v2-m3", "qwen-chat"]' "$key_unit"
+  grep -Fq 'models                = ["bge-m3", "bge-reranker-v2-m3", "parakeet-tdt-v3", "qwen-chat", "whisper-pt-br"]' "$key_unit"
   grep -Fq 'consumer = "cognee"' "$key_unit"
   grep -Fq 'dependency "cognee_key"' "$vault_unit"
   grep -Fq 'name          = "lab/cognee-litellm"' "$vault_unit"
@@ -42,7 +42,7 @@
 
   grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25' "$key_unit"
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$key_unit"
-  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "qwen-chat"\]' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "parakeet-tdt-v3", "qwen-chat", "whisper-pt-br"\]' "$key_unit"
   grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-deepseek-harness-model-inference"' "$key_unit"
   grep -Eq 'consumer[[:space:]]*=[[:space:]]*"deepseek-harness"' "$key_unit"
   grep -Fq 'modules//scoped-key' "$key_unit"
@@ -74,14 +74,14 @@
 
 @test "HA harness key can call qwen-chat and qwen-pqnld" {
   key_unit=components/litellm/environments/home/ha-harness-key/terragrunt.hcl
-  grep -Fq 'models                = ["ha-agent-qwen4b", "qwen-chat", "qwen-pqnld"]' "$key_unit"
+  grep -Fq 'models                = ["ha-agent-qwen4b", "parakeet-tdt-v3", "qwen-chat", "qwen-pqnld", "whisper-pt-br"]' "$key_unit"
 }
 
 @test "Aster helper key is restricted to DeepSeek through OpenCode Go" {
   unit=components/litellm/environments/home/aster-key/terragrunt.hcl
   grep -Fq 'modules//scoped-key' "$unit"
   grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-aster-model-inference"' "$unit"
-  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash"\]' "$unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "parakeet-tdt-v3", "whisper-pt-br"\]' "$unit"
   grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$unit"
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$unit"
 }
@@ -111,4 +111,32 @@
   grep -Fq 'path \"secret/metadata/home/voice-litellm\" { capabilities = [\"read\"] }' "$policy"
   ! grep -Fxq 'components/litellm/environments/home/voice-key' tests/fixtures/drift-monitored-units.txt
   ! grep -Fxq 'components/openbao/environments/home/voice-litellm' tests/fixtures/drift-monitored-units.txt
+}
+
+@test "Workstation OCR review gets a scoped LiteLLM key through OpenBao" {
+  key_unit=components/litellm/environments/home/ocr-review-key/terragrunt.hcl
+  vault_unit=components/openbao/environments/home/ocr-review-litellm/terragrunt.hcl
+  foundation=components/openbao/modules/runtime-secret-foundation/main.tf
+
+  grep -Fq 'modules//scoped-key' "$key_unit"
+  grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-ocr-review-model-inference"' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "glm-5.3-flash", "parakeet-tdt-v3", "whisper-pt-br"\]' "$key_unit"
+  grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$key_unit"
+  grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$key_unit"
+  grep -Eq 'consumer[[:space:]]*=[[:space:]]*"ocr-review"' "$key_unit"
+
+  grep -Fq 'dependency "ocr_review_key"' "$vault_unit"
+  grep -Fq 'name          = "home/ocr-review-litellm"' "$vault_unit"
+  grep -Fq 'LITELLM_OCR_API_KEY = dependency.ocr_review_key.outputs.key' "$vault_unit"
+
+  grep -Fq 'path \"secret/data/home/ocr-review-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }' "$foundation"
+  grep -Fq 'path \"secret/metadata/home/ocr-review-litellm\" { capabilities = [\"read\"] }' "$foundation"
+  grep -Fq 'resource "vault_policy" "endeavour_model_inference_reader"' "$foundation"
+  grep -Fq 'token_policies = [vault_policy.github_token_reader.name, vault_policy.endeavour_model_inference_reader.name]' "$foundation"
+
+  # The shared login must not widen either policy: one path, read-only.
+  reader=$(sed -n '/resource "vault_policy" "endeavour_model_inference_reader"/,/^}/p' "$foundation")
+  test "$(grep -Fc 'path "secret/data/home/ocr-review-litellm"' <<<"$reader")" -eq 1
+  test "$(grep -Fc 'capabilities = ["read"]' <<<"$reader")" -eq 1
+  ! grep -Eq 'create|update|delete|list|\*' <<<"$reader"
 }

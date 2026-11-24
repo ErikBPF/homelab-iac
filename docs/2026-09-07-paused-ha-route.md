@@ -1,6 +1,6 @@
 # Paused household HA inference route
 
-**Status:** Superseded for the HA main path on 2026-10-27 — `qwen-chat` + `qwen-pqnld` resumed; `ha-agent-qwen4b` remains withdrawn. The original pause record follows as history.
+**Status:** Superseded for the HA main path on 2026-10-27 — `qwen-chat` + `qwen-pqnld` resumed; `ha-agent-qwen4b` re-registered on 2026-11-23 on the Kepler Vulkan path. The original pause record follows as history.
 
 Household inference is explicitly suspended after the Kepler/Apollo GPU exchange.
 Withdraw `ha-agent-qwen4b` from the active production model manifest so LiteLLM
@@ -96,8 +96,8 @@ The production HA main path resumed with LiteLLM `qwen-chat` (Apollo
 `ha | escalate | noop` route. The harness uses `qwen-chat` for the answer or
 gated tool call.
 
-`ha-agent-qwen4b` remains absent from the active production catalog; the
-`ha-harness` key lists it only for rollback. The superseded pause does not
+At that point `ha-agent-qwen4b` was absent from the active production catalog;
+the `ha-harness` key listed it only for rollback. The superseded pause does not
 apply to any other route.
 
 Evidence: live `/v1/models` exposes both routes; the HA Assist pipelines select
@@ -124,3 +124,18 @@ Discovery runs the pinned `homelab-iac` flake input without refreshing itself,
 so this exclusion only reaches the drift unit after the following
 `desktop-nixos` consumer pin bump and deploy. The merged-main apply reads the
 merged revision directly and picks the exclusion up on its next run.
+
+## 2026-11-23 — ha-agent-qwen4b re-registered on Kepler
+
+The 4B shadow server returns to the production manifest against Kepler's AMD
+Vulkan stack. The route keeps the `8088` backend, the pinned grammar and the
+`ha-harness` key grant; `parakeet-tdt-v3` is registered alongside it for ASR on
+`:9001`.
+
+Observed on Kepler before the change: both models resident together at
+4 539 MiB of 8 176 MiB, grammar-shaped tool calls in 1.46-1.98 s, no amdgpu
+faults. The earlier withdrawal reason (no working GPU backend after the
+exchange) no longer applies.
+
+Evidence: PR ErikBPF/homelab-iac#182; server and service in
+ErikBPF/desktop-nixos#541; compose image in ErikBPF/servarr#366.

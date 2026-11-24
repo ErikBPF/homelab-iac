@@ -209,7 +209,7 @@ SH
   test "$(grep -Fc 'secret_id_ttl  = 7776000' "$module")" -eq 5
 }
 
-@test "GitHub token reader is read-only and scoped to one KV path" {
+@test "GitHub token reader login carries read-only policies, one KV path each" {
   module=components/openbao/modules/runtime-secret-foundation/main.tf
   policy=$(sed -n '/resource "vault_policy" "github_token_reader"/,/^}/p' "$module")
   role=$(sed -n '/resource "vault_approle_auth_backend_role" "github_token_reader"/,/^}/p' "$module")
@@ -220,7 +220,7 @@ SH
   test "$(grep -Fc 'capabilities = ["read"]' <<<"$policy")" -eq 1
   ! grep -Eq 'create|update|delete|list|\*' <<<"$policy"
   grep -Fq 'role_name      = "svc-desktop-nixos-endeavour-github-token-reader"' <<<"$role"
-  grep -Fq 'token_policies = [vault_policy.github_token_reader.name]' <<<"$role"
+  grep -Fq 'token_policies = [vault_policy.github_token_reader.name, vault_policy.endeavour_model_inference_reader.name]' <<<"$role"
   grep -Eq 'token_ttl[[:space:]]*=[[:space:]]*300' <<<"$role"
   grep -Eq 'token_max_ttl[[:space:]]*=[[:space:]]*300' <<<"$role"
   grep -Eq 'secret_id_ttl[[:space:]]*=[[:space:]]*7776000' <<<"$role"
