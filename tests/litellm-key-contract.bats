@@ -86,6 +86,33 @@
   grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$unit"
 }
 
+@test "Voice gets the ASR alias and the production rewrite route" {
+  key_unit=components/litellm/environments/home/voice-key/terragrunt.hcl
+  vault_unit=components/openbao/environments/home/voice-litellm/terragrunt.hcl
+  policy=components/openbao/modules/runtime-secret-foundation/main.tf
+
+  grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-voice-dictation-model-inference"$' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["voice-transcribe", "qwen3.8-flash-next"\]$' "$key_unit"
+  grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$key_unit"
+  grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"$' "$key_unit"
+  grep -Eq 'max_parallel_requests[[:space:]]*=[[:space:]]*2$' "$key_unit"
+  grep -Eq 'rpm_limit[[:space:]]*=[[:space:]]*20$' "$key_unit"
+  grep -Eq 'tpm_limit[[:space:]]*=[[:space:]]*1000000$' "$key_unit"
+  grep -Eq 'consumer[[:space:]]*=[[:space:]]*"voice-dictation"$' "$key_unit"
+  grep -Eq 'locality[[:space:]]*=[[:space:]]*"local"$' "$key_unit"
+  grep -Eq 'store_prompts_in_spend_logs[[:space:]]*=[[:space:]]*"false"$' "$key_unit"
+  grep -Fq 'modules//scoped-key' "$key_unit"
+  grep -Fq 'dependency "voice_key"' "$vault_unit"
+  grep -Fq 'config_path = "../../../../litellm/environments/home/voice-key"' "$vault_unit"
+  grep -Eq 'mount[[:space:]]*=[[:space:]]*"secret"$' "$vault_unit"
+  grep -Eq 'name[[:space:]]*=[[:space:]]*"home/voice-litellm"$' "$vault_unit"
+  grep -Eq 'data[[:space:]]*=[[:space:]]*\{ VOICE_LITELLM_API_KEY = dependency.voice_key.outputs.key \}$' "$vault_unit"
+  grep -Fq 'path \"secret/data/home/voice-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }' "$policy"
+  grep -Fq 'path \"secret/metadata/home/voice-litellm\" { capabilities = [\"read\"] }' "$policy"
+  ! grep -Fxq 'components/litellm/environments/home/voice-key' tests/fixtures/drift-monitored-units.txt
+  ! grep -Fxq 'components/openbao/environments/home/voice-litellm' tests/fixtures/drift-monitored-units.txt
+}
+
 @test "Workstation OCR review gets a scoped LiteLLM key through OpenBao" {
   key_unit=components/litellm/environments/home/ocr-review-key/terragrunt.hcl
   vault_unit=components/openbao/environments/home/ocr-review-litellm/terragrunt.hcl

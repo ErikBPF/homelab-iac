@@ -160,6 +160,11 @@
         // Kepler serves the Vulkan BGE endpoints on 8085/8087; Orion's temporary
         // CPU placement was retired, so that host exposes neither port.
         {"src": "s25-ultra-de-erik", "deny": ["kepler:8085", "kepler:8087"]},
+        // Transcription runs on Kepler :9000: Discovery reaches it through LiteLLM,
+        // no other peer gets a direct path.
+        {"src": "discovery", "accept": ["kepler:9000"]},
+        {"src": "s25-ultra-de-erik", "deny": ["kepler:9000"]},
+        {"src": "orion", "deny": ["kepler:9000"]},
         {"src": "orion", "deny": ["kepler:8085", "kepler:8087"]},
         {"src": "discovery", "accept": ["kepler:8085", "kepler:8087"]},
         // Kepler hot inference (parakeet ASR :9001, qwen4b tool server :8088) is
