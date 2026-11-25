@@ -6,8 +6,10 @@
     (.models["ha-agent-qwen4b"].model_api_base == "http://100.90.113.117:8088/v1") and
     (.models["qwen-chat"].mode == "chat") and
     (.models["qwen-chat"].model_api_base | length > 0) and
+    (.models["ha-pqnld"].mode == "chat") and
+    (.models["ha-pqnld"].model_api_base == "http://kepler:11560/v1") and
     (.models["qwen-pqnld"].mode == "chat") and
-    (.models["qwen-pqnld"].model_api_base == "http://kepler:11560/v1")
+    (.models["qwen-pqnld"].model_api_base == "http://100.72.85.73:11560/v1")
   ' components/litellm/environments/home/production/models.json
   test -f components/litellm/environments/home/ha-harness-key/terragrunt.hcl
   test -f components/openbao/environments/home/ha-harness-litellm/terragrunt.hcl
