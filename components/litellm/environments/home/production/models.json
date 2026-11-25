@@ -249,7 +249,7 @@
     },
     "ha-pqnld": {
       "custom_llm_provider": "openai",
-      "base_model": "ha-pqnld",
+      "base_model": "qwen4b-v8-onpolicy-dpo-v9",
       "model_api_key": "sk-no-key-required",
       "model_api_base": "http://kepler:11560/v1",
       "mode": "chat",
