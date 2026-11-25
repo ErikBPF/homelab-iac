@@ -411,7 +411,7 @@ check_s05() {
   [[ -f "$exceptions" ]] \
     || fail "S05 RED: reviewed manual route exception catalog missing"
   jq -e '
-    (keys | sort) == (["deepseek-v4.1-flash", "glm-5.3-flash", "mimo", "mimo-pro", "qwen3-max", "qwen3.8-flash"] | sort) and
+    (keys | sort) == (["deepseek-v4.1-flash", "glm-5.3", "glm-5.3-flash", "mimo", "mimo-pro", "qwen3-max", "qwen3.8-flash"] | sort) and
     all(.[];
       (.reason | type == "string" and length > 0) and
       (.reviewed_on | type == "string" and test("^[0-9]{4}-[0-9]{2}-[0-9]{2}$")))
@@ -447,11 +447,12 @@ check_s05() {
 
   jq -e '
     .inputs.models["deepseek-v4.1-flash"].cache_read_input_cost_per_million_tokens == 0.006 and
+    .inputs.models["glm-5.3"].cache_read_input_cost_per_million_tokens == 0.26 and
     ([.inputs.models | to_entries[] |
       select(.value | has("cache_read_input_cost_per_million_tokens")) | .key] | sort)
-      == ["deepseek-v4.1-flash"]
+      == ["deepseek-v4.1-flash", "glm-5.3"]
   ' "$production_render" >/dev/null \
-    || fail "S05 RED: cache-read price must be present only on the reviewed route"
+    || fail "S05 RED: cache-read prices must match the reviewed routes"
 
   printf '%s\n' "S05 PASS: exact Discovery production manifest, Kepler ASR/chat/embedding/rerank placement, allowlists, and cutoff guard proven offline"
 }

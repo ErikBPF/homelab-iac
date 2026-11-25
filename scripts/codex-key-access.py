@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Grant/revoke personal Codex routes inside LiteLLM; never rotate credentials."""
+"""Grant/revoke approved personal routes inside LiteLLM; never rotate credentials."""
 import json
 import os
 import re
@@ -11,13 +11,16 @@ MODELS = ['codex-' + base for base in (
 )]
 
 
-def proposed(models, action):
+def proposed(models, action, scope='codex'):
     if action not in ('grant', 'revoke'):
         raise ValueError('Expected grant or revoke')
+    if scope not in ('codex', 'glm-5.3'):
+        raise ValueError('Expected codex or glm-5.3 scope')
+    allowed = MODELS if scope == 'codex' else ['glm-5.3']
     if not models or 'all-proxy-models' in models:
         raise ValueError('Expected bounded personal model access')
-    result = (models + [name for name in MODELS if name not in models]
-              if action == 'grant' else [name for name in models if name not in MODELS])
+    result = (models + [name for name in allowed if name not in models]
+              if action == 'grant' else [name for name in models if name not in allowed])
     if not result:
         raise ValueError('Refusing empty allowlist: LiteLLM treats it as unrestricted')
     return result
@@ -32,7 +35,7 @@ def request(path, payload=None):
         return json.load(response)
 
 
-def main(action, fingerprint):
+def main(action, fingerprint, scope='codex'):
     if not re.fullmatch('[0-9a-f]{64}', fingerprint):
         raise ValueError('Expected SHA256 key fingerprint')
     path = '/key/info?key=' + fingerprint
@@ -40,7 +43,7 @@ def main(action, fingerprint):
     if info['key_alias'] != 'opencode-20260713':
         raise ValueError('Unexpected personal key')
     before = info['models']
-    after = proposed(before, action)
+    after = proposed(before, action, scope)
     if before != after:
         if request(path)['info']['models'] != before:
             raise ValueError('Key grants changed during review')
