@@ -307,7 +307,7 @@
       "custom_llm_provider": "openai",
       "base_model": "qwen-pqnld",
       "model_api_key": "sk-no-key-required",
-      "model_api_base": "http://100.72.85.73:11560/v1",
+      "model_api_base": "http://kepler:11560/v1",
       "mode": "chat",
       "input_cost_per_million_tokens": 0.25,
       "output_cost_per_million_tokens": 0.75,
