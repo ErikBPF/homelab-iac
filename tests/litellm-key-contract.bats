@@ -74,7 +74,7 @@
 
 @test "HA harness key can call qwen-chat and qwen-pqnld" {
   key_unit=components/litellm/environments/home/ha-harness-key/terragrunt.hcl
-  grep -Fq 'models                = ["ha-agent-qwen4b", "parakeet-tdt-v3", "qwen-chat", "qwen-pqnld", "whisper-pt-br"]' "$key_unit"
+  grep -Fq 'models                = ["ha-agent-qwen4b", "ha-pqnld", "parakeet-tdt-v3", "qwen-chat", "qwen-pqnld", "whisper-pt-br"]' "$key_unit"
 }
 
 @test "Aster helper key is restricted to DeepSeek through OpenCode Go" {
