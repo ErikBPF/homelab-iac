@@ -58,10 +58,17 @@ export TF_VAR_state_passphrase="${TF_VAR_state_passphrase:-${UNIFI_STATE_PASSPHR
 # Policies plus Service Tokens edit, which the shared CLOUDFLARE_API_TOKEN does
 # not hold. Keep it out of the unattended scope until that token exists; see
 # the BOOTSTRAP block in cloudflare/access/terragrunt.hcl.
+# The two voice credential units (voice-key, voice-litellm) were applied
+# interactively; their unattended credential and zero-diff qualification is
+# still pending, so only those two are filtered below. The voice model manifest
+# in components/litellm/environments/home/production stays in the adopted scope
+# and is therefore planned and applied by the merged-main runner.
 out=$(terragrunt run --all \
   --parallelism 1 \
   --filter '!oracle/compute-telstar' \
   --filter '!components/litellm/environments/home/canary' \
+  --filter '!components/litellm/environments/home/voice-key' \
+  --filter '!components/openbao/environments/home/voice-litellm' \
   --filter '!components/authentik/environments/home/aster-identity-reader' \
   --filter '!components/authentik/environments/home/iac-access' \
   --filter '!components/grafana/environments/home/argus-reader' \
