@@ -319,11 +319,11 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 24 and
-    (unique | length) == 24 and
+    length == 23 and
+    (unique | length) == 23 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 24 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 23 unique sorted aliases"
 
   jq -e '
     . as $aliases |
@@ -347,7 +347,7 @@ check_s05() {
     and .models["bge-m3"].model_api_base == "http://100.90.113.117:8085/v1"
     and .models["bge-reranker-v2-m3"].model_api_base == "http://100.90.113.117:8087"
     and .models["qwen-pqnld"].mode == "chat"
-    and .models["qwen-pqnld"].model_api_base == "http://100.77.14.27:11560/v1" and
+    and .models["qwen-pqnld"].model_api_base == "http://100.72.85.73:11560/v1" and
     ([.models[] | select((.context_limit // null) == null)] | length) > 0 and
     ([.models[] | select((.output_limit // null) == null)] | length) > 0 and
     (all(.models[];
