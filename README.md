@@ -238,3 +238,5 @@ do not repeat imports for resources already managed.
   Keep secret values out of command output and version control.
 - **Pre-commit** (devenv `git-hooks`): `tofu fmt`, `terragrunt hcl format`, and
   `tflint` run on commit. Active after `direnv allow` / `devenv shell`.
+
+- [Voice routing rollout](docs/behaviors/voice-litellm/one-pager.md) — dedicated local aliases, scoped key and OpenBao handoff.

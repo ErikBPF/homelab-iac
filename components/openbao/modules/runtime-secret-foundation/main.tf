@@ -45,6 +45,8 @@ resource "vault_policy" "iac_writer" {
   policy = join("\n", [
     "path \"secret/data/home/ha-harness-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/home/ha-harness-litellm\" { capabilities = [\"read\"] }",
+    "path \"secret/data/home/voice-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
+    "path \"secret/metadata/home/voice-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/home/deepseek-harness-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
     "path \"secret/metadata/home/deepseek-harness-litellm\" { capabilities = [\"read\"] }",
     "path \"secret/data/home/ocr-review-litellm\" { capabilities = [\"create\", \"update\", \"read\"] }",
