@@ -120,9 +120,9 @@
 
   grep -Fq 'modules//scoped-key' "$key_unit"
   grep -Eq 'key_alias[[:space:]]*=[[:space:]]*"svc-homelab-iac-ocr-review-model-inference"' "$key_unit"
-  grep -Eq 'models[[:space:]]*=[[:space:]]*\["deepseek-v4.1-flash", "glm-5.3-flash", "parakeet-tdt-v3", "whisper-pt-br"\]' "$key_unit"
-  grep -Eq 'max_budget[[:space:]]*=[[:space:]]*25$' "$key_unit"
-  grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"30d"' "$key_unit"
+  grep -Eq 'models[[:space:]]*=[[:space:]]*\["codex-gpt-6-astra", "deepseek-v4.1-flash", "glm-5.3-flash", "parakeet-tdt-v3", "whisper-pt-br"\]' "$key_unit"
+  grep -Eq 'max_budget[[:space:]]*=[[:space:]]*100$' "$key_unit"
+  grep -Eq 'budget_duration[[:space:]]*=[[:space:]]*"7d"' "$key_unit"
   grep -Eq 'consumer[[:space:]]*=[[:space:]]*"ocr-review"' "$key_unit"
 
   grep -Fq 'dependency "ocr_review_key"' "$vault_unit"

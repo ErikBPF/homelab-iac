@@ -52,6 +52,22 @@ ssh -o Hostname=192.168.10.210 discovery \
 The script preserves other models, budgets and credentials, verifies the key
 alias and refuses unrestricted/empty allowlists. Rollback uses `revoke` through
 the same entry point before removing the four routes through Terraform. It does
-not remove the saved login. No other harness key receives subscription access.
+not remove the saved login.
+
+Scope change (2026-11-25): two automated keys now draw on the subscription too,
+because the user asked for the review paths to run on Astra:
+
+- `svc-homelab-iac-hermes-agent-model-inference` (Daedalus, the PR review
+  worker) at `reasoning_effort: high` — measured 1 verified finding vs 2-3 for
+  deepseek on the same five PRs, at about a sixth of the wall time, so this is a
+  latency/quota trade, not a quality one.
+- `svc-homelab-iac-ocr-review-model-inference` (the OCR candidate pass) — the
+  pass is advisory and its output is filtered by the worker.
+
+Both are allowlisted per key like the personal one, with the `ocr-review` key
+carrying a weekly $100 pool so a heavy week cannot strand it for a month. The
+subscription's own usage windows remain the hard ceiling: if either path
+starts returning quota errors, move that key back to the metered pool rather
+than widening anything here.
 
 Offline check: `python3 tests/codex-subscription-routes.py`.
