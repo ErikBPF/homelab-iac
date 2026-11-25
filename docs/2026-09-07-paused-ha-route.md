@@ -139,3 +139,14 @@ exchange) no longer applies.
 
 Evidence: PR ErikBPF/homelab-iac#182; server and service in
 ErikBPF/desktop-nixos#541; compose image in ErikBPF/servarr#366.
+
+## 2026-11-24 — decision routes split: Orion generalist, Kepler household
+
+`qwen-pqnld` no longer names Apollo's pqnld chat shim: Apollo stopped listening on `11560`, so the alias now points at pqnld on Orion (`http://100.72.85.73:11560/v1`) in front of the Qwen3.8-Flash-Next Q2_0 Strata service. That instance is the general decision model: 160-wide lettered reads, partial-read certification, roughly 0.3-0.6 s per decision.
+
+A second alias, `ha-pqnld`, names pqnld on Kepler (`http://kepler:11560/v1`) in front of the `qwen4b-v8-onpolicy-dpo-v9` fine-tune at `kepler:8088`, which is the model behind the recorded 0.879 household baseline. The HA harness key may call both, so the router can move from `qwen-pqnld` to `ha-pqnld` with `PQNLD_MODEL` alone.
+
+`qwen-jev` is retired: it named the same dead Apollo `11560` and no model serves that id. This section supersedes the 2026-10-27 Apollo proxy note above.
+
+
+Verification for the split: `curl http://kepler:11560/v1/chat/completions -d '{"model":"qwen4b-v8-onpolicy-dpo-v9", …}'` returns the answers envelope with `action=ha` at 0.872, so the alias's `base_model` names the id the sidecar serves; `GET /healthz` on the same host answers 200. The frozen-116 suite scores 76.7 % on an utterance-only replay through either decision host, so the router's accuracy remains a property of the harness prompt (room plus filtered entity catalog) rather than of the endpoint.
