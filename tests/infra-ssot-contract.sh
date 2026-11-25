@@ -319,11 +319,11 @@ check_s05() {
 
   jq -e '
     type == "array" and
-    length == 23 and
-    (unique | length) == 23 and
+    length == 22 and
+    (unique | length) == 22 and
     . == (sort)
   ' "$aliases" >/dev/null \
-    || fail "S05 RED: Discovery alias fixture must contain exactly 23 unique sorted aliases"
+    || fail "S05 RED: Discovery alias fixture must contain exactly 22 unique sorted aliases"
 
   jq -e '
     . as $aliases |
