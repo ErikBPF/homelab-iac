@@ -10,6 +10,17 @@
   ! grep -Fq 'sops set' "$script"
 }
 
+@test "App-scoped resources authenticate with app auth, not a refreshable token" {
+  root=github/root.hcl
+  unit=github/repos/terragrunt.hcl
+
+  grep -Fq 'app_auth {' "$root"
+  grep -Fq 'installation_id = var.github_app_installation_id' "$root"
+  grep -Fq 'pem_file        = var.github_app_pem_file' "$root"
+  ! grep -Fq 'github_app_management_token' "$root"
+  grep -Fq 'GITHUB_APP_PEM_FILE' "$unit"
+}
+
 @test "Vault agent can rotate only the GitHub app token secret" {
   module=components/openbao/modules/runtime-secret-foundation/main.tf
 

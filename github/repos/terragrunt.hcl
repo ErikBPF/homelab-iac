@@ -211,6 +211,10 @@ inputs = {
     }
   } : {}
 
+  github_app_id              = local.kindle_release_app_id
+  github_app_installation_id = local.kindle_release_installation_id
+  github_app_pem_file        = get_env("GITHUB_APP_PEM_FILE", "")
+
   actions_secrets = local.kindle_release_ready ? {
     kindle-release-app-id = {
       repository  = "kindle-dash"
