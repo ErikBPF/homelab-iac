@@ -39,7 +39,17 @@ generate "provider" {
       type = string
     }
 
-    variable "github_app_management_token" {
+    variable "github_app_id" {
+      type    = string
+      default = ""
+    }
+
+    variable "github_app_installation_id" {
+      type    = string
+      default = ""
+    }
+
+    variable "github_app_pem_file" {
       type      = string
       sensitive = true
       default   = ""
@@ -50,10 +60,19 @@ generate "provider" {
       owner = var.github_owner
     }
 
+    # Installation-scoped resources (github_app_installation_repository) need app
+    # auth: the provider mints short-lived installation tokens from the app id,
+    # installation id and private key, so nothing here depends on an OAuth refresh
+    # token that expires after eight hours.
     provider "github" {
       alias = "app_management"
-      token = var.github_app_management_token
       owner = var.github_owner
+
+      app_auth {
+        id              = var.github_app_id
+        installation_id = var.github_app_installation_id
+        pem_file        = var.github_app_pem_file
+      }
     }
   EOT
 }
