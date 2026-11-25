@@ -3,6 +3,10 @@
     "reason": "OpenCode Go lists deepseek-v4.1-flash at https://opencode.ai/zen/go/v1/models and https://opencode.ai/docs/go/. Go metadata at https://models.dev/api.json specifies 1000000 context, 384000 output, text/image input and reasoning/tools. Proxy uses published peak input/output prices (0.30/1.20 USD per million) and the same table's cache-read price (0.006); off-peak is 0.15/0.60. Zen discovery does not include this Go-only route.",
     "reviewed_on": "2026-09-10"
   },
+  "glm-5.3": {
+    "reason": "OpenCode Go publishes full GLM 5.3 at https://opencode.ai/inference/go/v1/models. Reviewed metadata: 1000000 context, 131072 output, text input, reasoning/tools, input/output/cache-read prices 1.40/4.40/0.26 USD per million. The Zen catalog snapshot does not include this route.",
+    "reviewed_on": "2026-11-24"
+  },
   "glm-5.3-flash": {
     "reason": "GLM-5.3 Flash is absent from the reviewed Zen catalog; preserve the deployed OpenCode Go route and reviewed proxy price pending catalog parity.",
     "reviewed_on": "2026-09-04"

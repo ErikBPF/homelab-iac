@@ -6,6 +6,7 @@
   "codex-gpt-5.6-terra",
   "codex-gpt-6-astra",
   "deepseek-v4.1-flash",
+  "glm-5.3",
   "glm-5.3-flash",
   "ha-agent-qwen4b",
   "kimi-k2-code",
