@@ -15,5 +15,19 @@
 @test "Actions permissions wait for repository creation" {
   module="$BATS_TEST_DIRNAME/../github/modules/repo/main.tf"
 
-  [ "$(grep -Ec 'repository[[:space:]]*=[[:space:]]*github_repository\.this\[each\.key\]\.name' "$module")" -eq 3 ]
+  run python3 - "$module" <<'PY'
+import pathlib, re, sys
+
+text = pathlib.Path(sys.argv[1]).read_text()
+for kind, name in (
+    ("github_actions_repository_permissions", "this"),
+    ("github_workflow_repository_permissions", "this"),
+    ("github_repository_vulnerability_alerts", "this"),
+    ("github_repository_environment", "release"),
+):
+    block = re.search(rf'resource "{kind}" "{name}" \{{(?:(?!^}}).)*^}}', text, re.M | re.S)
+    assert block, f"missing repository setting: {kind}.{name}"
+    assert re.search(r"repository\s*=\s*github_repository\.this\[each\.key\]\.name", block.group()), kind
+PY
+  [ "$status" -eq 0 ]
 }
