@@ -37,15 +37,6 @@ variable "repos" {
   }))
 }
 
-variable "app_installation_repositories" {
-  description = "GitHub App installations attached to exact repositories."
-  type = map(object({
-    installation_id = string
-    repository      = string
-  }))
-  default = {}
-}
-
 variable "actions_secrets" {
   description = "Repository Actions secrets sourced from the apply environment."
   type = map(object({
