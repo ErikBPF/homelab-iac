@@ -71,7 +71,11 @@ generate "provider" {
       app_auth {
         id              = var.github_app_id
         installation_id = var.github_app_installation_id
-        pem_file        = var.github_app_pem_file
+        # Provider 6.13.0 decodes the PEM from this field's VALUE, not from the
+        # path it names: passing the path alone fails with "no decodeable PEM
+        # data found", while passing the file's contents works. Keep the input
+        # named for the path the apply host writes, and read it here.
+        pem_file        = file(var.github_app_pem_file)
       }
     }
   EOT
@@ -107,7 +111,6 @@ generate "encryption" {
 inputs = {
   state_passphrase = local.state_passphrase
 
-  github_token                = get_env("GITHUB_TOKEN")
-  github_owner                = get_env("GITHUB_OWNER", "ErikBPF")
-  github_app_management_token = get_env("GITHUB_APP_MANAGEMENT_TOKEN", "")
+  github_token = get_env("GITHUB_TOKEN")
+  github_owner = get_env("GITHUB_OWNER", "ErikBPF")
 }

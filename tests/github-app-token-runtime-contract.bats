@@ -16,7 +16,8 @@
 
   grep -Fq 'app_auth {' "$root"
   grep -Fq 'installation_id = var.github_app_installation_id' "$root"
-  grep -Fq 'pem_file        = var.github_app_pem_file' "$root"
+  # Provider 6.13.0 decodes the PEM from this value, so the path must be read
+  grep -Fq 'pem_file        = file(var.github_app_pem_file)' "$root"
   ! grep -Fq 'github_app_management_token' "$root"
   grep -Fq 'GITHUB_APP_PEM_FILE' "$unit"
 }
