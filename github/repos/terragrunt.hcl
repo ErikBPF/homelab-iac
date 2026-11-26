@@ -201,6 +201,16 @@ inputs = {
     terraform-provider-litellm = {
       protect_main = true
     }
+    terraform-provider-polaris = {
+      visibility                   = "public"
+      allow_auto_merge             = false
+      protect_main                 = true
+      required_checks              = ["unit", "generated-docs", "acceptance"]
+      default_workflow_permissions = "read"
+      can_approve_pull_requests    = false
+      vulnerability_alerts         = true
+      release_approvers            = [26701869] # ErikBPF; verified through the GitHub API.
+    }
     vault = {
       visibility   = "private"
       protect_main = false

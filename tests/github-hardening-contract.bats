@@ -19,7 +19,7 @@ expected = {
     "nanda_colors", "nstech-dev-technical-test", "nstech-mdm-technical-test",
     "ndc", "opencode-flake", "opencode-tui", "renovate-config", "romozinha",
     "servarr", "spicyphus", "terraform-polaris-iam", "terraform-provider-adguardhome",
-    "terraform-provider-litellm", "vault",
+    "terraform-provider-litellm", "terraform-provider-polaris", "vault",
     "zmk-config-chary",
 }
 declared = set(re.findall(r'^\s{4}([a-zA-Z0-9_-]+)\s+=\s+\{', repos, re.M))
@@ -140,6 +140,27 @@ import pathlib, sys
 text = pathlib.Path(sys.argv[1]).read_text()
 assert 'generate "imports"' not in text
 assert "import {" not in text
+PY
+  [ "$status" -eq 0 ]
+}
+
+@test "Polaris provider releases require an explicit reviewer without changing fleet defaults" {
+  run python3 - "$REPO_ROOT" <<'PY'
+import pathlib, re, sys
+root = pathlib.Path(sys.argv[1])
+repos = (root / "github/repos/terragrunt.hcl").read_text()
+block = re.search(r"^    terraform-provider-polaris = \{(?:(?!^    \}).)*^    \}", repos, re.M | re.S)
+assert block, "Polaris provider repository must be declared"
+assert re.search(r"release_approvers\s*=\s*\[26701869\]", block.group())
+variables = (root / "github/modules/repo/variables.tf").read_text()
+assert re.search(r"release_approvers\s*=\s*optional\(set\(number\), \[\]\)", variables)
+module = (root / "github/modules/repo/main.tf").read_text()
+resource = re.search(r'resource "github_repository_environment" "release" \{(?:(?!^}).)*^}', module, re.M | re.S)
+assert resource, "Release environment must be managed by IaC"
+assert "if length(v.release_approvers) > 0" in resource.group()
+assert re.search(r'environment\s*=\s*"production-release"', resource.group())
+assert re.search(r"users\s*=\s*each.value.release_approvers", resource.group())
+assert re.search(r"can_admins_bypass\s*=\s*false", resource.group())
 PY
   [ "$status" -eq 0 ]
 }
