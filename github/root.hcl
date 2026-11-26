@@ -49,7 +49,9 @@ generate "provider" {
       default = ""
     }
 
-    variable "github_app_pem_file" {
+    # The key material itself. It is handed to the provider through an
+    # environment variable, never written into a generated .tf file.
+    variable "github_app_pem" {
       type      = string
       sensitive = true
       default   = ""
@@ -71,7 +73,11 @@ generate "provider" {
       app_auth {
         id              = var.github_app_id
         installation_id = var.github_app_installation_id
-        pem_file        = var.github_app_pem_file
+        # Provider 6.13.0 decodes the PEM from this field's VALUE, not from the
+        # path it names: a path fails with "no decodeable PEM data found", while
+        # the contents work. The contents arrive through a sensitive variable
+        # (TF_VAR_, environment only), so no key material lands on disk.
+        pem_file        = var.github_app_pem
       }
     }
   EOT
@@ -107,7 +113,6 @@ generate "encryption" {
 inputs = {
   state_passphrase = local.state_passphrase
 
-  github_token                = get_env("GITHUB_TOKEN")
-  github_owner                = get_env("GITHUB_OWNER", "ErikBPF")
-  github_app_management_token = get_env("GITHUB_APP_MANAGEMENT_TOKEN", "")
+  github_token = get_env("GITHUB_TOKEN")
+  github_owner = get_env("GITHUB_OWNER", "ErikBPF")
 }
