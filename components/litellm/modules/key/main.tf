@@ -4,6 +4,7 @@ resource "litellm_key" "this" {
   max_parallel_requests = var.max_parallel_requests
   rpm_limit             = var.rpm_limit
   tpm_limit             = var.tpm_limit
+  budget_duration       = var.budget_duration
   metadata              = var.metadata
 
   lifecycle {
@@ -17,5 +18,6 @@ resource "litellm_key" "rotation" {
   max_parallel_requests = var.max_parallel_requests
   rpm_limit             = var.rpm_limit
   tpm_limit             = var.tpm_limit
+  budget_duration       = var.budget_duration
   metadata              = var.metadata
 }

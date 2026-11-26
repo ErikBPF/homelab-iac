@@ -18,6 +18,12 @@ variable "tpm_limit" {
   type = number
 }
 
+variable "budget_duration" {
+  description = "Budget window for the key. LiteLLM rejects an empty value on update, and the provider sends one when this input is absent."
+  type        = string
+  default     = "30d"
+}
+
 variable "metadata" {
   type = map(string)
 }
