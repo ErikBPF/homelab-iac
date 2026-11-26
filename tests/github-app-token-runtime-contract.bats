@@ -10,19 +10,18 @@
   ! grep -Fq 'sops set' "$script"
 }
 
-@test "App-scoped resources authenticate with app auth, not a refreshable token" {
+@test "No app-installation credential or resource stays in the apply path" {
   root=github/root.hcl
   unit=github/repos/terragrunt.hcl
 
-  grep -Fq 'app_auth {' "$root"
-  grep -Fq 'installation_id = var.github_app_installation_id' "$root"
-  # 6.13.0 decodes the PEM from this value; the contents arrive as a sensitive
-  # variable so nothing secret is materialised into a generated file.
-  grep -Fq 'pem_file        = var.github_app_pem' "$root"
-  # The key must not be materialised into a generated file:
-  ! grep -Fq 'pem_file        = file(' "$root"
+  # github_app_installation_repository needs a user-to-server token; that grant is
+  # owned in the app installation settings, so no app credential belongs here.
+  ! grep -Fq 'app_management' "$root"
+  ! grep -Fq 'app_auth' "$root"
+  ! grep -Fq 'github_app_pem' "$root"
   ! grep -Fq 'github_app_management_token' "$root"
-  grep -Fq 'github_app_pem = try(file(get_env("GITHUB_APP_PEM_FILE")), "")' "$unit"
+  ! grep -Fq 'app_installation_repositories' "$unit"
+  ! grep -Fq 'GITHUB_APP_PEM_FILE' "$unit"
 }
 
 @test "Vault agent can rotate only the GitHub app token secret" {

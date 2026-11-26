@@ -204,18 +204,10 @@ inputs = {
     }
   }
 
-  app_installation_repositories = local.kindle_release_ready ? {
-    kindle-release-servarr = {
-      installation_id = local.kindle_release_installation_id
-      repository      = "servarr"
-    }
-  } : {}
-
-  github_app_id              = local.kindle_release_app_id
-  github_app_installation_id = local.kindle_release_installation_id
-  # Read the runtime key file once, here, so the provider receives contents
-  # through TF_VAR_ instead of a path it cannot decode.
-  github_app_pem = try(file(get_env("GITHUB_APP_PEM_FILE")), "")
+  # The Kindle release app's repository selection is owned in its installation
+  # settings, not here: github_app_installation_repository needs a user-to-server
+  # token, and keeping that credential in the apply path is what expired and
+  # 401-ed every merged-main run.
 
   actions_secrets = local.kindle_release_ready ? {
     kindle-release-app-id = {

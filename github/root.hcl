@@ -39,46 +39,13 @@ generate "provider" {
       type = string
     }
 
-    variable "github_app_id" {
-      type    = string
-      default = ""
-    }
-
-    variable "github_app_installation_id" {
-      type    = string
-      default = ""
-    }
-
-    # The key material itself. It is handed to the provider through an
-    # environment variable, never written into a generated .tf file.
-    variable "github_app_pem" {
-      type      = string
-      sensitive = true
-      default   = ""
-    }
-
+    # One PAT-authenticated provider. App-installation resources are not managed
+    # here: github_app_installation_repository needs a user-to-server token, so
+    # that grant is owned out of band and this tree stays free of expiring
+    # credentials.
     provider "github" {
       token = var.github_token
       owner = var.github_owner
-    }
-
-    # Installation-scoped resources (github_app_installation_repository) need app
-    # auth: the provider mints short-lived installation tokens from the app id,
-    # installation id and private key, so nothing here depends on an OAuth refresh
-    # token that expires after eight hours.
-    provider "github" {
-      alias = "app_management"
-      owner = var.github_owner
-
-      app_auth {
-        id              = var.github_app_id
-        installation_id = var.github_app_installation_id
-        # Provider 6.13.0 decodes the PEM from this field's VALUE, not from the
-        # path it names: a path fails with "no decodeable PEM data found", while
-        # the contents work. The contents arrive through a sensitive variable
-        # (TF_VAR_, environment only), so no key material lands on disk.
-        pem_file        = var.github_app_pem
-      }
     }
   EOT
 }
