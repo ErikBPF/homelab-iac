@@ -39,40 +39,13 @@ generate "provider" {
       type = string
     }
 
-    variable "github_app_id" {
-      type    = string
-      default = ""
-    }
-
-    variable "github_app_installation_id" {
-      type    = string
-      default = ""
-    }
-
-    variable "github_app_pem_file" {
-      type      = string
-      sensitive = true
-      default   = ""
-    }
-
+    # One PAT-authenticated provider. App-installation resources are not managed
+    # here: github_app_installation_repository needs a user-to-server token, so
+    # that grant is owned out of band and this tree stays free of expiring
+    # credentials.
     provider "github" {
       token = var.github_token
       owner = var.github_owner
-    }
-
-    # Installation-scoped resources (github_app_installation_repository) need app
-    # auth: the provider mints short-lived installation tokens from the app id,
-    # installation id and private key, so nothing here depends on an OAuth refresh
-    # token that expires after eight hours.
-    provider "github" {
-      alias = "app_management"
-      owner = var.github_owner
-
-      app_auth {
-        id              = var.github_app_id
-        installation_id = var.github_app_installation_id
-        pem_file        = var.github_app_pem_file
-      }
     }
   EOT
 }
@@ -107,7 +80,6 @@ generate "encryption" {
 inputs = {
   state_passphrase = local.state_passphrase
 
-  github_token                = get_env("GITHUB_TOKEN")
-  github_owner                = get_env("GITHUB_OWNER", "ErikBPF")
-  github_app_management_token = get_env("GITHUB_APP_MANAGEMENT_TOKEN", "")
+  github_token = get_env("GITHUB_TOKEN")
+  github_owner = get_env("GITHUB_OWNER", "ErikBPF")
 }
