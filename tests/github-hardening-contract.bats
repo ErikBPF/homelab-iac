@@ -9,7 +9,7 @@ setup() {
 import pathlib, re, sys
 
 text = pathlib.Path(sys.argv[1]).read_text()
-repos = text.split("  repos = {", 1)[1].split("\n  }\n\n  app_installation_repositories", 1)[0]
+repos = text.split("  repos = {", 1)[1].split("\n  }\n", 1)[0]
 expected = {
     "airflow-mcp",
     "agent-evals", "ai-server", "aster", "aster-smoke", "buzz-flake", "codex-flake", "datafoundation-support-scripts",
