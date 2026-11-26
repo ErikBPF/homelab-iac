@@ -213,7 +213,9 @@ inputs = {
 
   github_app_id              = local.kindle_release_app_id
   github_app_installation_id = local.kindle_release_installation_id
-  github_app_pem_file        = get_env("GITHUB_APP_PEM_FILE", "")
+  # Read the runtime key file once, here, so the provider receives contents
+  # through TF_VAR_ instead of a path it cannot decode.
+  github_app_pem = try(file(get_env("GITHUB_APP_PEM_FILE")), "")
 
   actions_secrets = local.kindle_release_ready ? {
     kindle-release-app-id = {

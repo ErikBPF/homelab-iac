@@ -49,7 +49,9 @@ generate "provider" {
       default = ""
     }
 
-    variable "github_app_pem_file" {
+    # The key material itself. It is handed to the provider through an
+    # environment variable, never written into a generated .tf file.
+    variable "github_app_pem" {
       type      = string
       sensitive = true
       default   = ""
@@ -72,10 +74,10 @@ generate "provider" {
         id              = var.github_app_id
         installation_id = var.github_app_installation_id
         # Provider 6.13.0 decodes the PEM from this field's VALUE, not from the
-        # path it names: passing the path alone fails with "no decodeable PEM
-        # data found", while passing the file's contents works. Keep the input
-        # named for the path the apply host writes, and read it here.
-        pem_file        = file(var.github_app_pem_file)
+        # path it names: a path fails with "no decodeable PEM data found", while
+        # the contents work. The contents arrive through a sensitive variable
+        # (TF_VAR_, environment only), so no key material lands on disk.
+        pem_file        = var.github_app_pem
       }
     }
   EOT
