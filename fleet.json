@@ -12,6 +12,12 @@
       "role": "server",
       "tailscaleIp": "100.67.123.113"
     },
+    "challenger": {
+      "ip": "192.168.10.201",
+      "mac": "64:1c:67:f5:65:e0",
+      "role": "laptop",
+      "tailscaleIp": "100.96.190.75"
+    },
     "discovery": {
       "ip": "192.168.10.210",
       "mac": "64:51:06:1a:f8:1a",
