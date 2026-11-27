@@ -185,15 +185,7 @@ inputs = {
     spicyphus = {
       protect_main = true
     }
-    terraform-polaris-iam = {
-      visibility                   = "public"
-      allow_auto_merge             = false
-      protect_main                 = true
-      required_checks              = ["test"]
-      default_workflow_permissions = "read"
-      can_approve_pull_requests    = false
-      vulnerability_alerts         = true
-    }
+
     terraform-provider-adguardhome = {
       protect_main    = true
       required_checks = ["unit", "generated-docs"]

@@ -18,7 +18,7 @@ expected = {
     "homelab-gitops", "homelab-iac", "kindle-dash", "klipper-biqu",
     "nanda_colors", "nstech-dev-technical-test", "nstech-mdm-technical-test",
     "ndc", "opencode-flake", "opencode-tui", "renovate-config", "romozinha",
-    "servarr", "spicyphus", "terraform-polaris-iam", "terraform-provider-adguardhome",
+    "servarr", "spicyphus", "terraform-provider-adguardhome",
     "terraform-provider-litellm", "terraform-provider-polaris", "vault",
     "zmk-config-chary",
 }
