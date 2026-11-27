@@ -57,6 +57,18 @@ resource "github_repository_vulnerability_alerts" "this" {
   enabled    = each.value.vulnerability_alerts
 }
 
+resource "github_repository_environment" "release" {
+  for_each = { for k, v in var.repos : k => v if length(v.release_approvers) > 0 }
+
+  repository        = github_repository.this[each.key].name
+  environment       = "production-release"
+  can_admins_bypass = false
+
+  reviewers {
+    users = each.value.release_approvers
+  }
+}
+
 # Which actions / reusable workflows may run in the repo.
 resource "github_actions_repository_permissions" "this" {
   for_each        = var.repos
